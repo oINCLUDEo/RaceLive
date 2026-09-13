@@ -1,14 +1,18 @@
-# --- builder: install и build в одном слое, чтобы node_modules/.bin (next) не терялся ---
-FROM node:20-alpine AS builder
+# --- builder: Debian-базированный образ (glibc) — надёжнее Alpine/musl для next SWC ---
+FROM node:20-slim AS builder
 WORKDIR /app
-COPY package.json package-lock.json* ./
+# Лок-файл НЕ копируем: он сгенерирован на Windows и мешает npm ставить linux-бинарь next.
+# Версии в package.json запиннены точно, поэтому свежий resolve детерминирован.
+COPY package.json ./
 RUN npm install
+# санити-проверка: next установлен и вызывается (иначе падаем с понятной ошибкой, а не на build)
+RUN test -x node_modules/.bin/next && node_modules/.bin/next --version
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
-# --- runner: только standalone-вывод ---
-FROM node:20-alpine AS runner
+# --- runner: тот же glibc-образ, только standalone-вывод ---
+FROM node:20-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
