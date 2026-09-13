@@ -1,4 +1,4 @@
-name: formula
+name: racelive
 
 services:
   postgres:

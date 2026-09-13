@@ -20,7 +20,7 @@ async def lifespan(app: FastAPI):
 settings = get_settings()
 
 app = FastAPI(
-    title="Project Formula API",
+    title="race.live API",
     version="0.1.0",
     summary="Расписание / результаты / тайминг автогонок. MVP: Фаза 1 (расписание).",
     lifespan=lifespan,
@@ -40,4 +40,4 @@ app.include_router(schedule.router)
 
 @app.get("/")
 async def root() -> dict:
-    return {"name": "Project Formula API", "docs": "/docs", "health": "/api/health"}
+    return {"name": "race.live API", "docs": "/docs", "health": "/api/health"}

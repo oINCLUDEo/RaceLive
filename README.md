@@ -1,7 +1,7 @@
-# Project Formula (рабочее название)
+# race.live
 
 Портал живого тайминга, результатов и телеметрии автогонок с русской локализацией.
-Название и домен пока не выбраны — см. [docs/decisions.md](docs/decisions.md).
+Название и домен — **race.live** (см. ADR-009 в [docs/decisions.md](docs/decisions.md)).
 
 ## Что это
 
