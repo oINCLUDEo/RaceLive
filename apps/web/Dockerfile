@@ -1,6 +1,8 @@
 # --- builder: Debian-базированный образ (glibc) — надёжнее Alpine/musl для next SWC ---
 FROM node:20-slim AS builder
 WORKDIR /app
+# На VPS без рабочего IPv6 npm лез по IPv6 → EAI_AGAIN. Принудительно IPv4-first.
+ENV NODE_OPTIONS=--dns-result-order=ipv4first
 # Лок-файл НЕ копируем: он сгенерирован на Windows и мешает npm ставить linux-бинарь next.
 # Версии в package.json запиннены точно, поэтому свежий resolve детерминирован.
 COPY package.json ./
