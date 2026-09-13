@@ -1,7 +1,8 @@
 "use client";
 
 // 3D-болид через <model-viewer> (CDN — без npm-зависимости). Модель ~1.6 МБ (Draco+webp).
-// backdrop=true: неинтерактивная подложка героя (медленное вращение, свет, клики проходят сквозь).
+// backdrop=true: СТАТИЧНАЯ неинтерактивная подложка (фиксированный ракурс, без вращения,
+// клики проходят сквозь) — красиво встроенный элемент сцены.
 import { createElement, useEffect, useState } from "react";
 
 const CDN =
@@ -27,13 +28,9 @@ export function CarViewer({ backdrop = false }: { backdrop?: boolean }) {
 
   const common = {
     src: "/models/bolid-2023.glb",
-    alt: "Болид Формулы-1 2023 в 3D",
-    "auto-rotate": "",
-    "rotation-per-second": backdrop ? "14deg" : "20deg",
+    alt: "Болид Формулы-1 2023",
     "interaction-prompt": "none",
     "environment-image": "neutral",
-    exposure: backdrop ? "1.3" : "1.05",
-    "shadow-intensity": backdrop ? "0" : "0.5",
     loading: "lazy" as const,
     reveal: "auto" as const,
   };
@@ -41,11 +38,13 @@ export function CarViewer({ backdrop = false }: { backdrop?: boolean }) {
   const attrs = backdrop
     ? {
         ...common,
+        // статичный ракурс — сбоку, чуть спереди; авто-кадрирование; без вращения/интеракции
+        "camera-orbit": "-20deg 80deg auto",
         "disable-zoom": "",
         "disable-tap": "",
         "disable-pan": "",
-        "camera-orbit": "-20deg 78deg 3.9m",
-        "field-of-view": "28deg",
+        exposure: "1.25",
+        "shadow-intensity": "0",
         style: {
           width: "100%",
           height: "100%",
@@ -57,7 +56,10 @@ export function CarViewer({ backdrop = false }: { backdrop?: boolean }) {
     : {
         ...common,
         "camera-controls": "",
+        "auto-rotate": "",
         "touch-action": "pan-y",
+        exposure: "1.05",
+        "shadow-intensity": "0.5",
         style: {
           width: "100%",
           height: "100%",

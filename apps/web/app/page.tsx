@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CarViewer } from "@/components/CarViewer";
 import { Countdown } from "@/components/Countdown";
+import { CountdownBoxes } from "@/components/CountdownBoxes";
 import { Flag } from "@/components/Flag";
 import { SessionTime } from "@/components/SessionTime";
 import { TeamLogo } from "@/components/TeamLogo";
@@ -55,61 +56,95 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col gap-8">
-      {/* HERO — болид как живая подложка */}
-      <section className="glow-hero relative overflow-hidden rounded-[24px] shadow-[var(--soft)]">
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-full md:w-[58%]">
+      {/* HERO — болид статично встроен в сцену */}
+      <section
+        className="relative flex min-h-[560px] flex-col justify-between overflow-hidden rounded-[24px] shadow-[var(--soft)]"
+        style={{ background: "linear-gradient(180deg,#180d10 0%, #130a0c 62%)" }}
+      >
+        {/* красный подсвет-пол под машиной */}
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-[58%]"
+          style={{ background: "radial-gradient(56% 100% at 50% 110%, rgba(224,64,47,0.5), rgba(224,64,47,0.13) 42%, transparent 70%)" }}
+        />
+        {/* статичный болид (контейнер выше героя → авто-кадрирование даёт крупную машину) */}
+        <div className="pointer-events-none absolute inset-x-0 -top-[18%] -bottom-[4%]">
           <CarViewer backdrop />
         </div>
-        {/* атмосфера + читаемость текста */}
+        {/* виньетка — глубина и края */}
         <div
           className="pointer-events-none absolute inset-0"
-          style={{ background: "radial-gradient(50% 70% at 74% 54%, rgba(224,64,47,0.26), transparent 60%)" }}
-        />
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{ background: "linear-gradient(100deg, rgba(19,10,12,0.98) 0%, rgba(19,10,12,0.9) 34%, rgba(19,10,12,0.5) 55%, rgba(19,10,12,0.12) 80%, rgba(19,10,12,0) 100%)" }}
+          style={{ background: "radial-gradient(125% 85% at 50% 32%, transparent 50%, rgba(8,4,5,0.68) 100%)" }}
         />
 
-        <div className="relative flex min-h-[440px] max-w-[600px] flex-col justify-center p-8 md:p-12">
-          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-line bg-black/40 px-3.5 py-1.5 text-xs">
-            <span className="live-dot" aria-hidden />
-            {next ? `СЕЙЧАС В ЭФИРЕ · ${next.meeting_name_ru ?? next.meeting_name_en}` : "СЕЙЧАС В ЭФИРЕ"}
-          </span>
-          <h1 className="mt-4 font-display text-4xl font-semibold leading-[1.03] md:text-5xl">
-            Сюда просто
-            <br />
-            тянет заходить
-          </h1>
-          <p className="mt-4 max-w-[42ch] text-base leading-relaxed text-[#d8c7c6]">
-            Смотришь гонку, залипаешь в чат, споришь о стратегии — и время летит. Иногда шумно,
-            иногда спокойно, но всегда со своими. Короче, заходи :)
-          </p>
-          <div className="mt-6 flex flex-wrap items-center gap-4">
-            <Link href="/schedule" className="cta">Смотреть сейчас</Link>
-            <span className="flex items-center gap-2.5 text-[13px] text-[#d8c7c6]">
-              <span className="flex">
-                {["#C0504E", "#4E7CC0", "#4EA36E"].map((c, k) => (
-                  <span key={k} className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#130a0c] font-display text-[11px] font-semibold text-white" style={{ background: c, marginLeft: k ? -9 : 0 }}>
-                    {["А", "М", "К"][k]}
-                  </span>
-                ))}
-              </span>
-              <span className="tabular text-white">1 248</span> смотрят
-            </span>
+        {/* аннотации-выноски (десктоп) */}
+        <div className="pointer-events-none absolute inset-0 hidden text-[11px] uppercase tracking-wide text-mute lg:block">
+          <div className="absolute left-8 top-[30%] flex items-center gap-2">
+            <span>Гибрид · 1.6 V6 Turbo</span>
+            <span className="h-px w-16 bg-line" />
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--ember)]" />
           </div>
-          {next && next.session.starts_at && (
-            <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-              <span className="text-mute">
-                Ближайшая:{" "}
-                <span className="text-bone">
-                  {sessionLabel(next.session.type, next.session.name_ru, next.session.name_en)}
-                </span>
-              </span>
-              <span className="text-bone">
-                через <span className="tabular"><Countdown iso={next.session.starts_at} /></span>
-              </span>
+          <div className="absolute left-8 top-[52%] flex items-center gap-2">
+            <span>Углепластиковый монокок</span>
+            <span className="h-px w-10 bg-line" />
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--ember)]" />
+          </div>
+          <div className="absolute right-8 top-[34%] flex items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--ember)]" />
+            <span className="h-px w-16 bg-line" />
+            <span>Макс. 360 км/ч</span>
+          </div>
+        </div>
+
+        {/* верх: бренд + заголовок */}
+        <div className="relative p-8 md:p-10">
+          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-line bg-black/40 px-3.5 py-1.5 text-xs backdrop-blur">
+            <span className="live-dot" aria-hidden />
+            {next ? `Сейчас в эфире · ${next.meeting_name_ru ?? next.meeting_name_en}` : "Сейчас в эфире"}
+          </span>
+          <h1 className="mt-4 max-w-[16ch] font-display text-3xl font-semibold leading-[1.05] md:text-4xl">
+            Смотрим Формулу вместе
+          </h1>
+        </div>
+
+        {/* низ: карточка ближайшей гонки + присутствие */}
+        <div className="relative flex flex-wrap items-end justify-between gap-4 p-6 md:p-8">
+          <div className="w-full max-w-[330px] rounded-2xl border border-line bg-[rgba(18,11,13,0.62)] p-5 backdrop-blur-md">
+            <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-mute">
+              <span className="live-dot" aria-hidden /> ближайшая гонка
             </div>
-          )}
+            <div className="mt-2 font-display text-xl font-semibold">
+              {next ? next.meeting_name_ru ?? next.meeting_name_en : "Скоро объявим"}
+            </div>
+            {next && next.session.starts_at ? (
+              <>
+                <div className="mt-0.5 text-sm text-mute">
+                  {sessionLabel(next.session.type, next.session.name_ru, next.session.name_en)} ·{" "}
+                  <SessionTime iso={next.session.starts_at} withZone />
+                </div>
+                <div className="mt-4">
+                  <CountdownBoxes iso={next.session.starts_at} />
+                </div>
+                <Link href={`/schedule/${next.round}`} className="cta mt-4 w-full justify-center">
+                  Смотреть
+                </Link>
+              </>
+            ) : (
+              <Link href="/schedule" className="cta mt-4 w-full justify-center">
+                Открыть расписание
+              </Link>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2.5 rounded-full border border-line bg-black/40 px-4 py-2 text-[13px] text-[#d8c7c6] backdrop-blur">
+            <span className="flex">
+              {["#C0504E", "#4E7CC0", "#4EA36E"].map((c, k) => (
+                <span key={k} className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#130a0c] font-display text-[10px] font-semibold text-white" style={{ background: c, marginLeft: k ? -8 : 0 }}>
+                  {["А", "М", "К"][k]}
+                </span>
+              ))}
+            </span>
+            <span><span className="tabular text-white">1 248</span> смотрят</span>
+          </div>
         </div>
       </section>
 
