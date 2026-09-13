@@ -4,7 +4,9 @@
 SCHEDULE_TTL_HOURS. Это выполняет требование «кэширование вместо повторных обращений».
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+UTC = timezone.utc
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession

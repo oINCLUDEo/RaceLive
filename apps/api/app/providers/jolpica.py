@@ -5,7 +5,9 @@ https://github.com/jolpica/jolpica-f1  ·  база: https://api.jolpi.ca/ergast
 """
 
 import asyncio
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+UTC = timezone.utc
 
 import httpx
 
