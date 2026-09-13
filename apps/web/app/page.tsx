@@ -144,7 +144,7 @@ export default async function HomePage() {
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             {rounds.map((m, idx) => (
               <Link key={m.round} href={`/schedule/${m.round}`} className="card-soft relative flex flex-col gap-3 overflow-hidden p-4 transition-colors hover:bg-surface-2">
-                <TrackMap circuit={m.circuit?.key} size={128} className="pointer-events-none absolute -right-5 -top-4 opacity-[0.08]" />
+                <TrackMap circuit={m.circuit?.key} size={132} className="pointer-events-none absolute -right-5 -top-4 opacity-[0.11]" />
                 <div className="flex items-center justify-between">
                   <Flag code={m.circuit?.country_code ?? null} />
                   <span className="text-[11px] uppercase tracking-wide text-mute">Этап {m.round}</span>

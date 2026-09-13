@@ -14,4 +14,8 @@ export const TEAMS: Record<string, Team> = {
   mercedes: { slug: "mercedes", name: "Mercedes", color: "#27F4D2" },
   astonmartin: { slug: "astonmartin", name: "Aston Martin", color: "#229971" },
   williams: { slug: "williams", name: "Williams", color: "#64C4FF" },
+  rb: { slug: "rb", name: "Racing Bulls", color: "#6692FF" },
+  haas: { slug: "haas", name: "Haas", color: "#B6BABD" },
+  sauber: { slug: "sauber", name: "Kick Sauber", color: "#52E252" },
+  alpine: { slug: "alpine", name: "Alpine", color: "#0093CC" },
 };

@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Countdown } from "@/components/Countdown";
+import { Flag } from "@/components/Flag";
 import { SessionTime } from "@/components/SessionTime";
 import { TimezoneNote } from "@/components/TimezoneNote";
+import { TrackMap } from "@/components/TrackMap";
 import { getMeeting, type MeetingOut } from "@/lib/api";
 import { sessionLabel } from "@/lib/format";
 
@@ -43,19 +45,25 @@ export default async function MeetingPage({
         <Link href="/schedule" className="text-sm text-mute hover:text-bone">
           ← Расписание
         </Link>
-        <div className="mt-4 text-xs uppercase tracking-[0.16em] text-mute">
-          этап {m.round}
+        <div className="mt-4 flex items-center gap-6">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-mute">
+              <Flag code={m.circuit?.country_code ?? null} w={26} />
+              этап {m.round}
+            </div>
+            <h1 className="mt-2 font-display text-3xl font-semibold">
+              {m.name_ru ?? m.name_en}
+            </h1>
+            <p className="mt-2 text-mute">
+              {m.circuit
+                ? `${m.circuit.name_ru ?? m.circuit.name_en}${
+                    m.circuit.country ? ` · ${m.circuit.country}` : ""
+                  }`
+                : ""}
+            </p>
+          </div>
+          <TrackMap circuit={m.circuit?.key} size={132} className="hidden shrink-0 opacity-80 sm:block" />
         </div>
-        <h1 className="mt-2 font-display text-3xl font-semibold">
-          {m.name_ru ?? m.name_en}
-        </h1>
-        <p className="mt-2 text-mute">
-          {m.circuit
-            ? `${m.circuit.name_ru ?? m.circuit.name_en}${
-                m.circuit.country ? ` · ${m.circuit.country}` : ""
-              }`
-            : ""}
-        </p>
       </div>
 
       <div className="card-soft overflow-hidden">
