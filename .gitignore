@@ -24,6 +24,11 @@ dist/
 pgdata/
 redisdata/
 
+# 3D-модели: сырьё не коммитим (оптимизируем → app-ready версия в public/ или на CDN)
+/Bolid 2023.glb
+*.blend
+*.usdz
+
 # os / editors
 .DS_Store
 Thumbs.db

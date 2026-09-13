@@ -2,34 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Дизайн-система «Оксид». Источник правды — OKLCH; hex в комментариях — результат.
-   Насыщенность живёт в данных, а не в подложке (хрома поверхностей < 0.025).
-   Цветного брендового акцента не существует: интерактив — цвета кости. */
+/* Дизайн-система «Оксид», тёплая социальная версия.
+   Палитра сохранена; геометрия мягче; красноты меньше, темноты больше —
+   ember остаётся значимым акцентом (CTA, live), а не заливает экран. */
 :root {
-  --surface-0: oklch(0.16 0.022 18); /* #170D10 страница */
-  --surface-1: oklch(0.21 0.020 18); /* #241518 панели, таблицы */
-  --surface-2: oklch(0.26 0.018 18); /* #2F1C20 всплывающие слои */
-  --line: oklch(0.32 0.016 18); /* #3A2226 волосяные линии */
+  --surface-0: #130A0C; /* страница — глубокий тёмный оксид */
+  --surface-1: #1F1216; /* карточки, панели */
+  --surface-2: #2A171C; /* всплывающие/активные слои */
+  --line: rgba(237, 230, 228, 0.08); /* мягкие разделители */
+  --line-strong: rgba(237, 230, 228, 0.14);
 
-  --bone: oklch(0.93 0.006 40); /* #EDE6E4 текст, кнопки, ссылки */
-  --mute: oklch(0.62 0.012 20); /* #9C8286 вторичный текст */
-  --disabled: oklch(0.45 0.014 20);
+  --bone: #EDE6E4; /* текст, кнопки, ссылки */
+  --mute: #A98A8E; /* вторичный текст */
+  --disabled: #6f5458;
+
+  --ember: #E0402F; /* маркетинг-акцент — только в зонах повествования */
+  --ember-soft: rgba(224, 64, 47, 0.16);
 
   /* функциональный код — только в данных, менять нельзя */
-  --purple: #b04ce6; /* лучшее время сессии */
-  --green: #4fd87a; /* личный лучший */
-  --yellow: #e8c13a; /* медленнее личного лучшего */
-  --red: #e5484d; /* красный флаг, сход */
-  --blue: #3e8fe0; /* синий флаг, круг отставания */
+  --purple: #B04CE6;
+  --green: #4FD87A;
+  --yellow: #E8C13A;
+  --red: #E5484D;
+  --blue: #3E8FE0;
+
+  --r-card: 18px;
+  --r-hero: 24px;
+  --soft: 0 24px 60px -34px rgba(0, 0, 0, 0.8);
 
   color-scheme: dark;
 }
 
-html {
-  background: var(--surface-0);
-  color: var(--bone);
-}
-
+html { background: var(--surface-0); color: var(--bone); }
 body {
   background: var(--surface-0);
   color: var(--bone);
@@ -37,104 +41,73 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Табличные цифры для данных: времена не должны прыгать при обновлении. */
-.tabular {
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-/* Видимый фокус с клавиатуры — часть планки качества. */
-:focus-visible {
-  outline: 2px solid var(--bone);
-  outline-offset: 2px;
-}
+.tabular { font-variant-numeric: tabular-nums; letter-spacing: 0; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 2px solid var(--bone); outline-offset: 2px; }
 
 @media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.001ms !important;
-    transition-duration: 0.001ms !important;
-  }
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
+
+/* --- Компоненты оболочки --- */
+.card-soft {
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  box-shadow: var(--soft);
+}
+.cta {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: var(--ember); color: #fff; font-weight: 600; font-size: 15px;
+  padding: 13px 26px; border-radius: 999px;
+  box-shadow: 0 16px 44px -18px rgba(224, 64, 47, 0.65);
+  transition: filter 180ms cubic-bezier(0.2, 0, 0, 1);
+}
+.cta:hover { filter: brightness(1.07); }
+
+.rail-i {
+  display: flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; border-radius: 14px; color: var(--mute);
+  transition: background 150ms, color 150ms;
+}
+.rail-i:hover { color: var(--bone); background: var(--surface-1); }
+.rail-i.on { background: var(--ember-soft); color: var(--ember); }
+
+.team-logo {
+  width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0;
+  object-fit: cover; background: var(--surface-2);
+}
+
+/* Атмосферные фоны (тёмные, с умеренным тёплым свечением) */
+.glow-hero {
+  background:
+    radial-gradient(64% 110% at 86% 32%, rgba(224, 64, 47, 0.20), transparent 60%),
+    radial-gradient(50% 90% at 58% 118%, rgba(224, 64, 47, 0.10), transparent 62%),
+    linear-gradient(120deg, #1d1013, #130a0c 72%);
+}
+.glow-panel {
+  background:
+    radial-gradient(60% 120% at 78% 60%, rgba(224, 64, 47, 0.14), transparent 62%),
+    linear-gradient(120deg, #1c1013, #130a0c 74%);
+}
+.glow-page {
+  background:
+    radial-gradient(52% 34% at 84% 0%, rgba(224, 64, 47, 0.07), transparent 60%),
+    var(--surface-0);
 }
 
 /* Проигрывание строки в превью тайминга: подсветка яркостью, не цветом. */
 @keyframes rowFlash {
-  0% {
-    background: var(--surface-2);
-  }
-  100% {
-    background: transparent;
-  }
+  0% { background: var(--surface-2); }
+  100% { background: transparent; }
 }
-.row-flash {
-  animation: rowFlash 900ms cubic-bezier(0.2, 0, 0, 1);
-}
+.row-flash { animation: rowFlash 900ms cubic-bezier(0.2, 0, 0, 1); }
 
-/* --- Маркетинг-акцент (ТОЛЬКО в зонах повествования: герой, лендинг, CTA).
-   Не путать с функциональным --red (флаг/сход): --ember в зоне данных не появляется. --- */
-:root {
-  --ember: #e0402f; /* тёплый «оксид-ember», глубже флагового красного */
-  --ember-soft: rgba(224, 64, 47, 0.22);
-}
-
-/* Драматичная тёмная «сцена» героя: тёплое свечение снизу + горизонт-отражение.
-   Свечение — это яркость/атмосфера маркетинг-зоны, в данных такого нет. */
-.hero-stage {
-  position: relative;
-  overflow: hidden;
-  background:
-    radial-gradient(75% 60% at 62% 78%, var(--ember-soft), transparent 68%),
-    radial-gradient(120% 90% at 50% 120%, rgba(224, 64, 47, 0.10), transparent 60%),
-    var(--surface-0);
-}
-/* тонкая линия-горизонт под «сценой» */
-.hero-stage::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in oklch, var(--ember) 55%, transparent),
-    transparent
-  );
-  opacity: 0.6;
-}
-
-/* Пульсирующая точка «live» (нейтральная, яркостью — в зоне данных цвет занят смыслом). */
 @keyframes livePulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.35;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
 }
 .live-dot {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 9999px;
-  background: var(--bone);
-  animation: livePulse 1.6s ease-in-out infinite;
-}
-
-/* CTA маркетинг-зоны — тёплый ember с мягким свечением. */
-.cta-ember {
-  background: var(--ember);
-  color: #fff;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04),
-    0 8px 30px -8px var(--ember-soft);
-  transition: filter 180ms cubic-bezier(0.2, 0, 0, 1);
-}
-.cta-ember:hover {
-  filter: brightness(1.08);
+  display: inline-block; width: 6px; height: 6px; border-radius: 999px;
+  background: var(--ember); animation: livePulse 1.6s ease-in-out infinite;
 }
