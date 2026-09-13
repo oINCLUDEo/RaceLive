@@ -1,18 +1,13 @@
-# --- deps ---
-FROM node:20-alpine AS deps
+# --- builder: install и build в одном слое, чтобы node_modules/.bin (next) не терялся ---
+FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm install
-
-# --- builder ---
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
-# --- runner ---
+# --- runner: только standalone-вывод ---
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production \
