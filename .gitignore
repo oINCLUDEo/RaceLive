@@ -1,0 +1,31 @@
+# env
+.env
+.env.local
+*.local
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# node
+node_modules/
+.next/
+out/
+dist/
+.turbo/
+*.tsbuildinfo
+
+# docker / data
+pgdata/
+redisdata/
+
+# os / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
