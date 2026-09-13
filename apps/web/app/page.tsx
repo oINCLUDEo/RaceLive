@@ -6,6 +6,7 @@ import { Flag } from "@/components/Flag";
 import { SessionTime } from "@/components/SessionTime";
 import { TeamLogo } from "@/components/TeamLogo";
 import { TimingPreview } from "@/components/TimingPreview";
+import { TrackMap } from "@/components/TrackMap";
 import {
   getNextSession,
   getSchedule,
@@ -13,6 +14,10 @@ import {
   type NextSessionOut,
 } from "@/lib/api";
 import { sessionLabel } from "@/lib/format";
+
+// Главная зависит от живых данных (ближайшая сессия, отсчёт) — рендерим на каждый
+// запрос, иначе статичная сборка показывала пустой календарь до фоновой ревалидации.
+export const dynamic = "force-dynamic";
 
 const STANDINGS = [
   { p: 1, team: "redbull", name: "Макс Ферстаппен", pts: 331 },
@@ -66,8 +71,8 @@ export default async function HomePage() {
           className="pointer-events-none absolute inset-x-0 bottom-0 h-[60%]"
           style={{ background: "radial-gradient(55% 100% at 50% 112%, rgba(224,64,47,0.4), rgba(224,64,47,0.1) 44%, transparent 72%)" }}
         />
-        {/* болид — фоновый наполнитель; шейдеры (three.js + bloom), ленивый чанк */}
-        <div className="pointer-events-none absolute inset-0">
+        {/* болид — фоновый наполнитель справа; шейдеры (three.js + bloom), ленивый чанк */}
+        <div className="pointer-events-none absolute inset-y-0 right-0 left-0 md:-right-[4%] md:left-[24%]">
           <CarSceneLazy />
         </div>
         {/* градиент для читаемости текста слева */}
@@ -138,7 +143,8 @@ export default async function HomePage() {
           </div>
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             {rounds.map((m, idx) => (
-              <Link key={m.round} href={`/schedule/${m.round}`} className="card-soft flex flex-col gap-3 p-4 transition-colors hover:bg-surface-2">
+              <Link key={m.round} href={`/schedule/${m.round}`} className="card-soft relative flex flex-col gap-3 overflow-hidden p-4 transition-colors hover:bg-surface-2">
+                <TrackMap circuit={m.circuit?.key} size={128} className="pointer-events-none absolute -right-5 -top-4 opacity-[0.08]" />
                 <div className="flex items-center justify-between">
                   <Flag code={m.circuit?.country_code ?? null} />
                   <span className="text-[11px] uppercase tracking-wide text-mute">Этап {m.round}</span>

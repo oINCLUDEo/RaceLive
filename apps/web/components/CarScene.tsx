@@ -39,18 +39,18 @@ export function CarScene() {
   return (
     <Canvas
       frameloop="demand"
-      camera={{ position: [3.4, 1.05, 4.6], fov: 32 }}
+      camera={{ position: [5.4, 0.7, 2.7], fov: 30 }}
       dpr={[1, 1.5]}
-      gl={{ antialias: true, alpha: true, toneMappingExposure: 0.72, powerPreference: "high-performance" }}
+      gl={{ antialias: true, alpha: true, toneMappingExposure: 0.6, powerPreference: "high-performance" }}
       style={{ pointerEvents: "none" }}
     >
       <SettleThenIdle />
-      <ambientLight intensity={0.14} />
+      <ambientLight intensity={0.1} />
       <directionalLight position={[5, 6, 4]} intensity={1.1} color="#fbeee9" />
       <directionalLight position={[-4, 2, -5]} intensity={2.6} color="#e0402f" />
 
       <Suspense fallback={null}>
-        <Bounds fit clip observe margin={1.12}>
+        <Bounds fit clip observe margin={0.92}>
           <Car />
         </Bounds>
         <Environment resolution={256} frames={1}>
