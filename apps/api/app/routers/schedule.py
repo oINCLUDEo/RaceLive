@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..db import get_db
+from ..localization import circuit_name_ru, country_ru, meeting_name_ru
 from ..models import Meeting, Session
 from ..providers import get_provider
 from ..schemas import (
@@ -32,18 +33,20 @@ def _session_out(s: Session) -> SessionOut:
 
 
 def _meeting_out(m: Meeting) -> MeetingOut:
+    ckey = m.circuit.key if m.circuit else None
     return MeetingOut(
         round=m.round,
-        name_ru=m.name_ru,
+        # RU из БД, иначе fallback по справочнику локализации (покрывает старый кэш)
+        name_ru=m.name_ru or meeting_name_ru(ckey, m.name_en),
         name_en=m.name_en,
         starts_at=m.starts_at,
         ends_at=m.ends_at,
         circuit=(
             CircuitOut(
                 key=m.circuit.key,
-                name_ru=m.circuit.name_ru,
+                name_ru=m.circuit.name_ru or circuit_name_ru(ckey, m.circuit.name_en),
                 name_en=m.circuit.name_en,
-                country=m.circuit.country,
+                country=country_ru(ckey, m.circuit.country) or m.circuit.country,
             )
             if m.circuit
             else None

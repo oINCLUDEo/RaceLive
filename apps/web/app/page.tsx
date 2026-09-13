@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CarViewer } from "@/components/CarViewer";
 import { Countdown } from "@/components/Countdown";
 import { SessionTime } from "@/components/SessionTime";
 import { TeamLogo } from "@/components/TeamLogo";
@@ -192,17 +193,9 @@ export default async function HomePage() {
           <p className="text-[15px] leading-relaxed text-[#d8c7c6]">Покрути, приблизь антикрыло и диффузор. Реальная модель — прямо в приложении.</p>
           <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-line bg-black/30 px-3.5 py-2 text-[13px] text-[#d8c7c6]">перетащи, чтобы повернуть</div>
         </div>
-        <svg viewBox="0 0 760 240" className="flex-1" aria-hidden>
-          <defs>
-            <linearGradient id="rim3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#F0705F" /><stop offset="100%" stopColor="#8f2418" /></linearGradient>
-            <radialGradient id="g3" cx="50%" cy="82%" r="60%"><stop offset="0%" stopColor="rgba(224,64,47,.45)" /><stop offset="100%" stopColor="rgba(224,64,47,0)" /></radialGradient>
-          </defs>
-          <ellipse cx="380" cy="200" rx="320" ry="20" fill="url(#g3)" />
-          <path d="M100 150 L100 128 Q112 120 150 118 L214 115 Q238 115 250 100 L268 88 L288 88 Q296 100 316 114 L352 114 Q378 100 414 104 Q470 108 512 116 L604 124 Q672 130 700 144 L706 150 Q700 154 660 154 L200 154 Q140 155 100 153 Z" fill="#22161a" stroke="url(#rim3)" strokeWidth="2" />
-          <path d="M352 116 Q384 90 416 108" fill="none" stroke="url(#rim3)" strokeWidth="3" strokeLinecap="round" />
-          <circle cx="182" cy="176" r="50" fill="#140d0f" stroke="#2a1a1f" strokeWidth="8" /><circle cx="182" cy="176" r="22" fill="none" stroke="url(#rim3)" strokeWidth="2" />
-          <circle cx="600" cy="176" r="50" fill="#140d0f" stroke="#2a1a1f" strokeWidth="8" /><circle cx="600" cy="176" r="22" fill="none" stroke="url(#rim3)" strokeWidth="2" />
-        </svg>
+        <div className="h-[280px] w-full flex-1 md:h-[320px]">
+          <CarViewer />
+        </div>
       </section>
 
       {/* NEXT RACE */}

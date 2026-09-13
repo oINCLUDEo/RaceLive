@@ -12,6 +12,7 @@ UTC = timezone.utc
 import httpx
 
 from ..config import get_settings
+from ..localization import circuit_name_ru, country_ru, meeting_name_ru
 from ..ratelimit import TokenBucket
 from .base import ProviderMeeting, ProviderSession
 
@@ -103,15 +104,19 @@ class JolpicaProvider:
             )
 
             starts = [s.starts_at for s in sessions if s.starts_at]
+            ckey = circuit.get("circuitId", f"circuit-{rnd}")
+            name_en = race.get("raceName", f"Round {rnd}")
+            circuit_en = circuit.get("circuitName", "")
+            country_en = location.get("country")
             meetings.append(
                 ProviderMeeting(
                     round=rnd,
-                    name_en=race.get("raceName", f"Round {rnd}"),
-                    name_ru=None,  # RU-названия этапов — контентная работа Фазы 2
-                    circuit_key=circuit.get("circuitId", f"circuit-{rnd}"),
-                    circuit_name_en=circuit.get("circuitName", ""),
-                    circuit_name_ru=None,
-                    country=location.get("country"),
+                    name_en=name_en,
+                    name_ru=meeting_name_ru(ckey, name_en),
+                    circuit_key=ckey,
+                    circuit_name_en=circuit_en,
+                    circuit_name_ru=circuit_name_ru(ckey, circuit_en),
+                    country=country_ru(ckey, country_en) or country_en,
                     starts_at=min(starts) if starts else None,
                     ends_at=max(starts) if starts else None,
                     sessions=sessions,

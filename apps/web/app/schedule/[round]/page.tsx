@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Countdown } from "@/components/Countdown";
-import { DataAttribution } from "@/components/DataAttribution";
 import { SessionTime } from "@/components/SessionTime";
 import { TimezoneNote } from "@/components/TimezoneNote";
 import { getMeeting, type MeetingOut } from "@/lib/api";
@@ -39,25 +38,28 @@ export default async function MeetingPage({
   const now = Date.now();
 
   return (
-    <div>
-      <Link href="/schedule" className="text-sm text-mute hover:text-bone">
-        ← Расписание
-      </Link>
+    <div className="flex flex-col gap-6">
+      <div>
+        <Link href="/schedule" className="text-sm text-mute hover:text-bone">
+          ← Расписание
+        </Link>
+        <div className="mt-4 text-xs uppercase tracking-[0.16em] text-mute">
+          этап {m.round}
+        </div>
+        <h1 className="mt-2 font-display text-3xl font-semibold">
+          {m.name_ru ?? m.name_en}
+        </h1>
+        <p className="mt-2 text-mute">
+          {m.circuit
+            ? `${m.circuit.name_ru ?? m.circuit.name_en}${
+                m.circuit.country ? ` · ${m.circuit.country}` : ""
+              }`
+            : ""}
+        </p>
+      </div>
 
-      <h1 className="mt-3 font-display text-3xl font-semibold">
-        {m.name_ru ?? m.name_en}
-      </h1>
-      <p className="mt-2 text-mute">
-        Этап {m.round}
-        {m.circuit
-          ? ` · ${m.circuit.name_ru ?? m.circuit.name_en}${
-              m.circuit.country ? `, ${m.circuit.country}` : ""
-            }`
-          : ""}
-      </p>
-
-      <div className="mt-8 border border-line">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-2 text-xs uppercase tracking-wide text-mute">
+      <div className="card-soft overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3 text-xs uppercase tracking-wide text-mute">
           <span>Сессии</span>
           <TimezoneNote className="normal-case tracking-normal" />
         </div>
@@ -66,7 +68,7 @@ export default async function MeetingPage({
           return (
             <div
               key={idx}
-              className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-line px-4 py-3 last:border-0"
+              className={`flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-3.5 ${idx < m.sessions.length - 1 ? "border-b border-line" : ""}`}
             >
               <span className="min-w-[160px] flex-1 font-medium">
                 {sessionLabel(s.type, s.name_ru, s.name_en)}
@@ -84,7 +86,7 @@ export default async function MeetingPage({
         })}
       </div>
 
-      <DataAttribution />
+      <p className="text-xs text-mute">Источник данных: Jolpica / Ergast.</p>
     </div>
   );
 }
