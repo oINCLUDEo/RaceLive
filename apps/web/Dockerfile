@@ -4,7 +4,9 @@ WORKDIR /app
 # Лок-файл НЕ копируем: он сгенерирован на Windows и мешает npm ставить linux-бинарь next.
 # Версии в package.json запиннены точно, поэтому свежий resolve детерминирован.
 COPY package.json ./
-RUN npm install
+# Ретраи и таймауты — чтобы транзиентный сетевой/DNS-блип не убивал длинную установку.
+RUN npm install --no-audit --no-fund \
+    --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000
 # санити-проверка: next установлен и вызывается (иначе падаем с понятной ошибкой, а не на build)
 RUN test -x node_modules/.bin/next && node_modules/.bin/next --version
 COPY . .
