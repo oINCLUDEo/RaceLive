@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CarViewer } from "@/components/CarViewer";
+import { CarScene } from "@/components/CarScene";
 import { Countdown } from "@/components/Countdown";
 import { CountdownBoxes } from "@/components/CountdownBoxes";
 import { Flag } from "@/components/Flag";
@@ -61,39 +61,20 @@ export default async function HomePage() {
         className="relative flex min-h-[560px] flex-col justify-between overflow-hidden rounded-[24px] shadow-[var(--soft)]"
         style={{ background: "linear-gradient(180deg,#180d10 0%, #130a0c 62%)" }}
       >
-        {/* красный подсвет-пол под машиной */}
+        {/* красный подсвет-пол (за прозрачным canvas) */}
         <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-[58%]"
-          style={{ background: "radial-gradient(56% 100% at 50% 110%, rgba(224,64,47,0.5), rgba(224,64,47,0.13) 42%, transparent 70%)" }}
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-[60%]"
+          style={{ background: "radial-gradient(55% 100% at 50% 112%, rgba(224,64,47,0.4), rgba(224,64,47,0.1) 44%, transparent 72%)" }}
         />
-        {/* статичный болид (контейнер выше героя → авто-кадрирование даёт крупную машину) */}
-        <div className="pointer-events-none absolute inset-x-0 -top-[18%] -bottom-[4%]">
-          <CarViewer backdrop />
+        {/* болид — фоновый наполнитель; шейдеры (three.js + bloom) */}
+        <div className="pointer-events-none absolute inset-0">
+          <CarScene />
         </div>
-        {/* виньетка — глубина и края */}
+        {/* градиент для читаемости текста слева */}
         <div
           className="pointer-events-none absolute inset-0"
-          style={{ background: "radial-gradient(125% 85% at 50% 32%, transparent 50%, rgba(8,4,5,0.68) 100%)" }}
+          style={{ background: "linear-gradient(100deg, rgba(19,10,12,0.94) 0%, rgba(19,10,12,0.68) 34%, rgba(19,10,12,0.22) 58%, transparent 82%)" }}
         />
-
-        {/* аннотации-выноски (десктоп) */}
-        <div className="pointer-events-none absolute inset-0 hidden text-[11px] uppercase tracking-wide text-mute lg:block">
-          <div className="absolute left-8 top-[30%] flex items-center gap-2">
-            <span>Гибрид · 1.6 V6 Turbo</span>
-            <span className="h-px w-16 bg-line" />
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--ember)]" />
-          </div>
-          <div className="absolute left-8 top-[52%] flex items-center gap-2">
-            <span>Углепластиковый монокок</span>
-            <span className="h-px w-10 bg-line" />
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--ember)]" />
-          </div>
-          <div className="absolute right-8 top-[34%] flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--ember)]" />
-            <span className="h-px w-16 bg-line" />
-            <span>Макс. 360 км/ч</span>
-          </div>
-        </div>
 
         {/* верх: бренд + заголовок */}
         <div className="relative p-8 md:p-10">
