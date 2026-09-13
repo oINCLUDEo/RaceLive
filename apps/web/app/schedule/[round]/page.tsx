@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Countdown } from "@/components/Countdown";
 import { DataAttribution } from "@/components/DataAttribution";
 import { SessionTime } from "@/components/SessionTime";
+import { TimezoneNote } from "@/components/TimezoneNote";
 import { getMeeting, type MeetingOut } from "@/lib/api";
 import { sessionLabel } from "@/lib/format";
 
@@ -56,8 +57,9 @@ export default async function MeetingPage({
       </p>
 
       <div className="mt-8 border border-line">
-        <div className="border-b border-line px-4 py-2 text-xs uppercase tracking-wide text-mute">
-          Сессии
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-2 text-xs uppercase tracking-wide text-mute">
+          <span>Сессии</span>
+          <TimezoneNote className="normal-case tracking-normal" />
         </div>
         {m.sessions.map((s, idx) => {
           const upcoming = s.starts_at && new Date(s.starts_at).getTime() > now;
@@ -70,7 +72,7 @@ export default async function MeetingPage({
                 {sessionLabel(s.type, s.name_ru, s.name_en)}
               </span>
               <span className="tabular text-sm text-mute">
-                <SessionTime iso={s.starts_at} />
+                <SessionTime iso={s.starts_at} withZone />
               </span>
               {upcoming && s.starts_at && (
                 <span className="tabular min-w-[120px] text-right text-sm text-bone">

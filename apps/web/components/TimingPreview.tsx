@@ -57,7 +57,10 @@ export function TimingPreview() {
   return (
     <div className="border border-line bg-surface-1">
       <div className="flex items-center justify-between border-b border-line px-3 py-2 text-xs text-mute">
-        <span>Квалификация · демонстрация</span>
+        <span className="flex items-center gap-2">
+          <span className="live-dot" aria-hidden />
+          Квалификация · демонстрация
+        </span>
         <span className="tabular">Q3</span>
       </div>
       <table className="w-full border-collapse text-[15px]">

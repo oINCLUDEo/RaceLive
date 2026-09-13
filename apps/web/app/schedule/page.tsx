@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { DataAttribution } from "@/components/DataAttribution";
 import { SessionTime } from "@/components/SessionTime";
+import { TimezoneNote } from "@/components/TimezoneNote";
 import { getSchedule, type MeetingOut } from "@/lib/api";
 
 export const metadata = {
@@ -26,7 +27,9 @@ export default async function SchedulePage({
   return (
     <div>
       <h1 className="font-display text-3xl font-semibold">Расписание</h1>
-      <p className="mt-2 text-mute">Время показано в вашем часовом поясе.</p>
+      <p className="mt-2 text-mute">
+        <TimezoneNote />
+      </p>
 
       {error && (
         <div className="mt-8 border border-line bg-surface-1 p-4 text-sm text-mute">

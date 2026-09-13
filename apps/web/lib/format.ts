@@ -33,3 +33,18 @@ const SESSION_LABEL: Record<string, string> = {
 export function sessionLabel(type: string, nameRu: string | null, nameEn: string): string {
   return nameRu ?? SESSION_LABEL[type] ?? nameEn;
 }
+
+// Часовой пояс устройства пользователя: IANA-имя и краткая метка со смещением (напр. "GMT+4").
+export function userTimeZone(): { iana: string; label: string } {
+  let iana = "UTC";
+  try {
+    iana = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  } catch {
+    /* keep UTC */
+  }
+  const label =
+    new Intl.DateTimeFormat("ru-RU", { timeZoneName: "short" })
+      .formatToParts(new Date())
+      .find((p) => p.type === "timeZoneName")?.value ?? "";
+  return { iana, label };
+}
