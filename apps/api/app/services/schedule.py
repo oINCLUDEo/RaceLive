@@ -125,6 +125,7 @@ async def get_next_session(db: AsyncSession, provider: DataProvider,
         .join(Meeting, Session.meeting_id == Meeting.id)
         .join(Season, Meeting.season_id == Season.id)
         .where(Season.year == year, Session.starts_at > now)
+        .options(selectinload(Meeting.circuit))
         .order_by(Session.starts_at)
         .limit(1)
     )

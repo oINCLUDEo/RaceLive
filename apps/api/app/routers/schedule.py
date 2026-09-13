@@ -6,7 +6,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..db import get_db
-from ..localization import circuit_name_ru, country_ru, meeting_name_ru
+from ..localization import (
+    circuit_name_ru,
+    country_code,
+    country_ru,
+    meeting_name_ru,
+)
 from ..models import Meeting, Session
 from ..providers import get_provider
 from ..schemas import (
@@ -47,6 +52,7 @@ def _meeting_out(m: Meeting) -> MeetingOut:
                 name_ru=m.circuit.name_ru or circuit_name_ru(ckey, m.circuit.name_en),
                 name_en=m.circuit.name_en,
                 country=country_ru(ckey, m.circuit.country) or m.circuit.country,
+                country_code=country_code(ckey, m.circuit.country),
             )
             if m.circuit
             else None
@@ -96,9 +102,10 @@ async def next_session(db: AsyncSession = Depends(get_db)) -> NextSessionOut | N
     if found is None:
         return None
     m, s = found
+    ckey = m.circuit.key if m.circuit else None
     return NextSessionOut(
         round=m.round,
-        meeting_name_ru=m.name_ru,
+        meeting_name_ru=m.name_ru or meeting_name_ru(ckey, m.name_en),
         meeting_name_en=m.name_en,
         session=_session_out(s),
     )

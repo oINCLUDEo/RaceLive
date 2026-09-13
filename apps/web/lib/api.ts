@@ -15,6 +15,7 @@ export interface CircuitOut {
   name_ru: string | null;
   name_en: string;
   country: string | null;
+  country_code: string | null;
 }
 
 export interface MeetingOut {

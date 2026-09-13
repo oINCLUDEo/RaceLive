@@ -1,11 +1,16 @@
 import Link from "next/link";
 import { CarViewer } from "@/components/CarViewer";
 import { Countdown } from "@/components/Countdown";
+import { Flag } from "@/components/Flag";
 import { SessionTime } from "@/components/SessionTime";
 import { TeamLogo } from "@/components/TeamLogo";
-import { TimezoneNote } from "@/components/TimezoneNote";
 import { TimingPreview } from "@/components/TimingPreview";
-import { getNextSession, type NextSessionOut } from "@/lib/api";
+import {
+  getNextSession,
+  getSchedule,
+  type MeetingOut,
+  type NextSessionOut,
+} from "@/lib/api";
 import { sessionLabel } from "@/lib/format";
 
 const STANDINGS = [
@@ -34,53 +39,57 @@ const FANS = [
   { p: 1, av: "Д", c: "#C0504E", name: "Дмитрий", meta: "128 сессий · серия 14", lvl: "ур. 42" },
   { p: 2, av: "С", c: "#4E7CC0", name: "Света", meta: "прогнозы 78%", lvl: "ур. 37" },
   { p: 3, av: "И", c: "#4EA36E", name: "Игорь", meta: "1 240 сообщений", lvl: "ур. 33" },
-  { p: 4, av: "Н", c: "#7A4DB0", name: "Нина", meta: "62 сессии · серия 6", lvl: "ур. 28" },
 ];
 
 export default async function HomePage() {
-  const next = await getNextSession().catch(() => null as NextSessionOut | null);
+  const [next, schedule] = await Promise.all([
+    getNextSession().catch(() => null as NextSessionOut | null),
+    getSchedule().catch(() => [] as MeetingOut[]),
+  ]);
+
+  const now = Date.now();
+  const upcoming = schedule
+    .filter((m) => m.starts_at && new Date(m.starts_at).getTime() > now)
+    .slice(0, 4);
+  const rounds = upcoming.length ? upcoming : schedule.slice(-4);
 
   return (
-    <div className="flex flex-col gap-7">
-      {/* HERO */}
-      <section className="glow-hero relative flex flex-col items-stretch gap-8 overflow-hidden rounded-[24px] p-8 shadow-[var(--soft)] md:flex-row md:items-center md:p-12">
-        <svg viewBox="0 0 760 260" className="pointer-events-none absolute -bottom-6 -right-10 w-[560px] max-w-[70%] opacity-50" aria-hidden>
-          <defs>
-            <linearGradient id="rimH" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#F0705F" />
-              <stop offset="100%" stopColor="#7a1f16" />
-            </linearGradient>
-          </defs>
-          <path d="M100 150 L100 128 Q112 120 150 118 L214 115 Q238 115 250 100 L268 88 L288 88 Q296 100 316 114 L352 114 Q378 100 414 104 Q470 108 512 116 L604 124 Q672 130 700 144 L706 150 Q700 154 660 154 L200 154 Q140 155 100 153 Z" fill="#1a1013" stroke="url(#rimH)" strokeWidth="2" />
-          <path d="M352 116 Q384 90 416 108" fill="none" stroke="url(#rimH)" strokeWidth="3" strokeLinecap="round" />
-          <circle cx="182" cy="176" r="52" fill="#120b0d" stroke="#2a1a1f" strokeWidth="8" />
-          <circle cx="182" cy="176" r="22" fill="none" stroke="url(#rimH)" strokeWidth="2" />
-          <circle cx="600" cy="176" r="52" fill="#120b0d" stroke="#2a1a1f" strokeWidth="8" />
-          <circle cx="600" cy="176" r="22" fill="none" stroke="url(#rimH)" strokeWidth="2" />
-        </svg>
+    <div className="flex flex-col gap-8">
+      {/* HERO — болид как живая подложка */}
+      <section className="glow-hero relative overflow-hidden rounded-[24px] shadow-[var(--soft)]">
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-full md:w-[58%]">
+          <CarViewer backdrop />
+        </div>
+        {/* атмосфера + читаемость текста */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{ background: "radial-gradient(50% 70% at 74% 54%, rgba(224,64,47,0.26), transparent 60%)" }}
+        />
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{ background: "linear-gradient(100deg, rgba(19,10,12,0.98) 0%, rgba(19,10,12,0.9) 34%, rgba(19,10,12,0.5) 55%, rgba(19,10,12,0.12) 80%, rgba(19,10,12,0) 100%)" }}
+        />
 
-        <div className="relative max-w-[560px] flex-1">
-          <span className="inline-flex items-center gap-2 rounded-full border border-line bg-black/30 px-3.5 py-1.5 text-xs">
+        <div className="relative flex min-h-[440px] max-w-[600px] flex-col justify-center p-8 md:p-12">
+          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-line bg-black/40 px-3.5 py-1.5 text-xs">
             <span className="live-dot" aria-hidden />
-            {next
-              ? `СЕЙЧАС В ЭФИРЕ · ${next.meeting_name_ru ?? next.meeting_name_en}`
-              : "СЕЙЧАС В ЭФИРЕ"}
+            {next ? `СЕЙЧАС В ЭФИРЕ · ${next.meeting_name_ru ?? next.meeting_name_en}` : "СЕЙЧАС В ЭФИРЕ"}
           </span>
           <h1 className="mt-4 font-display text-4xl font-semibold leading-[1.03] md:text-5xl">
             Сюда просто
             <br />
             тянет заходить
           </h1>
-          <p className="mt-4 max-w-[46ch] text-base leading-relaxed text-[#d8c7c6]">
-            Смотришь гонку, залипаешь в чат, споришь о стратегии — и время летит. Иногда
-            шумно, иногда спокойно, но всегда со своими. Короче, заходи :)
+          <p className="mt-4 max-w-[42ch] text-base leading-relaxed text-[#d8c7c6]">
+            Смотришь гонку, залипаешь в чат, споришь о стратегии — и время летит. Иногда шумно,
+            иногда спокойно, но всегда со своими. Короче, заходи :)
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-4">
             <Link href="/schedule" className="cta">Смотреть сейчас</Link>
             <span className="flex items-center gap-2.5 text-[13px] text-[#d8c7c6]">
               <span className="flex">
                 {["#C0504E", "#4E7CC0", "#4EA36E"].map((c, k) => (
-                  <span key={k} className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#1d1013] font-display text-[11px] font-semibold text-white" style={{ background: c, marginLeft: k ? -9 : 0 }}>
+                  <span key={k} className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#130a0c] font-display text-[11px] font-semibold text-white" style={{ background: c, marginLeft: k ? -9 : 0 }}>
                     {["А", "М", "К"][k]}
                   </span>
                 ))}
@@ -88,11 +97,63 @@ export default async function HomePage() {
               <span className="tabular text-white">1 248</span> смотрят
             </span>
           </div>
+          {next && next.session.starts_at && (
+            <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+              <span className="text-mute">
+                Ближайшая:{" "}
+                <span className="text-bone">
+                  {sessionLabel(next.session.type, next.session.name_ru, next.session.name_en)}
+                </span>
+              </span>
+              <span className="text-bone">
+                через <span className="tabular"><Countdown iso={next.session.starts_at} /></span>
+              </span>
+            </div>
+          )}
         </div>
+      </section>
 
-        <div className="relative w-full md:ml-auto md:w-[340px]">
-          <TimingPreview />
+      {/* БЛИЖАЙШИЕ ЭТАПЫ (кусок календаря) */}
+      {rounds.length > 0 && (
+        <section>
+          <div className="mb-4 flex items-baseline justify-between gap-3">
+            <h2 className="font-display text-xl font-semibold">Ближайшие этапы</h2>
+            <Link href="/schedule" className="text-sm text-mute hover:text-bone">весь календарь →</Link>
+          </div>
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            {rounds.map((m, idx) => (
+              <Link key={m.round} href={`/schedule/${m.round}`} className="card-soft flex flex-col gap-3 p-4 transition-colors hover:bg-surface-2">
+                <div className="flex items-center justify-between">
+                  <Flag code={m.circuit?.country_code ?? null} />
+                  <span className="text-[11px] uppercase tracking-wide text-mute">Этап {m.round}</span>
+                </div>
+                <div className="min-w-0">
+                  <div className="truncate font-display font-semibold">{m.name_ru ?? m.name_en}</div>
+                  <div className="truncate text-sm text-mute">{m.circuit?.name_ru ?? m.circuit?.name_en}</div>
+                </div>
+                <div className="mt-auto flex items-center justify-between text-sm">
+                  <span className="text-mute"><SessionTime iso={m.starts_at} mode="date" /></span>
+                  {idx === 0 && m.starts_at && (
+                    <span className="tabular text-xs text-[var(--ember)]"><Countdown iso={m.starts_at} /></span>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ТАЙМИНГ */}
+      <section className="grid items-center gap-6 md:grid-cols-[1fr_360px]">
+        <div>
+          <div className="text-xs uppercase tracking-[0.16em] text-mute">в прямом эфире</div>
+          <h2 className="mt-2 font-display text-2xl font-semibold">Живой тайминг на русском</h2>
+          <p className="mt-3 max-w-prose text-mute">
+            Позиции, интервалы, шины и флаги — обновляются в реальном времени, с логотипами
+            команд и подсветкой лучшего круга. Рейс-контроль переведён на русский.
+          </p>
         </div>
+        <TimingPreview />
       </section>
 
       {/* СЕЙЧАС СМОТРЯТ */}
@@ -164,7 +225,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ЧЕМПИОНАТ с логотипами команд */}
+      {/* ЧЕМПИОНАТ */}
       <section className="card-soft overflow-hidden">
         <div className="flex items-center justify-between border-b border-line px-5 py-4">
           <span className="font-display text-base font-semibold">Личный зачёт · после Баку</span>
@@ -183,46 +244,6 @@ export default async function HomePage() {
             </div>
           ))}
         </div>
-      </section>
-
-      {/* 3D БОЛИД */}
-      <section className="glow-panel relative flex flex-col items-center gap-7 overflow-hidden rounded-[24px] p-9 shadow-[var(--soft)] md:flex-row md:px-11">
-        <div className="max-w-full md:max-w-[40%]">
-          <div className="text-xs uppercase tracking-[0.16em] text-mute">болид 2023</div>
-          <h3 className="mb-2.5 mt-2.5 font-display text-2xl font-semibold leading-tight">Рассмотри машину в 3D</h3>
-          <p className="text-[15px] leading-relaxed text-[#d8c7c6]">Покрути, приблизь антикрыло и диффузор. Реальная модель — прямо в приложении.</p>
-          <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-line bg-black/30 px-3.5 py-2 text-[13px] text-[#d8c7c6]">перетащи, чтобы повернуть</div>
-        </div>
-        <div className="h-[280px] w-full flex-1 md:h-[320px]">
-          <CarViewer />
-        </div>
-      </section>
-
-      {/* NEXT RACE */}
-      <section className="glow-panel flex flex-wrap items-center justify-between gap-6 rounded-[24px] px-10 py-8 shadow-[var(--soft)]">
-        <div>
-          <div className="text-xs uppercase tracking-[0.16em] text-mute">ближайший этап</div>
-          <h3 className="mb-1 mt-2 font-display text-2xl font-semibold">
-            {next ? next.meeting_name_ru ?? next.meeting_name_en : "Ближайший этап"}
-          </h3>
-          {next && next.session.starts_at ? (
-            <p className="text-sm text-[#d8c7c6]">
-              {sessionLabel(next.session.type, next.session.name_ru, next.session.name_en)} ·{" "}
-              <SessionTime iso={next.session.starts_at} withZone />
-            </p>
-          ) : (
-            <p className="text-sm text-[#d8c7c6]">Скоро объявим расписание.</p>
-          )}
-          <TimezoneNote className="mt-1 block text-xs text-mute" />
-        </div>
-        {next && next.session.starts_at && (
-          <div className="flex items-center gap-6">
-            <div className="font-display text-xl text-bone">
-              через <span className="tabular"><Countdown iso={next.session.starts_at} /></span>
-            </div>
-            <Link href={`/schedule/${next.round}`} className="cta">К этапу</Link>
-          </div>
-        )}
       </section>
     </div>
   );

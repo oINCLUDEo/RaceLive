@@ -23,6 +23,7 @@ class CircuitOut(BaseModel):
     name_ru: str | None
     name_en: str
     country: str | None
+    country_code: str | None = None  # ISO2 для флага
 
 
 class MeetingOut(BaseModel):
