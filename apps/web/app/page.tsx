@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CarScene } from "@/components/CarScene";
+import { CarSceneLazy } from "@/components/CarSceneLazy";
 import { Countdown } from "@/components/Countdown";
 import { CountdownBoxes } from "@/components/CountdownBoxes";
 import { Flag } from "@/components/Flag";
@@ -66,9 +66,9 @@ export default async function HomePage() {
           className="pointer-events-none absolute inset-x-0 bottom-0 h-[60%]"
           style={{ background: "radial-gradient(55% 100% at 50% 112%, rgba(224,64,47,0.4), rgba(224,64,47,0.1) 44%, transparent 72%)" }}
         />
-        {/* болид — фоновый наполнитель; шейдеры (three.js + bloom) */}
+        {/* болид — фоновый наполнитель; шейдеры (three.js + bloom), ленивый чанк */}
         <div className="pointer-events-none absolute inset-0">
-          <CarScene />
+          <CarSceneLazy />
         </div>
         {/* градиент для читаемости текста слева */}
         <div

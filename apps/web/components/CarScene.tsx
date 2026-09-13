@@ -1,10 +1,10 @@
 "use client";
 
-// Затемнённый болид как фоновый наполнитель героя.
-// Полноценные шейдеры: three.js (react-three-fiber) + постобработка (Bloom, Vignette).
-// Модель ~1.6 МБ (Draco). Освещение из Lightformer-окружения — без внешних HDRI.
+// Затемнённый болид как фоновый наполнитель героя — статичный, с шейдерами
+// (three.js + Bloom/Vignette). Оптимизация: frameloop="demand" — после того как
+// модель/окружение устаканились, сцена ЗАМИРАЕТ и не жрёт GPU/CPU (важно для нагрузки).
 import { Bounds, Environment, Lightformer, useGLTF } from "@react-three/drei";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
 import { Suspense, useEffect, useState } from "react";
 
@@ -16,6 +16,21 @@ function Car() {
 }
 useGLTF.preload(MODEL, true);
 
+// Толкает несколько кадров, пока грузится модель и подгоняется кадрирование,
+// затем перестаёт — сцена статична и рендер простаивает.
+function SettleThenIdle() {
+  const invalidate = useThree((s) => s.invalidate);
+  useEffect(() => {
+    let n = 0;
+    const id = setInterval(() => {
+      invalidate();
+      if (++n > 40) clearInterval(id); // ~4 c, потом покой
+    }, 100);
+    return () => clearInterval(id);
+  }, [invalidate]);
+  return null;
+}
+
 export function CarScene() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -23,13 +38,14 @@ export function CarScene() {
 
   return (
     <Canvas
+      frameloop="demand"
       camera={{ position: [3.4, 1.05, 4.6], fov: 32 }}
-      dpr={[1, 2]}
-      gl={{ antialias: true, alpha: true, toneMappingExposure: 0.72 }}
+      dpr={[1, 1.5]}
+      gl={{ antialias: true, alpha: true, toneMappingExposure: 0.72, powerPreference: "high-performance" }}
       style={{ pointerEvents: "none" }}
     >
+      <SettleThenIdle />
       <ambientLight intensity={0.14} />
-      {/* холодный ключевой + тёплый ember-контур */}
       <directionalLight position={[5, 6, 4]} intensity={1.1} color="#fbeee9" />
       <directionalLight position={[-4, 2, -5]} intensity={2.6} color="#e0402f" />
 
@@ -37,7 +53,6 @@ export function CarScene() {
         <Bounds fit clip observe margin={1.12}>
           <Car />
         </Bounds>
-        {/* окружение из светоформ — блики на металле без внешних файлов */}
         <Environment resolution={256} frames={1}>
           <Lightformer form="rect" intensity={2.4} position={[4, 4, 4]} scale={[9, 6, 1]} color="#fff2ec" />
           <Lightformer form="rect" intensity={4.2} position={[-5, 1.5, -4]} scale={[9, 5, 1]} color="#e0402f" />
