@@ -40,6 +40,17 @@ class SeasonOut(BaseModel):
     year: int
 
 
+class DriverStandingOut(BaseModel):
+    position: int
+    points: float
+    wins: int
+    code: str
+    name_ru: str | None
+    name_en: str
+    team_slug: str | None
+    team_name: str | None
+
+
 class NextSessionOut(BaseModel):
     """Ближайшая предстоящая сессия + минимальный контекст этапа."""
 

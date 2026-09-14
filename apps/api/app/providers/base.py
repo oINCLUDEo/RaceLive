@@ -35,9 +35,25 @@ class ProviderMeeting:
     sessions: list[ProviderSession] = field(default_factory=list)
 
 
+@dataclass
+class ProviderDriverStanding:
+    position: int
+    points: float
+    wins: int
+    code: str
+    given: str
+    family: str
+    constructor_id: str
+    constructor_name: str
+
+
 @runtime_checkable
 class DataProvider(Protocol):
     name: str
+
+    async def driver_standings(self, season: int) -> list[ProviderDriverStanding]:
+        """Личный зачёт сезона."""
+        ...
 
     async def schedule(self, season: int) -> list[ProviderMeeting]:
         """Календарь сезона: этапы и их сессии.

@@ -83,3 +83,34 @@ def country_code(circuit_key: str | None, country_en: str | None) -> str | None:
     if country_en and country_en in COUNTRIES:
         return COUNTRIES[country_en][1]
     return None
+
+
+# RU-имена пилотов по 3-буквенному коду (текущий/недавний грид).
+DRIVERS: dict[str, str] = {
+    "VER": "Макс Ферстаппен", "NOR": "Ландо Норрис", "PIA": "Оскар Пиастри",
+    "LEC": "Шарль Леклер", "HAM": "Льюис Хэмилтон", "RUS": "Джордж Расселл",
+    "SAI": "Карлос Сайнс", "ALO": "Фернандо Алонсо", "STR": "Лэнс Стролл",
+    "GAS": "Пьер Гасли", "OCO": "Эстебан Окон", "ALB": "Александер Албон",
+    "HUL": "Нико Хюлькенберг", "TSU": "Юки Цунода", "LAW": "Лиам Лоусон",
+    "HAD": "Исак Хаджар", "ANT": "Кими Антонелли", "BOR": "Габриэл Бортолето",
+    "BEA": "Оливер Бирман", "COL": "Франко Колапинто", "DOO": "Джек Дулан",
+    "PER": "Серхио Перес", "BOT": "Валттери Боттас", "ZHO": "Гуанью Чжоу",
+    "RIC": "Даниэль Риккардо", "MAG": "Кевин Магнуссен", "SAR": "Логан Сарджент",
+}
+
+# constructorId (Jolpica) -> наш slug команды (для логотипа/цвета).
+CONSTRUCTORS: dict[str, str] = {
+    "red_bull": "redbull", "mclaren": "mclaren", "ferrari": "ferrari",
+    "mercedes": "mercedes", "aston_martin": "astonmartin", "williams": "williams",
+    "rb": "rb", "racing_bulls": "rb", "alphatauri": "rb",
+    "haas": "haas", "sauber": "sauber", "kick_sauber": "sauber", "audi": "sauber",
+    "alpine": "alpine",
+}
+
+
+def driver_name_ru(code: str, en_fallback: str) -> str | None:
+    return DRIVERS.get(code) or (en_fallback.strip() or None)
+
+
+def team_slug_for(constructor_id: str) -> str | None:
+    return CONSTRUCTORS.get(constructor_id)

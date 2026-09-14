@@ -8,8 +8,10 @@ import { TeamLogo } from "@/components/TeamLogo";
 import { TimingPreview } from "@/components/TimingPreview";
 import { TrackMap } from "@/components/TrackMap";
 import {
+  getDriverStandings,
   getNextSession,
   getSchedule,
+  type DriverStandingOut,
   type MeetingOut,
   type NextSessionOut,
 } from "@/lib/api";
@@ -18,15 +20,6 @@ import { sessionLabel } from "@/lib/format";
 // Главная зависит от живых данных (ближайшая сессия, отсчёт) — рендерим на каждый
 // запрос, иначе статичная сборка показывала пустой календарь до фоновой ревалидации.
 export const dynamic = "force-dynamic";
-
-const STANDINGS = [
-  { p: 1, team: "redbull", name: "Макс Ферстаппен", pts: 331 },
-  { p: 2, team: "mclaren", name: "Ландо Норрис", pts: 318 },
-  { p: 3, team: "mclaren", name: "Оскар Пиастри", pts: 305 },
-  { p: 4, team: "ferrari", name: "Шарль Леклер", pts: 241 },
-  { p: 5, team: "ferrari", name: "Льюис Хэмилтон", pts: 228 },
-  { p: 6, team: "mercedes", name: "Джордж Расселл", pts: 212 },
-];
 
 const STREAMS = [
   { name: "Гонки с Гришей", meta: "Twitch · квалификация", v: "1.2k", av: "Г", c: "#C0504E", g: "#3a2226" },
@@ -48,10 +41,12 @@ const FANS = [
 ];
 
 export default async function HomePage() {
-  const [next, schedule] = await Promise.all([
+  const [next, schedule, standings] = await Promise.all([
     getNextSession().catch(() => null as NextSessionOut | null),
     getSchedule().catch(() => [] as MeetingOut[]),
+    getDriverStandings().catch(() => [] as DriverStandingOut[]),
   ]);
+  const topStandings = standings.slice(0, 6);
 
   const now = Date.now();
   const upcoming = schedule
@@ -144,7 +139,7 @@ export default async function HomePage() {
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             {rounds.map((m, idx) => (
               <Link key={m.round} href={`/schedule/${m.round}`} className="card-soft relative flex flex-col gap-3 overflow-hidden p-4 transition-colors hover:bg-surface-2">
-                <TrackMap circuit={m.circuit?.key} size={132} className="pointer-events-none absolute -right-5 -top-4 opacity-[0.11]" />
+                <TrackMap circuit={m.circuit?.key} size={116} className="pointer-events-none absolute right-2 top-2 opacity-[0.13]" />
                 <div className="flex items-center justify-between">
                   <Flag code={m.circuit?.country_code ?? null} />
                   <span className="text-[11px] uppercase tracking-wide text-mute">Этап {m.round}</span>
@@ -247,26 +242,28 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ЧЕМПИОНАТ */}
-      <section className="card-soft overflow-hidden">
-        <div className="flex items-center justify-between border-b border-line px-5 py-4">
-          <span className="font-display text-base font-semibold">Личный зачёт · после Баку</span>
-          <Link href="/schedule" className="text-[13px] text-mute hover:text-bone">смотреть весь →</Link>
-        </div>
-        <div className="grid md:grid-cols-2">
-          {STANDINGS.map((d, idx) => (
-            <div
-              key={d.p}
-              className={`grid grid-cols-[24px_28px_1fr_auto] items-center gap-3 px-5 py-3 ${idx < 4 ? "border-b border-line" : ""} ${idx % 2 === 1 ? "md:border-l md:border-line" : ""}`}
-            >
-              <span className="tabular text-mute">{d.p}</span>
-              <TeamLogo slug={d.team} size={28} />
-              <span>{d.name}</span>
-              <span className="tabular font-display font-semibold">{d.pts}</span>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* ЧЕМПИОНАТ — реальные данные (Jolpica) */}
+      {topStandings.length > 0 && (
+        <section className="card-soft overflow-hidden">
+          <div className="flex items-center justify-between border-b border-line px-5 py-4">
+            <span className="font-display text-base font-semibold">Личный зачёт</span>
+            <Link href="/schedule" className="text-[13px] text-mute hover:text-bone">весь календарь →</Link>
+          </div>
+          <div className="grid md:grid-cols-2">
+            {topStandings.map((d, idx) => (
+              <div
+                key={d.code || d.position}
+                className={`grid grid-cols-[24px_28px_1fr_auto] items-center gap-3 px-5 py-3 ${idx < 4 ? "border-b border-line" : ""} ${idx % 2 === 1 ? "md:border-l md:border-line" : ""}`}
+              >
+                <span className="tabular text-mute">{d.position}</span>
+                <TeamLogo slug={d.team_slug ?? ""} size={28} />
+                <span className="truncate">{d.name_ru ?? d.name_en}</span>
+                <span className="tabular font-display font-semibold">{d.points}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

@@ -56,3 +56,18 @@ export function getMeeting(round: number, season?: number): Promise<MeetingOut> 
 export function getNextSession(): Promise<NextSessionOut | null> {
   return getJSON<NextSessionOut | null>(`/api/v1/next-session`, 60);
 }
+
+export interface DriverStandingOut {
+  position: number;
+  points: number;
+  wins: number;
+  code: string;
+  name_ru: string | null;
+  name_en: string;
+  team_slug: string | null;
+  team_name: string | null;
+}
+
+export function getDriverStandings(): Promise<DriverStandingOut[]> {
+  return getJSON<DriverStandingOut[]>(`/api/v1/standings/drivers`, 1800);
+}

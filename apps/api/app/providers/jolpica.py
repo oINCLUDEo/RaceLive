@@ -14,7 +14,7 @@ import httpx
 from ..config import get_settings
 from ..localization import circuit_name_ru, country_ru, meeting_name_ru
 from ..ratelimit import TokenBucket
-from .base import ProviderMeeting, ProviderSession
+from .base import ProviderDriverStanding, ProviderMeeting, ProviderSession
 
 BASE_URL = "https://api.jolpi.ca/ergast/f1"
 
@@ -124,3 +124,26 @@ class JolpicaProvider:
             )
 
         return meetings
+
+    async def driver_standings(self, season: int) -> list[ProviderDriverStanding]:
+        data = await self._get(f"{season}/driverStandings/?format=json&limit=100")
+        lists = data["MRData"]["StandingsTable"]["StandingsLists"]
+        if not lists:
+            return []
+        out: list[ProviderDriverStanding] = []
+        for row in lists[0].get("DriverStandings", []):
+            d = row.get("Driver", {})
+            cons = (row.get("Constructors") or [{}])[-1]
+            out.append(
+                ProviderDriverStanding(
+                    position=int(row.get("position", 0)),
+                    points=float(row.get("points", 0)),
+                    wins=int(row.get("wins", 0)),
+                    code=d.get("code") or d.get("driverId", "").upper()[:3],
+                    given=d.get("givenName", ""),
+                    family=d.get("familyName", ""),
+                    constructor_id=cons.get("constructorId", ""),
+                    constructor_name=cons.get("name", ""),
+                )
+            )
+        return out
