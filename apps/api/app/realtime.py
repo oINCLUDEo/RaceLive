@@ -78,7 +78,7 @@ async def demo_publisher() -> None:
     while True:
         # изредка добавляем сообщение рейс-контроля (эмуляция ленты OpenF1)
         if random.random() < 0.22:
-            rc.appendleft({"lap": lap, **race_control.random_event()})
+            rc.appendleft(race_control.feed_item(race_control.random_event(), lap))
         # интервалы «дышат» вокруг номинала: возврат к среднему + шум
         for i in range(1, n):
             intervals[i] += (nominal[i] - intervals[i]) * 0.25 + random.uniform(-0.4, 0.5)
@@ -116,18 +116,27 @@ async def demo_publisher() -> None:
                 "rows": rows,
                 "rc": list(rc),
                 "demo": True,
+                "badge": "демо-поток",
             },
         )
         lap = lap % total_laps + 1
         await asyncio.sleep(1.6)
 
 
-def start_demo_publisher() -> asyncio.Task | None:
-    """Запускает демо-публикатор, если включён LIVE_DEMO и настроен Centrifugo."""
+def start_live_source() -> asyncio.Task | None:
+    """Запускает источник тайминга: реплей OpenF1 или демо. Без Centrifugo — ничего."""
     s = get_settings()
-    if not (s.live_demo and s.centrifugo_api_url and s.centrifugo_api_key):
+    if not (s.centrifugo_api_url and s.centrifugo_api_key):
         return None
-    return asyncio.create_task(demo_publisher())
+    if s.live_source == "openf1_replay" and s.openf1_session_key:
+        from . import replay  # локальный импорт: тянет providers.openf1 только при нужде
+
+        return asyncio.create_task(
+            replay.run_replay(s.openf1_session_key, s.openf1_replay_speed, publish, TIMING_CHANNEL)
+        )
+    if s.live_demo:
+        return asyncio.create_task(demo_publisher())
+    return None
 
 
 async def stop_task(task: asyncio.Task | None) -> None:

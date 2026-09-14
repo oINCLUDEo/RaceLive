@@ -9,12 +9,13 @@ import { useEffect, useRef, useState } from "react";
 import { TeamLogo } from "@/components/TeamLogo";
 import { TimingPreview } from "@/components/TimingPreview";
 
+type Tyre = "S" | "M" | "H" | "I" | "W";
 type Row = {
   pos: number;
   code: string;
   team: string;
   gap: string;
-  tyre: "S" | "M" | "H";
+  tyre: Tyre | null;
   best?: boolean;
 };
 type RcMessage = {
@@ -31,12 +32,15 @@ type Frame = {
   rows: Row[];
   rc?: RcMessage[];
   demo?: boolean;
+  badge?: string;
 };
 
-const TYRE: Record<Row["tyre"], string> = {
+const TYRE: Record<Tyre, string> = {
   S: "var(--red)",
   M: "var(--yellow)",
   H: "var(--bone)",
+  I: "var(--green)",
+  W: "var(--blue)",
 };
 
 // Цвет маркера события рейс-контроля: сначала по флагу, иначе по категории.
@@ -146,7 +150,7 @@ function Tower({ frame, prevOrder }: { frame: Frame; prevOrder: React.MutableRef
           )}
         </span>
         <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] uppercase tracking-wide">
-          {frame.demo ? "демо-поток" : "эфир"}
+          {frame.badge ?? (frame.demo ? "демо-поток" : "эфир")}
         </span>
       </div>
       <div className="py-1.5">
@@ -165,8 +169,8 @@ function Tower({ frame, prevOrder }: { frame: Frame; prevOrder: React.MutableRef
               <span className="tabular text-right" style={r.best ? { color: "var(--purple)" } : undefined}>
                 {r.gap}
               </span>
-              <span className="tabular text-right text-xs font-semibold" style={{ color: TYRE[r.tyre] }}>
-                {r.tyre}
+              <span className="tabular text-right text-xs font-semibold" style={r.tyre ? { color: TYRE[r.tyre] } : undefined}>
+                {r.tyre ?? ""}
               </span>
             </motion.div>
           );

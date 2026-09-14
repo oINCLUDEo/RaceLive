@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     task = asyncio.create_task(_prewarm())  # в фоне, не блокирует старт
-    live_task = realtime.start_demo_publisher()  # демо-тайминг, если включён LIVE_DEMO
+    live_task = realtime.start_live_source()  # реплей OpenF1 или демо-тайминг
     yield
     task.cancel()
     with contextlib.suppress(Exception):
