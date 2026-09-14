@@ -1,6 +1,7 @@
 "use client";
 
 // Живой тайминг-тауэр (демо, проигрывает круги в цикле). Логотипы команд слева.
+import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { TeamLogo } from "@/components/TeamLogo";
 
@@ -58,8 +59,10 @@ export function TimingPreview() {
         {rows.map((r, pos) => {
           const moved = prev[pos]?.code !== r.code;
           return (
-            <div
-              key={pos}
+            <motion.div
+              layout
+              key={r.code}
+              transition={{ layout: { duration: 0.24, ease: [0.2, 0, 0, 1] } }}
               className={`grid grid-cols-[22px_26px_1fr_auto_22px] items-center gap-2.5 px-4 py-2.5 ${moved ? "row-flash" : ""}`}
             >
               <span className="tabular text-mute">{pos + 1}</span>
@@ -71,7 +74,7 @@ export function TimingPreview() {
               <span className="tabular text-right text-xs font-semibold" style={{ color: TYRE[r.tyre] }}>
                 {r.tyre}
               </span>
-            </div>
+            </motion.div>
           );
         })}
       </div>

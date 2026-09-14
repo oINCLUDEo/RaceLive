@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CountUp } from "@/components/CountUp";
 import { DriverForm } from "@/components/DriverForm";
 import { Flag } from "@/components/Flag";
 import { TeamLogo } from "@/components/TeamLogo";
@@ -67,8 +68,8 @@ export default async function DriverPage({ params }: { params: { id: string } })
       {/* СТАТИСТИКА */}
       <section className="grid grid-cols-2 gap-px overflow-hidden rounded-[18px] bg-line sm:grid-cols-4">
         <Stat value={d.position ? `P${d.position}` : "—"} label="в зачёте" />
-        <Stat value={d.points != null ? String(d.points) : "—"} label="очков" />
-        <Stat value={String(d.wins ?? 0)} label="побед" />
+        <Stat value={d.points != null ? <CountUp value={d.points} /> : "—"} label="очков" />
+        <Stat value={<CountUp value={d.wins ?? 0} />} label="побед" />
         <Stat value={bestFinish ? `P${bestFinish}` : "—"} label={`лучший финиш · ${podiums} подиума(ов)`} />
       </section>
 
@@ -103,7 +104,7 @@ export default async function DriverPage({ params }: { params: { id: string } })
   );
 }
 
-function Stat({ value, label }: { value: string; label: string }) {
+function Stat({ value, label }: { value: React.ReactNode; label: string }) {
   return (
     <div className="bg-surface-1 px-5 py-5">
       <div className="tabular font-display text-2xl font-semibold leading-none md:text-3xl">
