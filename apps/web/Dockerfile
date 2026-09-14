@@ -13,6 +13,9 @@ RUN npm install --no-audit --no-fund \
 RUN test -x node_modules/.bin/next && node_modules/.bin/next --version
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+# NEXT_PUBLIC_* инлайнится на этапе сборки — пробрасываем как build-arg в env перед build.
+ARG NEXT_PUBLIC_CENTRIFUGO_URL
+ENV NEXT_PUBLIC_CENTRIFUGO_URL=$NEXT_PUBLIC_CENTRIFUGO_URL
 RUN npm run build
 
 # --- runner: тот же glibc-образ, только standalone-вывод ---

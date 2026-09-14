@@ -1,7 +1,7 @@
 import { Link } from "next-view-transitions";
 import { Countdown } from "@/components/Countdown";
+import { LiveTiming } from "@/components/LiveTiming";
 import { SessionTime } from "@/components/SessionTime";
-import { TimingPreview } from "@/components/TimingPreview";
 import { getLive, type LiveOut } from "@/lib/api";
 import { sessionLabel } from "@/lib/format";
 
@@ -20,6 +20,7 @@ export default async function LivePage() {
     s = null;
   }
   const sess = s?.session ?? null;
+  const wsUrl = process.env.NEXT_PUBLIC_CENTRIFUGO_URL;
 
   return (
     <div className="flex flex-col gap-6">
@@ -64,24 +65,27 @@ export default async function LivePage() {
         )}
       </section>
 
-      {/* ТАЙМИНГ (предпросмотр) */}
+      {/* ТАЙМИНГ (живой через Centrifugo, с фолбэком на демо-превью) */}
       <section>
         <div className="mb-3 flex items-baseline justify-between gap-3">
           <h2 className="font-display text-lg font-semibold">Таблица тайминга</h2>
-          <span className="text-[11px] uppercase tracking-wide text-mute">предпросмотр</span>
+          <span className="text-[11px] uppercase tracking-wide text-mute">
+            позиции · интервалы · шины
+          </span>
         </div>
         <div className="max-w-[440px]">
-          <TimingPreview />
+          <LiveTiming wsUrl={wsUrl} />
         </div>
       </section>
 
       {/* ЧЕСТНО О СТАТУСЕ ФАЗЫ 3 */}
       <section className="card-soft p-5 text-sm leading-relaxed text-mute">
-        <span className="font-display text-bone">Что здесь будет.</span> Живой тайминг —
-        позиции, интервалы, круги, шины, флаги и сообщения рейс-контроля на русском —
-        обновляемый в реальном времени. Это Фаза 3: сейчас подключаем поток данных
-        (OpenF1) и realtime-слой (Centrifugo). Выше — предпросмотр таблицы на демо-данных.
-        Определение «идёт ли сессия сейчас» уже работает по расписанию.
+        <span className="font-display text-bone">Что здесь работает.</span> Таблица выше
+        обновляется в реальном времени через Centrifugo (WebSocket) — realtime-слой Фазы 3
+        уже подключён. Сейчас в канал идёт демо-поток (помечен как «демо»), пока
+        подключается коммерческий поток данных OpenF1 с настоящими позициями, интервалами,
+        кругами, шинами, флагами и сообщениями рейс-контроля на русском. Определение
+        «идёт ли сессия сейчас» уже работает по расписанию.
       </section>
     </div>
   );

@@ -27,6 +27,11 @@ class Settings(BaseSettings):
     provider_rate_burst: int = 8
     schedule_ttl_hours: int = 12
 
+    # Realtime (Фаза 3): Centrifugo HTTP API для публикации тайминга
+    centrifugo_api_url: str = ""  # напр. http://centrifugo:8000/api
+    centrifugo_api_key: str = ""
+    live_demo: bool = False  # публиковать демо-тайминг, пока нет реального потока OpenF1
+
     @property
     def sqlalchemy_url(self) -> str:
         if self.database_url:

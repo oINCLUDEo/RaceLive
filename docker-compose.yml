@@ -29,6 +29,25 @@ services:
       timeout: 3s
       retries: 10
 
+  centrifugo:
+    image: centrifugo/centrifugo:v5.4.7
+    command: centrifugo -c /centrifugo/config.json
+    environment:
+      CENTRIFUGO_API_KEY: ${CENTRIFUGO_API_KEY:-dev_centrifugo_api_key}
+    volumes:
+      - ./infra/centrifugo/config.json:/centrifugo/config.json:ro
+    ports:
+      - "8001:8000"
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    healthcheck:
+      test: ["CMD", "sh", "-c", "wget -qO- http://localhost:8000/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   api:
     build: ./apps/api
     env_file: .env
@@ -36,6 +55,8 @@ services:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       REDIS_URL: redis://redis:6379/0
+      CENTRIFUGO_API_URL: http://centrifugo:8000/api
+      CENTRIFUGO_API_KEY: ${CENTRIFUGO_API_KEY:-dev_centrifugo_api_key}
     depends_on:
       postgres:
         condition: service_healthy
@@ -45,12 +66,17 @@ services:
       - "8000:8000"
 
   web:
-    build: ./apps/web
+    build:
+      context: ./apps/web
+      args:
+        NEXT_PUBLIC_CENTRIFUGO_URL: ${NEXT_PUBLIC_CENTRIFUGO_URL:-ws://localhost:8001/connection/websocket}
     env_file: .env
     environment:
       API_INTERNAL_URL: http://api:8000
+      NEXT_PUBLIC_CENTRIFUGO_URL: ${NEXT_PUBLIC_CENTRIFUGO_URL:-ws://localhost:8001/connection/websocket}
     depends_on:
       - api
+      - centrifugo
     ports:
       - "3000:3000"
 
