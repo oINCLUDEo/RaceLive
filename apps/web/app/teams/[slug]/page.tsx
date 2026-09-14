@@ -20,7 +20,7 @@ function EntryChip({ e }: { e: TeamRoundEntryOut }) {
   const color = dnf
     ? "var(--red)"
     : e.position === 1
-      ? "var(--ember)"
+      ? "var(--gold)"
       : e.position <= 3
         ? "var(--accent2)"
         : "var(--mute)";

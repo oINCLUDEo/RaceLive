@@ -93,7 +93,7 @@ export default async function DriverPage({ params }: { params: { id: string } })
             >
               <span className="tabular text-mute">{r.round}</span>
               <span className="truncate">{r.name_ru ?? r.name_en}</span>
-              <span className={`tabular text-right text-sm ${isDnf(r.status) ? "text-[var(--red)]" : r.position === 1 ? "text-[var(--ember)]" : r.position > 0 ? "text-bone" : "text-mute"}`}>
+              <span className={`tabular text-right text-sm ${isDnf(r.status) ? "text-[var(--red)]" : r.position === 1 ? "text-[var(--gold)]" : r.position > 0 ? "text-bone" : "text-mute"}`}>
                 {isDnf(r.status) ? "Сход" : `P${r.position}`}
               </span>
               <span className="tabular w-10 text-right font-display font-semibold">{r.points}</span>
