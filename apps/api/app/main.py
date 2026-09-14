@@ -1,19 +1,43 @@
+import asyncio
+import contextlib
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import get_settings
-from .db import Base, engine
+from .db import Base, SessionLocal, engine
+from .providers import get_provider
 from .routers import circuits, drivers, health, results, schedule, standings
+from .services import schedule as sched_svc
+from .services import standings as stand_svc
+
+
+async def _prewarm() -> None:
+    """Прогрев кэшей при старте: расписание + зачёты уже тёплые к первому запросу
+    пользователя (иначе холодная страница ждёт провайдера). Ошибки не критичны."""
+    year = datetime.now(timezone.utc).year
+    provider = get_provider()
+    with contextlib.suppress(Exception):
+        async with SessionLocal() as db:
+            await sched_svc.get_schedule(db, provider, year)
+    with contextlib.suppress(Exception):
+        await stand_svc.get_driver_standings(year)
+    with contextlib.suppress(Exception):
+        await stand_svc.get_constructor_standings(year)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # MVP: создаём таблицы на старте. С Фазы 2 — Alembic-миграции (ADR-006 / infra/migrations).
+    # MVP: создаём таблицы на старте. С Фазы 3 — Alembic-миграции (см. журнал решений).
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    task = asyncio.create_task(_prewarm())  # в фоне, не блокирует старт
     yield
+    task.cancel()
+    with contextlib.suppress(Exception):
+        await task
     await engine.dispose()
 
 
