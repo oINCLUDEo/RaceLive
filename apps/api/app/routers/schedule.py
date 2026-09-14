@@ -16,6 +16,7 @@ from ..models import Meeting, Session
 from ..providers import get_provider
 from ..schemas import (
     CircuitOut,
+    LiveOut,
     MeetingOut,
     NextSessionOut,
     SeasonOut,
@@ -104,6 +105,37 @@ async def next_session(db: AsyncSession = Depends(get_db)) -> NextSessionOut | N
     m, s = found
     ckey = m.circuit.key if m.circuit else None
     return NextSessionOut(
+        round=m.round,
+        meeting_name_ru=m.name_ru or meeting_name_ru(ckey, m.name_en),
+        meeting_name_en=m.name_en,
+        session=_session_out(s),
+    )
+
+
+@router.get("/live", response_model=LiveOut)
+async def live(db: AsyncSession = Depends(get_db)) -> LiveOut:
+    provider = get_provider()
+    year = _default_year()
+    found = await svc.get_live_session(db, provider, year)
+    if found:
+        m, s = found
+        ckey = m.circuit.key if m.circuit else None
+        return LiveOut(
+            live=True,
+            round=m.round,
+            meeting_name_ru=m.name_ru or meeting_name_ru(ckey, m.name_en),
+            meeting_name_en=m.name_en,
+            session=_session_out(s),
+        )
+    nxt = await svc.get_next_session(db, provider, year)
+    if nxt is None:
+        nxt = await svc.get_next_session(db, provider, year + 1)
+    if nxt is None:
+        return LiveOut(live=False, round=None, meeting_name_ru=None, meeting_name_en=None, session=None)
+    m, s = nxt
+    ckey = m.circuit.key if m.circuit else None
+    return LiveOut(
+        live=False,
         round=m.round,
         meeting_name_ru=m.name_ru or meeting_name_ru(ckey, m.name_en),
         meeting_name_en=m.name_en,

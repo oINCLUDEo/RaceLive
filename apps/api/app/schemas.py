@@ -147,3 +147,13 @@ class NextSessionOut(BaseModel):
     meeting_name_ru: str | None
     meeting_name_en: str
     session: SessionOut
+
+
+class LiveOut(BaseModel):
+    """Статус эфира: идёт ли сессия сейчас, иначе — ближайшая."""
+
+    live: bool
+    round: int | None
+    meeting_name_ru: str | None
+    meeting_name_en: str | None
+    session: SessionOut | None

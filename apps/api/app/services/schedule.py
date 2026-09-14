@@ -137,6 +137,42 @@ async def get_next_session(db: AsyncSession, provider: DataProvider,
     return meeting, session
 
 
+# Примерная длительность сессии (мин) — для определения «идёт сейчас».
+_SESSION_DURATION = {
+    "practice": 70,
+    "qualifying": 70,
+    "sprint_qualifying": 50,
+    "sprint": 60,
+    "race": 150,
+}
+
+
+async def get_live_session(
+    db: AsyncSession, provider: DataProvider, year: int
+) -> tuple[Meeting, Session] | None:
+    """Идёт ли сессия прямо сейчас (по расписанию): последняя стартовавшая сессия,
+    если её окно ещё не закрылось."""
+    await ensure_cached(db, provider, year)
+    now = datetime.now(UTC)
+    result = await db.execute(
+        select(Session, Meeting)
+        .join(Meeting, Session.meeting_id == Meeting.id)
+        .join(Season, Meeting.season_id == Season.id)
+        .where(Season.year == year, Session.starts_at <= now)
+        .options(selectinload(Meeting.circuit))
+        .order_by(Session.starts_at.desc())
+        .limit(1)
+    )
+    row = result.first()
+    if row is None:
+        return None
+    session, meeting = row
+    dur = _SESSION_DURATION.get(session.type, 90)
+    if session.starts_at and now < session.starts_at + timedelta(minutes=dur):
+        return meeting, session
+    return None
+
+
 def list_seasons_range() -> list[int]:
     """Диапазон сезонов, доступных в UI (текущий год и несколько назад)."""
     current = datetime.now(UTC).year

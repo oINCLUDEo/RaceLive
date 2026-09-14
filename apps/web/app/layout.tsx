@@ -33,7 +33,7 @@ export const metadata: Metadata = {
 const rail = [
   { href: "/", label: "Главная", on: true, icon: "M3 11l9-8 9 8 M5 10v10h14V10" },
   { href: "/schedule", label: "Расписание", icon: "M3 5h18 M3 12h18 M3 19h18" },
-  { href: "#", label: "Стримы", icon: "M2 6h14v12H2z M16 10l6-3v10l-6-3" },
+  { href: "/live", label: "Эфир", icon: "M2 6h14v12H2z M16 10l6-3v10l-6-3" },
   { href: "/tracks", label: "Трассы", icon: "M9 20l-6-3V4l6 3 6-3 6 3v13l-6-3-6 3z M9 7v13 M15 4v13" },
   { href: "/standings", label: "Зачёт", icon: "M8 21h8 M12 17v4 M5 4h14v4a7 7 0 01-14 0z" },
 ];

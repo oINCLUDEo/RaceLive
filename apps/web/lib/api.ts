@@ -57,6 +57,18 @@ export function getNextSession(): Promise<NextSessionOut | null> {
   return getJSON<NextSessionOut | null>(`/api/v1/next-session`, 60);
 }
 
+export interface LiveOut {
+  live: boolean;
+  round: number | null;
+  meeting_name_ru: string | null;
+  meeting_name_en: string | null;
+  session: SessionOut | null;
+}
+
+export function getLive(): Promise<LiveOut> {
+  return getJSON<LiveOut>(`/api/v1/live`, 30);
+}
+
 export interface DriverStandingOut {
   position: number;
   points: number;
