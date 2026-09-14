@@ -11,11 +11,14 @@ from __future__ import annotations
 import asyncio
 import bisect
 import contextlib
+import logging
 from datetime import datetime
 from typing import Awaitable, Callable
 
 from . import race_control
 from .providers.openf1 import OpenF1Client
+
+log = logging.getLogger("uvicorn.error")
 
 # OpenF1 team_name -> наш slug (для логотипа). Матчим по подстроке, регистр не важен.
 _TEAM_SLUGS: list[tuple[str, str]] = [
@@ -207,21 +210,35 @@ async def run_replay(
 ) -> None:
     """Тянет сессию OpenF1 и бесконечно проигрывает её кадрами в channel."""
     client = OpenF1Client()
-    sess = await client.session(session_key)
+    try:
+        sess = await client.session(session_key)
+    except Exception as exc:
+        log.warning("OpenF1 replay: сессия %s недоступна: %s", session_key, exc)
+        return
     if not sess:
+        log.warning("OpenF1 replay: сессия %s не найдена", session_key)
         return
     label = f"Гонка · {sess.get('circuit_short_name') or sess.get('country_name') or ''}".strip(" ·")
 
-    drivers = await client.drivers(session_key)
-    position = await client.position(session_key)
-    intervals = await client.intervals(session_key)
-    laps = await client.laps(session_key)
-    stints = await client.stints(session_key)
-    rc = await client.race_control(session_key)
+    try:
+        drivers = await client.drivers(session_key)
+        position = await client.position(session_key)
+        intervals = await client.intervals(session_key)
+        laps = await client.laps(session_key)
+        stints = await client.stints(session_key)
+        rc = await client.race_control(session_key)
+    except Exception as exc:
+        log.warning("OpenF1 replay: не удалось загрузить данные сессии %s: %s", session_key, exc)
+        return
 
     tl = Timeline(drivers, position, intervals, laps, stints, rc, label)
     if tl.t_end <= tl.t_start:
+        log.warning("OpenF1 replay: пустой таймлайн для сессии %s", session_key)
         return
+    log.info(
+        "OpenF1 replay: %s — %d пилотов, %d сообщений РК, %d кругов, скорость x%.0f",
+        label, len(tl.info), len(tl.rc), tl.total_laps, speed,
+    )
 
     step = 20.0  # секунд гоночного времени на кадр
     delay = max(0.2, step / max(speed, 1.0))
