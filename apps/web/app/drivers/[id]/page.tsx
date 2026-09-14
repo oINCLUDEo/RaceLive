@@ -1,7 +1,6 @@
 import { Link } from "next-view-transitions";
 import { notFound } from "next/navigation";
 import { CountUp } from "@/components/CountUp";
-import { DriverForm } from "@/components/DriverForm";
 import { Flag } from "@/components/Flag";
 import { TeamLogo } from "@/components/TeamLogo";
 import { getDriverProfile, type DriverProfileOut } from "@/lib/api";
@@ -61,7 +60,13 @@ export default async function DriverPage({ params }: { params: { id: string } })
               {d.number && <span className="tabular">· №{d.number}</span>}
             </div>
             <h1 className="mt-1 font-display text-4xl font-semibold">{d.name_ru ?? d.name_en}</h1>
-            <div className="mt-1 text-mute">{d.team_name ?? ""}</div>
+            {d.team_slug ? (
+              <Link href={`/teams/${d.team_slug}`} className="mt-1 inline-block text-mute hover:text-bone">
+                {d.team_name ?? ""}
+              </Link>
+            ) : (
+              <div className="mt-1 text-mute">{d.team_name ?? ""}</div>
+            )}
           </div>
         </div>
       </section>
@@ -73,9 +78,6 @@ export default async function DriverPage({ params }: { params: { id: string } })
         <Stat value={<CountUp value={d.wins ?? 0} />} label="побед" />
         <Stat value={bestFinish ? `P${bestFinish}` : "—"} label={`лучший финиш · ${podiums} подиума(ов)`} />
       </section>
-
-      {/* ФОРМА СЕЗОНА (эксперимент) */}
-      <DriverForm results={d.results} teamSlug={d.team_slug} />
 
       {/* РЕЗУЛЬТАТЫ СЕЗОНА */}
       {d.results.length > 0 && (

@@ -86,7 +86,13 @@ export default async function StandingsPage() {
                   <span className="tabular text-mute">{c.position}</span>
                   <span className="h-6 w-[4px] rounded-full" style={{ background: colorOf(c.team_slug) }} />
                   <TeamLogo slug={c.team_slug ?? ""} size={26} />
-                  <span className="truncate">{c.team_name}</span>
+                  {c.team_slug ? (
+                    <Link href={`/teams/${c.team_slug}`} className="truncate hover:text-[var(--accent2)]">
+                      {c.team_name}
+                    </Link>
+                  ) : (
+                    <span className="truncate">{c.team_name}</span>
+                  )}
                   <span className="text-right leading-tight">
                     <span className="tabular block font-display font-semibold">{c.points}</span>
                     <span className="tabular block text-[11px] text-mute">
