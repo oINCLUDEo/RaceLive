@@ -50,7 +50,9 @@ export function TimingPreview() {
           <span className="live-dot" aria-hidden />
           Квалификация · Q3 · Баку
         </span>
-        <span className="tabular">идёт</span>
+        <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] uppercase tracking-wide">
+          демо
+        </span>
       </div>
       <div className="py-1.5">
         {rows.map((r, pos) => {

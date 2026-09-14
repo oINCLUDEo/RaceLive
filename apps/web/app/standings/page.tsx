@@ -8,6 +8,8 @@ import {
 } from "@/lib/api";
 import { TEAMS } from "@/lib/teams";
 
+// force-dynamic (а не ISR): статик-пререндер на билде дал бы пустую страницу до
+// первой ревалидации (API недоступен во время сборки). API-данные кэшируются в Redis.
 export const dynamic = "force-dynamic";
 
 export const metadata = {

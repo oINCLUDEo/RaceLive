@@ -6,7 +6,7 @@ import { TeamLogo } from "@/components/TeamLogo";
 import { TrackMap } from "@/components/TrackMap";
 import { getCircuit, type CircuitPageOut } from "@/lib/api";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 600; // ISR
 
 export async function generateMetadata({ params }: { params: { key: string } }) {
   try {

@@ -10,12 +10,15 @@ import {
   getMeeting,
   getQualifyingResults,
   getRaceResults,
-  type MeetingOut,
   type QualifyingResultOut,
   type RaceResultOut,
 } from "@/lib/api";
 import { sessionLabel } from "@/lib/format";
 import { TEAMS } from "@/lib/teams";
+
+// ISR: страница кэшируется на 5 минут (повторные открытия — мгновенные), данные
+// обновляются в фоне. Отсчёты на странице клиентские, так что не устаревают.
+export const revalidate = 300;
 
 export async function generateMetadata({
   params,
@@ -39,18 +42,14 @@ export default async function MeetingPage({
   const round = Number(params.round);
   if (!Number.isFinite(round)) notFound();
 
-  let m: MeetingOut;
-  try {
-    m = await getMeeting(round);
-  } catch {
-    notFound();
-  }
-
-  const now = Date.now();
-  const [results, qualifying] = await Promise.all([
+  // все три запроса параллельно (не последовательно) — быстрее открытие
+  const [m, results, qualifying] = await Promise.all([
+    getMeeting(round).catch(() => null),
     getRaceResults(round).catch(() => [] as RaceResultOut[]),
     getQualifyingResults(round).catch(() => [] as QualifyingResultOut[]),
   ]);
+  if (!m) notFound();
+  const now = Date.now();
 
   return (
     <div className="flex flex-col gap-6">

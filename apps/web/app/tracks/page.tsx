@@ -3,6 +3,7 @@ import { Flag } from "@/components/Flag";
 import { TrackMap } from "@/components/TrackMap";
 import { getCircuits, type CircuitListItemOut } from "@/lib/api";
 
+// force-dynamic: см. standings — избегаем пустого статик-пререндера на билде.
 export const dynamic = "force-dynamic";
 
 export const metadata = {

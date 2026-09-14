@@ -24,23 +24,25 @@ import { TEAMS } from "@/lib/teams";
 // запрос, иначе статичная сборка показывала пустой календарь до фоновой ревалидации.
 export const dynamic = "force-dynamic";
 
-const STREAMS = [
-  { name: "Гонки с Гришей", meta: "Twitch · квалификация", v: "1.2k", av: "Г", c: "#C0504E", g: "#3a2226" },
-  { name: "PitWall", meta: "VK Video · стратегии", v: "640", av: "P", c: "#4E7CC0", g: "#2a2230" },
-  { name: "Апекс ТВ", meta: "YouTube · с регулятором", v: "3.1k", av: "А", c: "#4EA36E", g: "#22303a" },
-  { name: "Бокс-Бокс", meta: "Twitch · ламповый", v: "820", av: "Б", c: "#B0894D", g: "#2f2622" },
-];
-
-const CHAT = [
-  { av: "К", c: "#C0504E", name: "Кирилл", lvl: "ур.21", text: "Норрис поехал, квала топ 🔥" },
-  { av: "А", c: "#4E7CC0", name: "Аня", lvl: "ур.34", text: "Леклер на софте — рискуют, но темп есть" },
-  { av: "М", c: "#4EA36E", name: "Максим", lvl: "ур.12", text: "ждём Ферстаппена в последней попытке" },
-];
-
-const FANS = [
-  { p: 1, av: "Д", c: "#C0504E", name: "Дмитрий", meta: "128 сессий · серия 14", lvl: "ур. 42" },
-  { p: 2, av: "С", c: "#4E7CC0", name: "Света", meta: "прогнозы 78%", lvl: "ур. 37" },
-  { p: 3, av: "И", c: "#4EA36E", name: "Игорь", meta: "1 240 сообщений", lvl: "ур. 33" },
+const SOON = [
+  {
+    title: "Живой тайминг",
+    phase: "Фаза 3",
+    desc: "Позиции, интервалы, шины, флаги и рейс-контроль на русском — в реальном времени.",
+    icon: "M3 17l5-6 4 4 5-8 4 6",
+  },
+  {
+    title: "Чат и сообщество",
+    phase: "Фаза 5",
+    desc: "Чат во время гонки, профили, уровни и топы болельщиков между этапами.",
+    icon: "M21 15a2 2 0 01-2 2H8l-5 4V5a2 2 0 012-2h14a2 2 0 012 2z",
+  },
+  {
+    title: "Стримы кастеров",
+    phase: "Фаза 6",
+    desc: "Трансляции комьюнити с чатом и регулятором смещения звука.",
+    icon: "M4 6h14v12H4z M18 10l4-2v8l-4-2",
+  },
 ];
 
 export default async function HomePage() {
@@ -125,17 +127,6 @@ export default async function HomePage() {
               </Link>
             )}
           </div>
-
-          <div className="flex items-center gap-2.5 rounded-full border border-line bg-black/40 px-4 py-2 text-[13px] text-[#d8c7c6] backdrop-blur">
-            <span className="flex">
-              {["#C0504E", "#4E7CC0", "#4EA36E"].map((c, k) => (
-                <span key={k} className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#130a0c] font-display text-[10px] font-semibold text-white" style={{ background: c, marginLeft: k ? -8 : 0 }}>
-                  {["А", "М", "К"][k]}
-                </span>
-              ))}
-            </span>
-            <span><span className="tabular text-white">1 248</span> смотрят</span>
-          </div>
         </div>
       </section>
 
@@ -215,75 +206,6 @@ export default async function HomePage() {
         <TimingPreview />
       </section>
 
-      {/* СЕЙЧАС СМОТРЯТ */}
-      <section>
-        <div className="mb-4 flex items-baseline gap-3.5">
-          <h2 className="font-display text-xl font-semibold">Сейчас смотрят</h2>
-          <span className="text-sm text-mute">стримы комьюнити в прямом эфире</span>
-        </div>
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {STREAMS.map((s) => (
-            <div key={s.name} className="card-soft overflow-hidden">
-              <div className="relative h-[120px]" style={{ background: `linear-gradient(135deg, ${s.g}, #130a0c)` }}>
-                <span className="absolute left-2.5 top-2.5 rounded-full bg-[var(--ember)] px-2 py-0.5 text-[10px] text-white">LIVE</span>
-                <span className="tabular absolute bottom-2.5 right-2.5 rounded-full bg-black/50 px-2 py-0.5 text-[11px]">{s.v}</span>
-              </div>
-              <div className="flex items-center gap-2.5 px-3.5 py-3">
-                <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full font-display text-xs font-semibold text-white" style={{ background: s.c }}>{s.av}</span>
-                <div className="min-w-0">
-                  <div className="truncate font-display text-sm font-semibold">{s.name}</div>
-                  <div className="truncate text-xs text-mute">{s.meta}</div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ЧАТ + ТОП */}
-      <section className="grid gap-5 lg:grid-cols-[1.1fr_1fr]">
-        <div className="card-soft flex flex-col overflow-hidden">
-          <div className="flex items-center justify-between border-b border-line px-[18px] py-3.5 text-[13px] text-mute">
-            <span className="font-display text-bone">Чат гонки</span>
-            <span><span className="tabular text-bone">340</span> в чате</span>
-          </div>
-          <div className="flex flex-col gap-3.5 px-[18px] py-4">
-            {CHAT.map((m) => (
-              <div key={m.name} className="flex gap-2.5">
-                <span className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full font-display text-xs font-semibold text-white" style={{ background: m.c }}>{m.av}</span>
-                <div>
-                  <div className="text-xs"><b className="text-bone">{m.name}</b> <span className="text-mute">{m.lvl}</span></div>
-                  <div className="text-sm">{m.text}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-auto flex gap-2.5 border-t border-line px-[18px] py-3.5">
-            <div className="flex-1 rounded-full bg-surface-2 px-4 py-2.5 text-sm text-mute">Написать сообщение…</div>
-            <span className="cta py-2.5">Отправить</span>
-          </div>
-        </div>
-
-        <div className="card-soft overflow-hidden">
-          <div className="border-b border-line px-[18px] py-3.5">
-            <span className="font-display text-[15px] font-semibold">Болельщики недели</span>
-          </div>
-          <div className="py-1.5">
-            {FANS.map((f) => (
-              <div key={f.p} className="grid grid-cols-[22px_34px_1fr_auto] items-center gap-3 px-[18px] py-2.5">
-                <span className="tabular text-mute">{f.p}</span>
-                <span className="flex h-[34px] w-[34px] items-center justify-center rounded-full font-display text-sm font-semibold text-white" style={{ background: f.c }}>{f.av}</span>
-                <div>
-                  <div className="text-sm">{f.name}</div>
-                  <div className="text-[11px] uppercase tracking-wide text-mute">{f.meta}</div>
-                </div>
-                <span className="rounded-full bg-surface-2 px-2.5 py-1 text-[11px] font-medium">{f.lvl}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ЧЕМПИОНАТ — реальные данные (Jolpica) */}
       {topStandings.length > 0 && (
         <section className="card-soft overflow-hidden">
@@ -322,6 +244,30 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+
+      {/* СКОРО — честный роадмап вместо демо-данных */}
+      <section>
+        <div className="mb-4 flex items-baseline gap-3.5">
+          <h2 className="font-display text-xl font-semibold">Скоро</h2>
+          <span className="text-sm text-mute">что готовим дальше</span>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          {SOON.map((s) => (
+            <div key={s.title} className="card-soft p-5">
+              <div className="flex items-center justify-between">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--bone)" strokeWidth="1.6">
+                  <path d={s.icon} />
+                </svg>
+                <span className="rounded-full bg-[var(--accent2-soft)] px-2.5 py-1 text-[11px] font-medium" style={{ color: "var(--accent2)" }}>
+                  {s.phase}
+                </span>
+              </div>
+              <h3 className="mt-4 font-display text-base font-semibold">{s.title}</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-mute">{s.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

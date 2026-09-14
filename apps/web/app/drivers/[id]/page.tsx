@@ -6,7 +6,7 @@ import { getDriverProfile, type DriverProfileOut } from "@/lib/api";
 import { NATIONALITY } from "@/lib/nationality";
 import { TEAMS } from "@/lib/teams";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 600; // ISR
 
 export async function generateMetadata({ params }: { params: { id: string } }) {
   try {

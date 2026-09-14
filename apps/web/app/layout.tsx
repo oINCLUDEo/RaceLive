@@ -111,11 +111,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         {/* MINI-CHAT FAB */}
         <div className="fixed bottom-5 right-5 z-30 flex items-center gap-2.5 rounded-full border border-line bg-surface-1 px-4 py-2.5 shadow-[0_24px_60px_-34px_rgba(0,0,0,0.8)]">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ember)" strokeWidth="1.8">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" strokeWidth="1.8">
             <path d="M21 15a2 2 0 01-2 2H8l-5 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
           </svg>
-          <span className="font-display text-sm">Мини-чат</span>
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--ember)] text-[10px] font-semibold text-white">7</span>
+          <span className="font-display text-sm">Чат</span>
+          <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] uppercase tracking-wide text-mute">скоро</span>
         </div>
       </body>
     </html>
