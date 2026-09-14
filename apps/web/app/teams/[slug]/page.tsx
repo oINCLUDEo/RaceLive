@@ -4,7 +4,7 @@ import { CountUp } from "@/components/CountUp";
 import { Flag } from "@/components/Flag";
 import { TeamLogo } from "@/components/TeamLogo";
 import { getTeam, type TeamProfileOut, type TeamRoundEntryOut } from "@/lib/api";
-import { isDnf } from "@/lib/format";
+import { isDnf, statusCode, statusRu } from "@/lib/format";
 import { NATIONALITY } from "@/lib/nationality";
 import { TEAMS } from "@/lib/teams";
 
@@ -18,17 +18,17 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 function EntryChip({ e }: { e: TeamRoundEntryOut }) {
   const dnf = isDnf(e.status);
   const color = dnf
-    ? "var(--red)"
+    ? "var(--mute)"
     : e.position === 1
-      ? "var(--gold)"
+      ? "var(--red)"
       : e.position <= 3
         ? "var(--accent2)"
         : "var(--mute)";
   return (
-    <span className="flex items-center gap-1.5 whitespace-nowrap">
+    <span className="flex items-center gap-1.5 whitespace-nowrap" title={dnf ? statusRu(e.status) : undefined}>
       <span className="tabular text-mute">{e.code}</span>
       <span className="tabular font-semibold" style={{ color }}>
-        {dnf ? "Сход" : `P${e.position}`}
+        {dnf ? statusCode(e.status) : `P${e.position}`}
       </span>
     </span>
   );

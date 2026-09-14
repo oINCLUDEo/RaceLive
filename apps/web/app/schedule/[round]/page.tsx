@@ -13,7 +13,7 @@ import {
   type QualifyingResultOut,
   type RaceResultOut,
 } from "@/lib/api";
-import { sessionLabel, statusRu } from "@/lib/format";
+import { sessionLabel, statusCode, statusRu } from "@/lib/format";
 import { TEAMS } from "@/lib/teams";
 
 // ISR: страница кэшируется на 5 минут (повторные открытия — мгновенные), данные
@@ -97,8 +97,11 @@ export default async function MeetingPage({
                 <Link href={`/drivers/${r.driver_id}`} className="truncate hover:text-[var(--accent2)]">
                   {r.name_ru ?? r.name_en}
                 </Link>
-                <span className="tabular hidden text-right text-sm text-mute sm:block">
-                  {r.time ?? statusRu(r.status)}
+                <span
+                  className="tabular hidden text-right text-sm text-mute sm:block"
+                  title={r.time ? undefined : statusRu(r.status)}
+                >
+                  {r.time ?? statusCode(r.status)}
                 </span>
                 <span className="tabular text-right font-display font-semibold">{r.points}</span>
               </div>

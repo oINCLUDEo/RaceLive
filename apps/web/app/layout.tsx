@@ -87,9 +87,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="mx-auto w-full max-w-[1200px] flex-1 px-4 py-7 md:px-8">{children}</div>
 
             <footer className="border-t border-line">
-              <div className="mx-auto flex w-full max-w-[1200px] items-center justify-between px-4 py-6 text-xs text-mute md:px-8">
-                <span className="font-display lowercase text-bone">
-                  race<span className="text-mute">.live</span>
+              <div className="mx-auto flex w-full max-w-[1200px] flex-wrap items-center justify-between gap-3 px-4 py-6 text-xs text-mute md:px-8">
+                <span className="flex items-center gap-4">
+                  <span className="font-display lowercase text-bone">
+                    race<span className="text-mute">.live</span>
+                  </span>
+                  <Link href="/glossary" className="hover:text-bone">
+                    Словарь терминов
+                  </Link>
                 </span>
                 <span>Данные — Jolpica / Ergast · логотипы команд — плейсхолдеры · проект в разработке</span>
               </div>

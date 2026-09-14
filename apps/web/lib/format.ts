@@ -74,6 +74,18 @@ export function statusRu(status: string): string {
   return STATUS_RU[status] ?? "Сход";
 }
 
+// Аббревиатура статуса как в официальной трансляции (DNF/DNS/DSQ/NC…).
+// Компактно и профессионально; расшифровка по-русски — в statusRu (тултип) и /glossary.
+export function statusCode(status: string): string {
+  const s = status || "";
+  if (s === "Disqualified") return "DSQ";
+  if (s === "Did not start" || s === "Withdrew") return "DNS";
+  if (s === "Did not qualify") return "DNQ";
+  if (s === "Did not prequalify") return "DNPQ";
+  if (s === "Not classified") return "NC";
+  return "DNF"; // сход по любой другой нефинишной причине
+}
+
 // Часовой пояс устройства пользователя: IANA-имя и краткая метка со смещением (напр. "GMT+4").
 export function userTimeZone(): { iana: string; label: string } {
   let iana = "UTC";

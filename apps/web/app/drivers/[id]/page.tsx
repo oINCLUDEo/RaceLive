@@ -4,7 +4,7 @@ import { CountUp } from "@/components/CountUp";
 import { Flag } from "@/components/Flag";
 import { TeamLogo } from "@/components/TeamLogo";
 import { getDriverProfile, type DriverProfileOut } from "@/lib/api";
-import { isDnf } from "@/lib/format";
+import { isDnf, statusCode, statusRu } from "@/lib/format";
 import { NATIONALITY } from "@/lib/nationality";
 import { TEAMS } from "@/lib/teams";
 
@@ -93,8 +93,11 @@ export default async function DriverPage({ params }: { params: { id: string } })
             >
               <span className="tabular text-mute">{r.round}</span>
               <span className="truncate">{r.name_ru ?? r.name_en}</span>
-              <span className={`tabular text-right text-sm ${isDnf(r.status) ? "text-[var(--red)]" : r.position === 1 ? "text-[var(--gold)]" : r.position > 0 ? "text-bone" : "text-mute"}`}>
-                {isDnf(r.status) ? "Сход" : `P${r.position}`}
+              <span
+                title={isDnf(r.status) ? statusRu(r.status) : undefined}
+                className={`tabular text-right text-sm ${isDnf(r.status) ? "text-mute" : r.position === 1 ? "text-[var(--red)]" : r.position > 0 ? "text-bone" : "text-mute"}`}
+              >
+                {isDnf(r.status) ? statusCode(r.status) : `P${r.position}`}
               </span>
               <span className="tabular w-10 text-right font-display font-semibold">{r.points}</span>
             </Link>
