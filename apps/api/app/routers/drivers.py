@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, Query
@@ -24,8 +25,16 @@ async def driver_profile(driver_id: str, season: int = Query(default_factory=_ye
     if info is None:
         raise HTTPException(status_code=404, detail="Пилот не найден")
 
-    results = await dsvc.get_driver_results(used, driver_id)
-    standings = await ssvc.get_driver_standings(used)
+    # результаты и зачёт тянем параллельно; зачёт необязателен (не валит страницу)
+    results, standings = await asyncio.gather(
+        dsvc.get_driver_results(used, driver_id),
+        ssvc.get_driver_standings(used),
+        return_exceptions=True,
+    )
+    if isinstance(results, BaseException):
+        results = []
+    if isinstance(standings, BaseException):
+        standings = []
     st = next((s for s in standings if s.driver_id == driver_id), None)
     name_en = f"{info.given} {info.family}".strip()
 

@@ -108,10 +108,12 @@ export default async function MeetingPage({
       )}
 
       {qualifying.length > 0 && (
-        <div className="card-soft overflow-hidden">
-          <div className="border-b border-line px-5 py-3 text-xs uppercase tracking-wide text-mute">
-            Квалификация
-          </div>
+        <details className="card-soft group overflow-hidden">
+          <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-3 text-xs uppercase tracking-wide text-mute">
+            <span>Квалификация</span>
+            <span className="text-[10px] transition-transform group-open:rotate-180">▾</span>
+          </summary>
+          <div className="border-t border-line">
           {qualifying.map((r, i) => {
             const color = (r.team_slug ? TEAMS[r.team_slug]?.color : undefined) ?? "var(--line)";
             const best = r.q3 ?? r.q2 ?? r.q1;
@@ -130,7 +132,8 @@ export default async function MeetingPage({
               </div>
             );
           })}
-        </div>
+          </div>
+        </details>
       )}
 
       <div className="card-soft overflow-hidden">

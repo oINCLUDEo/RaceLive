@@ -57,11 +57,15 @@ class JolpicaProvider:
         s = get_settings()
         self._bucket = TokenBucket(s.provider_rate_per_sec, s.provider_rate_burst)
 
+    # Короткий, ограниченный ретрай: интерактивные запросы не должны ждать десятки
+    # секунд. 3 попытки, паузы 1с/2с, таймаут запроса 12с.
+    _RETRIES = 3
+
     async def _get(self, path: str) -> dict:
         url = f"{BASE_URL}/{path}"
         last_exc: Exception | None = None
-        async with httpx.AsyncClient(timeout=20.0) as client:
-            for attempt in range(5):
+        async with httpx.AsyncClient(timeout=12.0) as client:
+            for attempt in range(self._RETRIES):
                 await self._bucket.acquire()
                 try:
                     resp = await client.get(url, headers={"Accept": "application/json"})
@@ -73,7 +77,8 @@ class JolpicaProvider:
                     return resp.json()
                 except (httpx.HTTPError, ValueError) as exc:
                     last_exc = exc
-                    await asyncio.sleep(min(2**attempt, 30))  # backoff
+                    if attempt < self._RETRIES - 1:
+                        await asyncio.sleep(1.0 * (attempt + 1))  # 1с, 2с
         raise RuntimeError(f"Провайдер недоступен: {url}") from last_exc
 
     async def schedule(self, season: int) -> list[ProviderMeeting]:

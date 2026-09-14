@@ -1,37 +1,28 @@
-"""Итоги гонок: тянем у провайдера с TTL-кэшем (в процессе). Завершённая гонка не
-меняется, поэтому TTL длинный. Для прода переедет в БД (is_final), как в архитектуре."""
+"""Итоги гонок и квалификация: данные провайдера в общем Redis-кэше (см. app.cache).
+Завершённая гонка не меняется → TTL длинный."""
 
-import time
+from dataclasses import asdict
 
+from ..cache import cached
 from ..providers import get_provider
 from ..providers.base import ProviderQualifyingResult, ProviderRaceResult
 
-TTL = 6 * 3600.0
-_race: dict[tuple[int, str], tuple[float, list[ProviderRaceResult]]] = {}
-_qual: dict[tuple[int, str], tuple[float, list[ProviderQualifyingResult]]] = {}
+TTL = 6 * 3600
 
 
 async def get_race_results(season: int, rnd: int | str) -> list[ProviderRaceResult]:
-    key = (season, str(rnd))
-    now = time.time()
-    hit = _race.get(key)
-    if hit and hit[0] > now:
-        return hit[1]
-    rows = await get_provider().race_results(season, rnd)
-    if rows:
-        _race[key] = (now + TTL, rows)
-    return rows
+    async def fetch() -> list[dict]:
+        return [asdict(x) for x in await get_provider().race_results(season, rnd)]
+
+    data = await cached(f"results:race:{season}:{rnd}", TTL, fetch)
+    return [ProviderRaceResult(**d) for d in data]
 
 
 async def get_qualifying_results(
     season: int, rnd: int | str
 ) -> list[ProviderQualifyingResult]:
-    key = (season, str(rnd))
-    now = time.time()
-    hit = _qual.get(key)
-    if hit and hit[0] > now:
-        return hit[1]
-    rows = await get_provider().qualifying_results(season, rnd)
-    if rows:
-        _qual[key] = (now + TTL, rows)
-    return rows
+    async def fetch() -> list[dict]:
+        return [asdict(x) for x in await get_provider().qualifying_results(season, rnd)]
+
+    data = await cached(f"results:quali:{season}:{rnd}", TTL, fetch)
+    return [ProviderQualifyingResult(**d) for d in data]
