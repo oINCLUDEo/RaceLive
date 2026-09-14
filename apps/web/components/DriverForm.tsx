@@ -1,16 +1,19 @@
-// Эксперимент: «форма сезона» пилота — динамика набранных очков (площадь+линия)
-// с точками по этапам, окрашенными по результату (победа/подиум/очки/вне/сход).
-// Один интегрированный график: и импульс сезона, и качество каждой гонки.
+// «Форма сезона»: динамика набранных очков (площадь+линия в цвете команды) с
+// точками по этапам, окрашенными по результату. Линия рисуется SVG на всю ширину
+// (preserveAspectRatio="none"), а точки — HTML в процентных координатах поверх,
+// поэтому они идеально ложатся на линию и остаются круглыми.
 import type { DriverSeasonResultOut } from "@/lib/api";
 import { TEAMS } from "@/lib/teams";
 
 function finishColor(position: number): string {
-  if (position === 1) return "var(--ember)"; // победа
-  if (position >= 2 && position <= 3) return "var(--accent2)"; // подиум
-  if (position >= 4 && position <= 10) return "var(--bone)"; // очки
-  if (position > 10) return "var(--mute)"; // вне очков
-  return "var(--red)"; // сход / не финишировал
+  if (position === 1) return "var(--ember)";
+  if (position >= 2 && position <= 3) return "var(--accent2)";
+  if (position >= 4 && position <= 10) return "var(--bone)";
+  if (position > 10) return "var(--mute)";
+  return "var(--red)";
 }
+
+const PAD = 10; // % вертикальный отступ, чтобы точки не липли к краям
 
 export function DriverForm({
   results,
@@ -28,14 +31,16 @@ export function DriverForm({
     return { r, sum };
   });
   const max = Math.max(1, sum);
-  const W = 100;
-  const H = 34;
-  const xy = cum.map((c, i) => [
-    (i / (cum.length - 1)) * W,
-    H - (c.sum / max) * (H - 3) - 1.5,
-  ]);
-  const line = "M" + xy.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join(" L");
-  const area = `${line} L ${W} ${H} L 0 ${H} Z`;
+  const n = cum.length;
+
+  // точки в процентах: x слева-направо, y — доля очков (сверху вниз для SVG)
+  const pts = cum.map((c, i) => {
+    const xPct = (i / (n - 1)) * 100;
+    const yPct = PAD + (1 - c.sum / max) * (100 - 2 * PAD); // 0 сверху
+    return { xPct, yPct, c };
+  });
+  const line = "M" + pts.map((p) => `${p.xPct.toFixed(2)} ${p.yPct.toFixed(2)}`).join(" L");
+  const area = `${line} L 100 100 L 0 100 Z`;
 
   const wins = results.filter((r) => r.position === 1).length;
   const podiums = results.filter((r) => r.position >= 1 && r.position <= 3).length;
@@ -49,8 +54,12 @@ export function DriverForm({
         </span>
       </div>
 
-      <div className="relative">
-        <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="h-24 w-full">
+      <div className="relative h-28 w-full">
+        <svg
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          className="absolute inset-0 h-full w-full"
+        >
           <defs>
             <linearGradient id="df-grad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={color} stopOpacity="0.35" />
@@ -64,33 +73,24 @@ export function DriverForm({
             stroke={color}
             strokeWidth="1.6"
             strokeLinejoin="round"
+            strokeLinecap="round"
             vectorEffect="non-scaling-stroke"
           />
         </svg>
-        {/* точки-финиши поверх линии (в собственном слое, чтобы кружки были круглыми) */}
-        <svg viewBox={`0 0 ${W} ${H}`} className="absolute inset-0 h-24 w-full overflow-visible">
-          {xy.map(([x, y], i) => (
-            <circle
-              key={cum[i].r.round}
-              cx={x}
-              cy={y}
-              r={2.4}
-              fill={finishColor(cum[i].r.position)}
-              stroke="var(--surface-1)"
-              strokeWidth="0.8"
-              vectorEffect="non-scaling-stroke"
-            >
-              <title>
-                {`Этап ${cum[i].r.round} · ${cum[i].r.name_ru ?? cum[i].r.name_en}: ${
-                  cum[i].r.position > 0 ? "P" + cum[i].r.position : cum[i].r.status
-                } · ${cum[i].sum} очк.`}
-              </title>
-            </circle>
-          ))}
-        </svg>
+        {/* точки-финиши — HTML поверх, идеально круглые и на линии */}
+        {pts.map((p) => (
+          <span
+            key={p.c.r.round}
+            title={`Этап ${p.c.r.round} · ${p.c.r.name_ru ?? p.c.r.name_en}: ${
+              p.c.r.position > 0 ? "P" + p.c.r.position : p.c.r.status
+            } · ${p.c.sum} очк.`}
+            className="absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-[var(--surface-1)] transition-transform hover:scale-150"
+            style={{ left: `${p.xPct}%`, top: `${p.yPct}%`, background: finishColor(p.c.r.position) }}
+          />
+        ))}
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-mute">
+      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-mute">
         <Legend color="var(--ember)" label="победа" />
         <Legend color="var(--accent2)" label="подиум" />
         <Legend color="var(--bone)" label="очки" />

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geologica, Golos_Text } from "next/font/google";
 import Link from "next/link";
+import { RailNav } from "@/components/RailNav";
 import "./globals.css";
 
 const display = Geologica({
@@ -30,14 +31,6 @@ export const metadata: Metadata = {
     "Живой тайминг на русском, чат во время гонки, стримы комьюнити. Место, куда возвращаются между этапами.",
 };
 
-const rail = [
-  { href: "/", label: "Главная", on: true, icon: "M3 11l9-8 9 8 M5 10v10h14V10" },
-  { href: "/schedule", label: "Расписание", icon: "M3 5h18 M3 12h18 M3 19h18" },
-  { href: "/live", label: "Эфир", icon: "M2 6h14v12H2z M16 10l6-3v10l-6-3" },
-  { href: "/tracks", label: "Трассы", icon: "M9 20l-6-3V4l6 3 6-3 6 3v13l-6-3-6 3z M9 7v13 M15 4v13" },
-  { href: "/standings", label: "Зачёт", icon: "M8 21h8 M12 17v4 M5 4h14v4a7 7 0 01-14 0z" },
-];
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru" className={`${display.variable} ${sans.variable}`}>
@@ -55,13 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <path d="M13 7l5 5-5 5" />
               </svg>
             </Link>
-            {rail.map((r) => (
-              <Link key={r.label} href={r.href} className={`rail-i ${r.on ? "on" : ""}`} aria-label={r.label} title={r.label}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                  <path d={r.icon} />
-                </svg>
-              </Link>
-            ))}
+            <RailNav />
           </aside>
 
           {/* MAIN */}
