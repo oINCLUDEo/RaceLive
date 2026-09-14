@@ -3,10 +3,18 @@
 # (нужны открытые порты 80/443 и DNS, указывающий на этот сервер).
 
 {$SITE_DOMAIN} {
+	encode zstd gzip
+
 	# WebSocket живого тайминга → Centrifugo (на том же домене, поэтому работает wss://)
 	@ws path /connection/*
 	reverse_proxy @ws centrifugo:8000
 
 	# всё остальное → Next.js
 	reverse_proxy web:3000
+
+	header {
+		Referrer-Policy strict-origin-when-cross-origin
+		X-Content-Type-Options nosniff
+		-Server
+	}
 }
