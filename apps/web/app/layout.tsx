@@ -46,10 +46,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               className="mb-3 flex h-10 w-10 items-center justify-center rounded-[12px] bg-[var(--ember)]"
               aria-label="race.live"
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
-                <path d="M4 15l3-7h6l4 4h3M4 15h16" />
-                <circle cx="8" cy="18" r="2" fill="#fff" />
-                <circle cx="17" cy="18" r="2" fill="#fff" />
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 7l5 5-5 5" />
+                <path d="M13 7l5 5-5 5" />
               </svg>
             </Link>
             {rail.map((r) => (
@@ -69,16 +68,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 race<span className="text-mute">.live</span>
               </Link>
               <div className="hidden min-w-0 flex-1 items-center gap-2 rounded-full border border-line bg-surface-1 px-4 py-2.5 text-sm text-mute sm:flex md:max-w-[520px]">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" style={{ color: "var(--accent2)" }}>
                   <circle cx="11" cy="11" r="7" />
                   <path d="M21 21l-4-4" />
                 </svg>
                 <span className="truncate">Найди пилота, этап или стримера</span>
               </div>
               <div className="ml-auto flex items-center gap-3">
-                <span className="hidden items-center gap-2 rounded-full border border-line bg-surface-1 px-3.5 py-1.5 text-[13px] sm:flex">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--ember)"><path d="M3 7l4 3 5-6 5 6 4-3-2 12H5z" /></svg>
-                  <span className="font-display">race.live+</span>
+                <span className="hidden items-center gap-2 rounded-full border px-3.5 py-1.5 text-[13px] sm:flex" style={{ borderColor: "var(--accent2-soft)", background: "var(--accent2-soft)" }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--accent2)"><path d="M3 7l4 3 5-6 5 6 4-3-2 12H5z" /></svg>
+                  <span className="font-display" style={{ color: "var(--accent2)" }}>race.live+</span>
                 </span>
                 <span className="relative flex h-9 w-9 items-center justify-center rounded-full border border-line bg-surface-1 text-mute">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">

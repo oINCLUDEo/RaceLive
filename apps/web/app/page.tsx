@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { CarSceneLazy } from "@/components/CarSceneLazy";
 import { Countdown } from "@/components/Countdown";
 import { CountdownBoxes } from "@/components/CountdownBoxes";
 import { Flag } from "@/components/Flag";
+import { HeroCar } from "@/components/HeroCar";
 import { SessionTime } from "@/components/SessionTime";
 import { TeamLogo } from "@/components/TeamLogo";
 import { TimingPreview } from "@/components/TimingPreview";
@@ -68,10 +68,8 @@ export default async function HomePage() {
           className="pointer-events-none absolute inset-x-0 bottom-0 h-[60%]"
           style={{ background: "radial-gradient(55% 100% at 50% 112%, rgba(224,64,47,0.4), rgba(224,64,47,0.1) 44%, transparent 72%)" }}
         />
-        {/* болид — фоновый наполнитель справа; шейдеры (three.js + bloom), ленивый чанк */}
-        <div className="pointer-events-none absolute inset-y-0 right-0 left-0 md:-right-[4%] md:left-[24%]">
-          <CarSceneLazy />
-        </div>
+        {/* болид — фоновый наполнитель справа + переключатель (three.js по требованию) */}
+        <HeroCar />
         {/* градиент для читаемости текста слева */}
         <div
           className="pointer-events-none absolute inset-0"
@@ -252,27 +250,31 @@ export default async function HomePage() {
             <span className="text-[11px] uppercase tracking-wide text-mute">очки · отставание</span>
           </div>
           <div className="grid md:grid-cols-2">
-            {topStandings.map((d, idx) => {
-              const color = d.team_slug ? TEAMS[d.team_slug]?.color : undefined;
-              const gap = leaderPoints - d.points;
-              return (
-                <div
-                  key={d.code || d.position}
-                  className={`relative grid grid-cols-[22px_4px_28px_1fr_auto] items-center gap-3 px-5 py-2.5 ${idx < 8 ? "border-b border-line" : ""} ${idx % 2 === 1 ? "md:border-l md:border-line" : ""} ${d.position === 1 ? "bg-surface-2" : ""}`}
-                >
-                  <span className="tabular text-mute">{d.position}</span>
-                  <span className="h-6 w-[4px] rounded-full" style={{ background: color ?? "var(--line)" }} />
-                  <TeamLogo slug={d.team_slug ?? ""} size={26} />
-                  <span className="truncate">{d.name_ru ?? d.name_en}</span>
-                  <span className="text-right leading-tight">
-                    <span className="tabular block font-display font-semibold">{d.points}</span>
-                    <span className="tabular block text-[11px] text-mute">
-                      {d.position === 1 ? "лидер" : `−${gap}`}
-                    </span>
-                  </span>
-                </div>
-              );
-            })}
+            {[topStandings.slice(0, 5), topStandings.slice(5, 10)].map((col, ci) => (
+              <div key={ci} className={ci === 1 ? "md:border-l md:border-line" : ""}>
+                {col.map((d, ri) => {
+                  const color = d.team_slug ? TEAMS[d.team_slug]?.color : undefined;
+                  const gap = leaderPoints - d.points;
+                  return (
+                    <div
+                      key={d.code || d.position}
+                      className={`grid grid-cols-[22px_4px_28px_1fr_auto] items-center gap-3 px-5 py-2.5 ${ri < col.length - 1 ? "border-b border-line" : ""} ${d.position === 1 ? "bg-surface-2" : ""}`}
+                    >
+                      <span className="tabular text-mute">{d.position}</span>
+                      <span className="h-6 w-[4px] rounded-full" style={{ background: color ?? "var(--line)" }} />
+                      <TeamLogo slug={d.team_slug ?? ""} size={26} />
+                      <span className="truncate">{d.name_ru ?? d.name_en}</span>
+                      <span className="text-right leading-tight">
+                        <span className="tabular block font-display font-semibold">{d.points}</span>
+                        <span className="tabular block text-[11px] text-mute">
+                          {d.position === 1 ? "лидер" : `−${gap}`}
+                        </span>
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
           </div>
         </section>
       )}
