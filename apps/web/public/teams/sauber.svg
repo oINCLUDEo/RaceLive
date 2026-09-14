@@ -1,1 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#52E252"/><text x="32" y="39" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="19" letter-spacing="0.5" fill="#08240f">SAU</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#52E252"/><path d="M41 23c-5-4-19-4-19 4s19 4 19 11-14 8-19 4" fill="none" stroke="#08240f" stroke-width="5" stroke-linecap="round"/></svg>
