@@ -112,6 +112,34 @@ class ConstructorStandingOut(BaseModel):
     team_name: str
 
 
+class CircuitListItemOut(BaseModel):
+    key: str
+    name_ru: str | None
+    name_en: str
+    country: str | None
+    country_code: str | None
+    round: int | None
+
+
+class CircuitPageOut(BaseModel):
+    key: str
+    name_ru: str | None
+    name_en: str
+    country: str | None
+    country_code: str | None
+    length_m: int | None
+    opened: int | None
+    first_gp: int | None
+    locality: str | None
+    round: int | None
+    meeting_starts_at: datetime | None
+    meeting_name_ru: str | None
+    meeting_name_en: str | None
+    winner_name_ru: str | None
+    winner_name_en: str | None
+    winner_team_slug: str | None
+
+
 class NextSessionOut(BaseModel):
     """Ближайшая предстоящая сессия + минимальный контекст этапа."""
 

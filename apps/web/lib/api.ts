@@ -150,3 +150,39 @@ export interface DriverProfileOut {
 export function getDriverProfile(id: string): Promise<DriverProfileOut> {
   return getJSON<DriverProfileOut>(`/api/v1/drivers/${id}`, 1800);
 }
+
+export interface CircuitListItemOut {
+  key: string;
+  name_ru: string | null;
+  name_en: string;
+  country: string | null;
+  country_code: string | null;
+  round: number | null;
+}
+
+export interface CircuitPageOut {
+  key: string;
+  name_ru: string | null;
+  name_en: string;
+  country: string | null;
+  country_code: string | null;
+  length_m: number | null;
+  opened: number | null;
+  first_gp: number | null;
+  locality: string | null;
+  round: number | null;
+  meeting_starts_at: string | null;
+  meeting_name_ru: string | null;
+  meeting_name_en: string | null;
+  winner_name_ru: string | null;
+  winner_name_en: string | null;
+  winner_team_slug: string | null;
+}
+
+export function getCircuits(): Promise<CircuitListItemOut[]> {
+  return getJSON<CircuitListItemOut[]>(`/api/v1/circuits`, 1800);
+}
+
+export function getCircuit(key: string): Promise<CircuitPageOut> {
+  return getJSON<CircuitPageOut>(`/api/v1/circuits/${key}`, 1800);
+}

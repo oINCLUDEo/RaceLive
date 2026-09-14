@@ -67,13 +67,14 @@ export default async function MeetingPage({
             <h1 className="mt-2 font-display text-3xl font-semibold">
               {m.name_ru ?? m.name_en}
             </h1>
-            <p className="mt-2 text-mute">
-              {m.circuit
-                ? `${m.circuit.name_ru ?? m.circuit.name_en}${
-                    m.circuit.country ? ` · ${m.circuit.country}` : ""
-                  }`
-                : ""}
-            </p>
+            {m.circuit && (
+              <p className="mt-2 text-mute">
+                <Link href={`/tracks/${m.circuit.key}`} className="hover:text-bone">
+                  {m.circuit.name_ru ?? m.circuit.name_en}
+                </Link>
+                {m.circuit.country ? ` · ${m.circuit.country}` : ""}
+              </p>
+            )}
           </div>
           <TrackMap circuit={m.circuit?.key} size={132} className="hidden shrink-0 opacity-80 sm:block" />
         </div>
