@@ -134,3 +134,16 @@ OpenF1, при `LIVE_DEMO=true` API крутит **демо-симуляцию �
 списка (localhost + `tensory.ulya.space` + будущий `race.live`/`www` по https) — варнинг ушёл,
 чужие origin'ы отклоняются. При переезде на HTTPS фронт потребует `wss://`: Centrifugo нужно
 спрятать за reverse-proxy (см. `.env.example`) и указать `NEXT_PUBLIC_CENTRIFUGO_URL=wss://<домен>/connection/websocket`.
+
+### ADR-011 · обновление 2: HTTPS через Caddy reverse-proxy
+**Решение.** Публичный доступ — через сервис `caddy` (порты 80/443), сайт на `{$SITE_DOMAIN}`.
+Caddy сам выпускает и продлевает TLS Let's Encrypt. Маршрутизация: `/connection/*` →
+`centrifugo:8000` (WebSocket на том же домене, поэтому работает `wss://`), всё остальное →
+`web:3000`. API наружу для браузера не нужен (данные тянет RSC по внутренней сети).
+**Почему.** Браузер на https-странице умеет только `wss://`; проксирование Centrifugo на том
+же домене снимает проблему mixed-content и лишнего порта в адресе. Caddy — минимум конфигурации
+и авто-TLS. `SITE_DOMAIN` параметризует домен (сейчас `tensory.ulya.space`, позже `race.live`).
+**Следствия.** Нужны открытые 80/443 и DNS на сервер (для `tensory.ulya.space` уже так).
+`NEXT_PUBLIC_CENTRIFUGO_URL=wss://<SITE_DOMAIN>/connection/websocket` (инлайнится на сборке web).
+Порты `web:3000` и `centrifugo:8001` пока оставлены открытыми для отладки — можно закрыть позже.
+Конфиг — `infra/caddy/Caddyfile`.

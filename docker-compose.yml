@@ -80,6 +80,27 @@ services:
     ports:
       - "3000:3000"
 
+  # Reverse-proxy с автоматическим HTTPS (Let's Encrypt). Отдаёт сайт на 443,
+  # /connection/* проксирует в Centrifugo (WebSocket) на том же домене → wss://.
+  # Работает при SITE_DOMAIN != localhost и открытых портах 80/443.
+  caddy:
+    image: caddy:2.8
+    restart: unless-stopped
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:-localhost}
+    volumes:
+      - ./infra/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+      - caddyconfig:/config
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - web
+      - centrifugo
+
 volumes:
   pgdata:
   redisdata:
+  caddydata:
+  caddyconfig:
