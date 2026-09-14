@@ -1,6 +1,7 @@
 import { Link } from "next-view-transitions";
 import { Countdown } from "@/components/Countdown";
 import { LiveTiming } from "@/components/LiveTiming";
+import { NotifyBell } from "@/components/NotifyBell";
 import { SessionTime } from "@/components/SessionTime";
 import { getLive, type LiveOut } from "@/lib/api";
 import { sessionLabel } from "@/lib/format";
@@ -54,10 +55,14 @@ export default async function LivePage() {
           )}
         </div>
         {!s?.live && sess?.starts_at && (
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <div className="font-display text-lg text-bone">
               до старта <span className="tabular"><Countdown iso={sess.starts_at} /></span>
             </div>
+            <NotifyBell
+              iso={sess.starts_at}
+              label={`${s?.meeting_name_ru ?? s?.meeting_name_en ?? "Сессия"} · ${sessionLabel(sess.type, sess.name_ru, sess.name_en)}`}
+            />
             {s?.round != null && (
               <Link href={`/schedule/${s.round}`} className="cta">К этапу</Link>
             )}

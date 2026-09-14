@@ -70,6 +70,15 @@ def _latest(series: list[tuple[float, object]], t: float):
     return series[i][1] if i >= 0 else None
 
 
+def _fmt_laptime(seconds: object) -> str | None:
+    try:
+        s = float(seconds)
+    except (TypeError, ValueError):
+        return None
+    m, s = divmod(s, 60)
+    return f"{int(m)}:{s:06.3f}"
+
+
 def _fmt_gap(gap: object) -> str:
     if gap is None:
         return ""
@@ -97,6 +106,7 @@ class Timeline:
         stints: list[dict],
         rc: list[dict],
         session_label: str,
+        weather: list[dict] | None = None,
     ) -> None:
         self.session_label = session_label
         self.info: dict[int, dict] = {
@@ -115,10 +125,12 @@ class Timeline:
                 self.pos.setdefault(r["driver_number"], []).append((t, r["position"]))
 
         self.gap: dict[int, list[tuple[float, object]]] = {}
+        self.itv: dict[int, list[tuple[float, object]]] = {}  # интервал до впереди идущего
         for r in intervals:
             t = _ts(r.get("date"))
             if t is not None:
                 self.gap.setdefault(r["driver_number"], []).append((t, r.get("gap_to_leader")))
+                self.itv.setdefault(r["driver_number"], []).append((t, r.get("interval")))
 
         self.lap: dict[int, list[tuple[float, object]]] = {}
         for r in laps:
@@ -140,7 +152,12 @@ class Timeline:
             key=lambda x: x[0],
         )
 
-        for series in (*self.pos.values(), *self.gap.values(), *self.lap.values()):
+        self.weather: list[tuple[float, dict]] = sorted(
+            [(t, w) for w in (weather or []) if (t := _ts(w.get("date"))) is not None],
+            key=lambda x: x[0],
+        )
+
+        for series in (*self.pos.values(), *self.gap.values(), *self.itv.values(), *self.lap.values()):
             series.sort(key=lambda x: x[0])
 
         # Быстрейший круг: когда меняется обладатель лучшего времени круга (t → driver_number).
@@ -152,12 +169,12 @@ class Timeline:
             ),
             key=lambda x: x[0] if x[0] is not None else 0.0,
         )
-        self.fastest: list[tuple[float, object]] = []
+        self.fastest: list[tuple[float, object]] = []  # (t, (driver_number, lap_duration))
         best = float("inf")
         for t, num, dur in fl_events:
             if t is not None and dur < best:
                 best = dur
-                self.fastest.append((t, num))
+                self.fastest.append((t, (num, dur)))
 
         starts = [s[0][0] for s in self.pos.values() if s] + ([self.rc[0][0]] if self.rc else [])
         ends = [s[-1][0] for s in self.pos.values() if s] + ([self.rc[-1][0]] if self.rc else [])
@@ -168,13 +185,13 @@ class Timeline:
             default=0,
         )
 
-    def _tyre(self, num: int, lap: object) -> str | None:
+    def _stint(self, num: int, lap: object) -> tuple[str | None, int | None]:
         if not isinstance(lap, int):
-            return None
+            return None, None
         for lo, hi, comp in self.stints.get(num, []):
             if lo <= lap <= hi:
-                return comp
-        return None
+                return comp, lo
+        return None, None
 
     def frame_at(self, t: float) -> dict:
         entries = []
@@ -183,6 +200,8 @@ class Timeline:
             if position is None:
                 continue
             lap = _latest(self.lap.get(num, []), t)
+            comp, stint_start = self._stint(num, lap)
+            age = (lap - stint_start + 1) if isinstance(lap, int) and stint_start is not None else None
             entries.append(
                 {
                     "num": num,
@@ -190,31 +209,44 @@ class Timeline:
                     "code": meta["code"],
                     "team": meta["team"],
                     "gap": _latest(self.gap.get(num, []), t),
-                    "tyre": self._tyre(num, lap),
+                    "int": _latest(self.itv.get(num, []), t),
+                    "tyre": comp,
+                    "tyre_age": age if age and age > 0 else None,
                     "lap": lap,
                 }
             )
         entries.sort(key=lambda e: e["pos"])
-        fl_holder = _latest(self.fastest, t)  # кто держит быстрейший круг на момент t
+        fl = _latest(self.fastest, t)  # (driver_number, lap_duration) держателя быстрейшего круга
+        fl_num = fl[0] if fl else None
         rows = [
             {
                 "pos": e["pos"],
                 "code": e["code"],
                 "team": e["team"],
                 "gap": "ЛИДЕР" if e["pos"] == 1 else _fmt_gap(e["gap"]),
+                "int": "" if e["pos"] == 1 else _fmt_gap(e["int"]),
                 "tyre": e["tyre"],
-                "best": e["num"] == fl_holder,
+                "tyre_age": e["tyre_age"],
+                "best": e["num"] == fl_num,
             }
             for e in entries
         ]
         leader_lap = entries[0]["lap"] if entries and isinstance(entries[0]["lap"], int) else None
         recent = [race_control.feed_item(r, r.get("lap_number")) for tt, r in self.rc if tt <= t]
+        fl_code = self.info.get(fl_num, {}).get("code") if fl_num else None
+        w = _latest(self.weather, t) or {}
         return {
             "session": self.session_label,
             "lap": leader_lap,
             "total_laps": self.total_laps or None,
             "rows": rows,
             "rc": list(reversed(recent[-8:])),
+            "fastest": {"code": fl_code, "time": _fmt_laptime(fl[1])} if fl else None,
+            "weather": {
+                "track": w.get("track_temperature"),
+                "air": w.get("air_temperature"),
+                "rain": bool(w.get("rainfall")),
+            } if w else None,
             "badge": "реплей",
         }
 
@@ -266,11 +298,12 @@ async def run_replay(
         laps = await client.laps(session_key)
         stints = await client.stints(session_key)
         rc = await client.race_control(session_key)
+        weather = await client.weather(session_key)
     except Exception as exc:
         log.warning("OpenF1 replay: не удалось загрузить данные сессии %s: %s", session_key, exc)
         return
 
-    tl = Timeline(drivers, position, intervals, laps, stints, rc, label)
+    tl = Timeline(drivers, position, intervals, laps, stints, rc, label, weather)
     if tl.t_end <= tl.t_start:
         log.warning("OpenF1 replay: пустой таймлайн для сессии %s", session_key)
         return

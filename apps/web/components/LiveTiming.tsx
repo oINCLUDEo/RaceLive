@@ -15,7 +15,9 @@ type Row = {
   code: string;
   team: string;
   gap: string;
+  int?: string;
   tyre: Tyre | null;
+  tyre_age?: number | null;
   best?: boolean;
 };
 type RcMessage = {
@@ -33,6 +35,8 @@ type Frame = {
   rc?: RcMessage[];
   demo?: boolean;
   badge?: string;
+  fastest?: { code: string | null; time: string | null } | null;
+  weather?: { track: number | null; air: number | null; rain: boolean } | null;
 };
 
 const TYRE: Record<Tyre, string> = {
@@ -136,23 +140,55 @@ export function LiveTiming({ wsUrl }: { wsUrl?: string }) {
 function Tower({ frame, prevOrder }: { frame: Frame; prevOrder: React.MutableRefObject<string[]> }) {
   const order = prevOrder.current;
   const rows = frame.rows;
+  const pct =
+    frame.lap != null && frame.total_laps
+      ? Math.min(100, Math.round((frame.lap / frame.total_laps) * 100))
+      : null;
+  const w = frame.weather;
+  const hasStats = pct != null || frame.fastest?.code || (w && (w.track != null || w.air != null));
 
   return (
     <div className="card-soft overflow-hidden self-start">
       <div className="flex items-center justify-between border-b border-line px-4 py-3 text-xs text-mute">
-        <span className="flex items-center gap-2">
+        <span className="flex min-w-0 items-center gap-2">
           <span className="live-dot" aria-hidden />
-          {frame.session ?? "Тайминг"}
-          {frame.lap != null && frame.total_laps != null && (
-            <span className="tabular text-bone">
-              {" "}круг {frame.lap}/{frame.total_laps}
-            </span>
-          )}
+          <span className="truncate">{frame.session ?? "Тайминг"}</span>
         </span>
-        <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] uppercase tracking-wide">
+        <span className="shrink-0 rounded-full bg-surface-2 px-2 py-0.5 text-[10px] uppercase tracking-wide">
           {frame.badge ?? (frame.demo ? "демо-поток" : "эфир")}
         </span>
       </div>
+
+      {/* СТРОКА СТАТИСТИКИ: прогресс круга · быстрейший круг · погода */}
+      {hasStats && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-b border-line px-4 py-2 text-[11px] text-mute">
+          {pct != null && (
+            <span className="flex min-w-[140px] flex-1 items-center gap-2">
+              <span className="tabular whitespace-nowrap text-bone">
+                круг {frame.lap}/{frame.total_laps}
+              </span>
+              <span className="h-1 flex-1 overflow-hidden rounded-full bg-surface-2">
+                <span className="block h-full rounded-full bg-[var(--ember)]" style={{ width: `${pct}%` }} />
+              </span>
+            </span>
+          )}
+          {frame.fastest?.code && (
+            <span className="flex items-center gap-1 whitespace-nowrap">
+              <span style={{ color: "var(--purple)" }}>БК</span>
+              <span className="text-bone">{frame.fastest.code}</span>
+              {frame.fastest.time && <span className="tabular">{frame.fastest.time}</span>}
+            </span>
+          )}
+          {w && (w.track != null || w.air != null) && (
+            <span className="flex items-center gap-2 whitespace-nowrap">
+              {w.track != null && <span className="tabular">трасса {Math.round(w.track)}°</span>}
+              {w.air != null && <span className="tabular">воздух {Math.round(w.air)}°</span>}
+              {w.rain && <span style={{ color: "var(--blue)" }}>дождь</span>}
+            </span>
+          )}
+        </div>
+      )}
+
       <div className="py-1.5">
         {rows.map((r) => {
           const moved = order.length > 0 && order[r.pos - 1] !== r.code;
@@ -161,16 +197,25 @@ function Tower({ frame, prevOrder }: { frame: Frame; prevOrder: React.MutableRef
               layout
               key={r.code}
               transition={{ layout: { duration: 0.24, ease: [0.2, 0, 0, 1] } }}
-              className={`grid grid-cols-[22px_26px_1fr_auto_22px] items-center gap-2.5 px-4 py-2.5 ${moved ? "row-flash" : ""}`}
+              className={`grid grid-cols-[20px_24px_1fr_auto_auto] items-center gap-2.5 px-4 py-2 ${moved ? "row-flash" : ""}`}
             >
               <span className="tabular text-mute">{r.pos}</span>
               <TeamLogo slug={r.team} />
               <span className="font-display font-semibold">{r.code}</span>
-              <span className="tabular text-right" style={r.best ? { color: "var(--purple)" } : undefined}>
-                {r.gap}
+              <span className="text-right leading-tight">
+                <span className="tabular block" style={r.best ? { color: "var(--purple)" } : undefined}>
+                  {r.gap}
+                </span>
+                {r.int && <span className="tabular block text-[10px] text-mute">{r.int}</span>}
               </span>
-              <span className="tabular text-right text-xs font-semibold" style={r.tyre ? { color: TYRE[r.tyre] } : undefined}>
-                {r.tyre ?? ""}
+              <span className="w-8 text-right leading-tight">
+                <span
+                  className="tabular block text-xs font-semibold"
+                  style={r.tyre ? { color: TYRE[r.tyre] } : undefined}
+                >
+                  {r.tyre ?? ""}
+                </span>
+                {r.tyre_age != null && <span className="tabular block text-[10px] text-mute">{r.tyre_age}</span>}
               </span>
             </motion.div>
           );

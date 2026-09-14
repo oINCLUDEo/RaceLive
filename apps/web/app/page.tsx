@@ -3,6 +3,7 @@ import { Countdown } from "@/components/Countdown";
 import { CountdownBoxes } from "@/components/CountdownBoxes";
 import { Flag } from "@/components/Flag";
 import { HeroCar } from "@/components/HeroCar";
+import { NotifyBell } from "@/components/NotifyBell";
 import { SessionTime } from "@/components/SessionTime";
 import { TeamLogo } from "@/components/TeamLogo";
 import { TimingPreview } from "@/components/TimingPreview";
@@ -117,9 +118,15 @@ export default async function HomePage() {
                 <div className="mt-4">
                   <CountdownBoxes iso={next.session.starts_at} />
                 </div>
-                <Link href={`/schedule/${next.round}`} className="cta mt-4 w-full justify-center">
-                  Смотреть
-                </Link>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Link href={`/schedule/${next.round}`} className="cta flex-1 justify-center">
+                    Смотреть
+                  </Link>
+                  <NotifyBell
+                    iso={next.session.starts_at}
+                    label={`${next.meeting_name_ru ?? next.meeting_name_en} · ${sessionLabel(next.session.type, next.session.name_ru, next.session.name_en)}`}
+                  />
+                </div>
               </>
             ) : (
               <Link href="/schedule" className="cta mt-4 w-full justify-center">

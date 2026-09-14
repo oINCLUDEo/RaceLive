@@ -102,6 +102,7 @@ async def demo_publisher() -> None:
                 "code": state[i]["code"],
                 "team": state[i]["team"],
                 "gap": "ЛИДЕР" if i == 0 else _fmt_gap(gaps[i]),
+                "int": "" if i == 0 else _fmt_gap(intervals[i]),
                 "tyre": state[i]["tyre"],
                 "best": i == best_idx,
             }
