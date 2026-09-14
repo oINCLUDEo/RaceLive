@@ -1,5 +1,6 @@
 {
   "_comment": "Centrifugo v5 — realtime-транспорт тайминга (Фаза 3). Секреты (api_key) приходят из окружения CENTRIFUGO_* и переопределяют этот файл.",
+  "health": true,
   "allowed_origins": ["*"],
   "allow_anonymous_connect_without_token": true,
   "namespaces": [
