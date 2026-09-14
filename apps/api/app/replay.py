@@ -218,6 +218,7 @@ class Timeline:
         entries.sort(key=lambda e: e["pos"])
         fl = _latest(self.fastest, t)  # (driver_number, lap_duration) держателя быстрейшего круга
         fl_num = fl[0] if fl else None
+        status = race_control.driver_statuses([r.get("message") or "" for tt, r in self.rc if tt <= t])
         rows = [
             {
                 "pos": e["pos"],
@@ -228,10 +229,13 @@ class Timeline:
                 "tyre": e["tyre"],
                 "tyre_age": e["tyre_age"],
                 "best": e["num"] == fl_num,
+                "pen": status.get(e["code"], {}).get("pen"),
+                "inv": status.get(e["code"], {}).get("inv"),
             }
             for e in entries
         ]
         leader_lap = entries[0]["lap"] if entries and isinstance(entries[0]["lap"], int) else None
+        # Вся лента рейс-контроля до момента t (новые сверху) — можно отмотать назад.
         recent = [race_control.feed_item(r, r.get("lap_number")) for tt, r in self.rc if tt <= t]
         fl_code = self.info.get(fl_num, {}).get("code") if fl_num else None
         w = _latest(self.weather, t) or {}
@@ -240,7 +244,7 @@ class Timeline:
             "lap": leader_lap,
             "total_laps": self.total_laps or None,
             "rows": rows,
-            "rc": list(reversed(recent[-8:])),
+            "rc": list(reversed(recent[-150:])),
             "fastest": {"code": fl_code, "time": _fmt_laptime(fl[1])} if fl else None,
             "weather": {
                 "track": w.get("track_temperature"),
@@ -312,13 +316,15 @@ async def run_replay(
         label, len(tl.info), len(tl.rc), tl.total_laps, speed,
     )
 
-    step = 20.0  # секунд гоночного времени на кадр
-    delay = max(0.2, step / max(speed, 1.0))
+    # Кадр раз в ~2 реальные секунды; гоночное время за кадр = 2с × speed.
+    # speed=1 → реальный темп гонки; speed=60 → 2-часовая гонка за ~2 мин.
+    real_step = 2.0
+    race_step = real_step * max(speed, 0.1)
     while True:
         t = tl.t_start
         while t <= tl.t_end:
             with contextlib.suppress(Exception):
                 await publish(channel, tl.frame_at(t))
-            t += step
-            await asyncio.sleep(delay)
+            t += race_step
+            await asyncio.sleep(real_step)
         await asyncio.sleep(3.0)  # пауза перед повтором реплея

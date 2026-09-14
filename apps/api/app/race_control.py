@@ -163,6 +163,28 @@ def feed_cat(rc: dict) -> str:
     return "info"
 
 
+def driver_statuses(messages: list[str]) -> dict[str, dict]:
+    """Из английских сообщений РК (в хронологическом порядке) собирает статусы пилотов:
+    {code: {"pen": секунды_штрафа, "inv": "invest"|"noted"}}. Резолюции снимают расследование."""
+    st: dict[str, dict] = {}
+    for msg in messages:
+        u = (msg or "").upper()
+        codes = re.findall(r"\(([A-Z]{3})\)", u)
+        mp = re.search(r"CAR \d+ \(([A-Z]{3})\).*?(\d+)\s*SECOND", u)
+        if mp and "PENALTY" in u:
+            st.setdefault(mp.group(1), {})["pen"] = int(mp.group(2))
+        if "NO FURTHER" in u:  # снято с рассмотрения
+            for c in codes:
+                st.get(c, {}).pop("inv", None)
+        elif "UNDER INVESTIGATION" in u:
+            for c in codes:
+                st.setdefault(c, {})["inv"] = "invest"
+        elif "NOTED" in u and "INCIDENT" in u:
+            for c in codes:
+                st.setdefault(c, {}).setdefault("inv", "noted")
+    return {c: v for c, v in st.items() if v}
+
+
 def feed_item(rc: dict, lap: int | None = None) -> dict:
     """Готовит сообщение к публикации: русский текст + оригинал + метки для UI."""
     return {

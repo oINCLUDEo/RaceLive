@@ -18,6 +18,7 @@ function notify(title: string, body: string) {
 export function NotifyBell({ iso, label }: { iso: string | null; label: string }) {
   const [perm, setPerm] = useState<Perm>("default");
   const [on, setOn] = useState(false);
+  const [hint, setHint] = useState(false);
   const fired = useRef<{ soon?: boolean; start?: boolean }>({});
 
   useEffect(() => {
@@ -62,12 +63,15 @@ export function NotifyBell({ iso, label }: { iso: string | null; label: string }
     if (p === "granted") {
       fired.current = {};
       setOn(true);
+      setHint(false);
       try {
         localStorage.setItem("racelive:notify", "1");
       } catch {
         /* noop */
       }
       notify("race.live", `Напомним о старте: ${label}`);
+    } else {
+      setHint(true); // отклонено — мягкая подсказка, без пугающего чипа
     }
   };
 
@@ -87,14 +91,6 @@ export function NotifyBell({ iso, label }: { iso: string | null; label: string }
     </svg>
   );
 
-  if (perm === "denied") {
-    return (
-      <span className="inline-flex items-center gap-2 rounded-full border border-line px-3.5 py-2 text-xs text-mute" title="Разрешите уведомления в настройках браузера">
-        {Bell} Уведомления заблокированы
-      </span>
-    );
-  }
-
   if (on && perm === "granted") {
     return (
       <button
@@ -107,12 +103,19 @@ export function NotifyBell({ iso, label }: { iso: string | null; label: string }
     );
   }
 
+  // Кнопка всегда кликабельна; при отказе — тихая подсказка, а не постоянный «заблокировано».
+  const denied = perm === "denied" || hint;
   return (
-    <button
-      onClick={enable}
-      className="inline-flex items-center gap-2 rounded-full border border-line px-3.5 py-2 text-xs font-medium text-bone transition-colors hover:bg-surface-2"
-    >
-      {Bell} Напомнить о старте
-    </button>
+    <span className="inline-flex flex-col items-start gap-1">
+      <button
+        onClick={enable}
+        className="inline-flex items-center gap-2 rounded-full border border-line px-3.5 py-2 text-xs font-medium text-bone transition-colors hover:bg-surface-2"
+      >
+        {Bell} Напомнить о старте
+      </button>
+      {denied && (
+        <span className="text-[11px] text-mute">Разрешите уведомления для сайта в настройках браузера</span>
+      )}
+    </span>
   );
 }

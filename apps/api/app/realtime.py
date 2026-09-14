@@ -73,7 +73,7 @@ async def demo_publisher() -> None:
     # номинальный интервал до впереди идущего по позициям (P1 = 0)
     nominal = [0.0, 1.2, 1.6, 2.3, 2.9, 3.4, 4.1, 5.0][:n]
     intervals = list(nominal)
-    rc: deque[dict] = deque(maxlen=8)  # лента рейс-контроля, новые сверху
+    rc: deque[dict] = deque(maxlen=50)  # лента рейс-контроля, новые сверху (можно отматывать)
     lap = 1
     while True:
         # изредка добавляем сообщение рейс-контроля (эмуляция ленты OpenF1)
@@ -96,6 +96,7 @@ async def demo_publisher() -> None:
             gaps.append(cum)
         # быстрейший круг — иногда подсвечиваем кого-то из середины/хвоста
         best_idx = random.randint(1, n - 1) if random.random() < 0.25 else -1
+        status = race_control.driver_statuses([m["message"] for m in reversed(rc)])
         rows = [
             {
                 "pos": i + 1,
@@ -105,6 +106,8 @@ async def demo_publisher() -> None:
                 "int": "" if i == 0 else _fmt_gap(intervals[i]),
                 "tyre": state[i]["tyre"],
                 "best": i == best_idx,
+                "pen": status.get(state[i]["code"], {}).get("pen"),
+                "inv": status.get(state[i]["code"], {}).get("inv"),
             }
             for i in range(n)
         ]
