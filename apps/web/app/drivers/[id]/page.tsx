@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { DriverForm } from "@/components/DriverForm";
 import { Flag } from "@/components/Flag";
 import { TeamLogo } from "@/components/TeamLogo";
 import { getDriverProfile, type DriverProfileOut } from "@/lib/api";
@@ -70,6 +71,9 @@ export default async function DriverPage({ params }: { params: { id: string } })
         <Stat value={String(d.wins ?? 0)} label="побед" />
         <Stat value={bestFinish ? `P${bestFinish}` : "—"} label={`лучший финиш · ${podiums} подиума(ов)`} />
       </section>
+
+      {/* ФОРМА СЕЗОНА (эксперимент) */}
+      <DriverForm results={d.results} teamSlug={d.team_slug} />
 
       {/* РЕЗУЛЬТАТЫ СЕЗОНА */}
       {d.results.length > 0 && (
