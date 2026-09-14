@@ -58,36 +58,48 @@ def _fmt_gap(seconds: float) -> str:
 
 
 async def demo_publisher() -> None:
-    """Крутит демо-кадры тайминга в TIMING_CHANNEL, пока задача жива."""
+    """Крутит демо-кадры тайминга в TIMING_CHANNEL, пока задача жива.
+
+    Модель «интервал до впереди идущего»: у каждой позиции есть номинальный
+    интервал (реалистичный разброс), он колеблется с возвратом к среднему; когда
+    интервал схлопывается к нулю — обгон (машины меняются местами). Суммарный отрыв
+    замыкающего держится в разумных ~20 c, а не растёт до бесконечности.
+    """
     total_laps = 51
-    # накопленное отставание от лидера (в секундах) + текущая шина
-    state = [
-        {"code": c, "team": t, "gap": base, "tyre": random.choice(_TYRES)}
-        for c, t, base in _DEMO_GRID
-    ]
+    state = [{"code": c, "team": t, "tyre": random.choice(_TYRES)} for c, t, _ in _DEMO_GRID]
+    n = len(state)
+    # номинальный интервал до впереди идущего по позициям (P1 = 0)
+    nominal = [0.0, 1.2, 1.6, 2.3, 2.9, 3.4, 4.1, 5.0][:n]
+    intervals = list(nominal)
     lap = 1
     while True:
-        # каждый круг слегка меняем отставания; иногда обгон между соседями
-        for d in state[1:]:
-            d["gap"] = max(0.0, d["gap"] + random.uniform(-0.35, 0.45))
-        state.sort(key=lambda d: d["gap"])
-        state[0]["gap"] = 0.0
-        if len(state) > 2 and random.random() < 0.25:
-            i = random.randint(1, len(state) - 2)
-            state[i]["gap"], state[i + 1]["gap"] = state[i + 1]["gap"], state[i]["gap"]
-            state.sort(key=lambda d: d["gap"])
-
-        best_idx = min(range(len(state)), key=lambda i: state[i]["gap"] if i else 1e9)
+        # интервалы «дышат» вокруг номинала: возврат к среднему + шум
+        for i in range(1, n):
+            intervals[i] += (nominal[i] - intervals[i]) * 0.25 + random.uniform(-0.4, 0.5)
+            intervals[i] = max(0.0, intervals[i])
+        # обгон: если интервал схлопнулся — меняемся местами с впереди идущим
+        for i in range(1, n):
+            if intervals[i] < 0.2 and random.random() < 0.5:
+                state[i - 1], state[i] = state[i], state[i - 1]
+                intervals[i] = random.uniform(0.4, 0.9)
+        # накопленный отрыв от лидера
+        cum = 0.0
+        gaps = []
+        for i in range(n):
+            cum += intervals[i]
+            gaps.append(cum)
+        # быстрейший круг — иногда подсвечиваем кого-то из середины/хвоста
+        best_idx = random.randint(1, n - 1) if random.random() < 0.25 else -1
         rows = [
             {
                 "pos": i + 1,
-                "code": d["code"],
-                "team": d["team"],
-                "gap": "ЛИДЕР" if i == 0 else _fmt_gap(d["gap"]),
-                "tyre": d["tyre"],
-                "best": i == best_idx and i != 0 and random.random() < 0.3,
+                "code": state[i]["code"],
+                "team": state[i]["team"],
+                "gap": "ЛИДЕР" if i == 0 else _fmt_gap(gaps[i]),
+                "tyre": state[i]["tyre"],
+                "best": i == best_idx,
             }
-            for i, d in enumerate(state)
+            for i in range(n)
         ]
         await publish(
             TIMING_CHANNEL,
