@@ -14,7 +14,12 @@ import httpx
 from ..config import get_settings
 from ..localization import circuit_name_ru, country_ru, meeting_name_ru
 from ..ratelimit import TokenBucket
-from .base import ProviderDriverStanding, ProviderMeeting, ProviderSession
+from .base import (
+    ProviderConstructorStanding,
+    ProviderDriverStanding,
+    ProviderMeeting,
+    ProviderSession,
+)
 
 BASE_URL = "https://api.jolpi.ca/ergast/f1"
 
@@ -144,6 +149,27 @@ class JolpicaProvider:
                     family=d.get("familyName", ""),
                     constructor_id=cons.get("constructorId", ""),
                     constructor_name=cons.get("name", ""),
+                )
+            )
+        return out
+
+    async def constructor_standings(
+        self, season: int
+    ) -> list[ProviderConstructorStanding]:
+        data = await self._get(f"{season}/constructorStandings/?format=json&limit=100")
+        lists = data["MRData"]["StandingsTable"]["StandingsLists"]
+        if not lists:
+            return []
+        out: list[ProviderConstructorStanding] = []
+        for row in lists[0].get("ConstructorStandings", []):
+            c = row.get("Constructor", {})
+            out.append(
+                ProviderConstructorStanding(
+                    position=int(row.get("position", 0)),
+                    points=float(row.get("points", 0)),
+                    wins=int(row.get("wins", 0)),
+                    constructor_id=c.get("constructorId", ""),
+                    constructor_name=c.get("name", ""),
                 )
             )
         return out

@@ -247,7 +247,7 @@ export default async function HomePage() {
         <section className="card-soft overflow-hidden">
           <div className="flex items-center justify-between border-b border-line px-5 py-4">
             <span className="font-display text-base font-semibold">Личный зачёт</span>
-            <span className="text-[11px] uppercase tracking-wide text-mute">очки · отставание</span>
+            <Link href="/standings" className="text-[13px] text-mute hover:text-bone">весь зачёт →</Link>
           </div>
           <div className="grid md:grid-cols-2">
             {[topStandings.slice(0, 5), topStandings.slice(5, 10)].map((col, ci) => (

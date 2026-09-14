@@ -71,3 +71,15 @@ export interface DriverStandingOut {
 export function getDriverStandings(): Promise<DriverStandingOut[]> {
   return getJSON<DriverStandingOut[]>(`/api/v1/standings/drivers`, 1800);
 }
+
+export interface ConstructorStandingOut {
+  position: number;
+  points: number;
+  wins: number;
+  team_slug: string | null;
+  team_name: string;
+}
+
+export function getConstructorStandings(): Promise<ConstructorStandingOut[]> {
+  return getJSON<ConstructorStandingOut[]>(`/api/v1/standings/constructors`, 1800);
+}

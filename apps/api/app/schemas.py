@@ -51,6 +51,14 @@ class DriverStandingOut(BaseModel):
     team_name: str | None
 
 
+class ConstructorStandingOut(BaseModel):
+    position: int
+    points: float
+    wins: int
+    team_slug: str | None
+    team_name: str
+
+
 class NextSessionOut(BaseModel):
     """Ближайшая предстоящая сессия + минимальный контекст этапа."""
 

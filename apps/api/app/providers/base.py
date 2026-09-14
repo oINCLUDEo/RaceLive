@@ -47,12 +47,27 @@ class ProviderDriverStanding:
     constructor_name: str
 
 
+@dataclass
+class ProviderConstructorStanding:
+    position: int
+    points: float
+    wins: int
+    constructor_id: str
+    constructor_name: str
+
+
 @runtime_checkable
 class DataProvider(Protocol):
     name: str
 
     async def driver_standings(self, season: int) -> list[ProviderDriverStanding]:
         """Личный зачёт сезона."""
+        ...
+
+    async def constructor_standings(
+        self, season: int
+    ) -> list[ProviderConstructorStanding]:
+        """Кубок конструкторов сезона."""
         ...
 
     async def schedule(self, season: int) -> list[ProviderMeeting]:
