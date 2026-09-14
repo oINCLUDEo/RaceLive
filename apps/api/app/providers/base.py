@@ -94,6 +94,32 @@ class ProviderConstructorStanding:
 
 
 @dataclass
+class ProviderConstructorInfo:
+    constructor_id: str
+    name: str
+    nationality: str | None
+
+
+@dataclass
+class ProviderResultEntry:
+    code: str
+    given: str
+    family: str
+    driver_id: str
+    position: int
+    status: str
+    points: float
+
+
+@dataclass
+class ProviderConstructorRound:
+    round: int
+    race_name: str
+    circuit_id: str
+    entries: list[ProviderResultEntry]
+
+
+@dataclass
 class ProviderRaceResult:
     position: int
     points: float
@@ -140,6 +166,18 @@ class DataProvider(Protocol):
         self, season: int
     ) -> list[ProviderConstructorStanding]:
         """Кубок конструкторов сезона."""
+        ...
+
+    async def constructor_info(
+        self, season: int, constructor_id: str
+    ) -> ProviderConstructorInfo | None:
+        """Профиль команды (название, национальность)."""
+        ...
+
+    async def constructor_results(
+        self, season: int, constructor_id: str
+    ) -> list[ProviderConstructorRound]:
+        """Результаты команды по этапам сезона (обе машины)."""
         ...
 
     async def schedule(self, season: int) -> list[ProviderMeeting]:

@@ -21,4 +21,6 @@ export const NATIONALITY: Record<string, { ru: string; code: string }> = {
   Argentinian: { ru: "Аргентина", code: "ar" },
   "New Zealander": { ru: "Новая Зеландия", code: "nz" },
   Austrian: { ru: "Австрия", code: "at" },
+  Swiss: { ru: "Швейцария", code: "ch" },
+  Belgian: { ru: "Бельгия", code: "be" },
 };

@@ -97,6 +97,57 @@ export function getConstructorStandings(): Promise<ConstructorStandingOut[]> {
   return getJSON<ConstructorStandingOut[]>(`/api/v1/standings/constructors`, 1800);
 }
 
+export interface TeamDriverOut {
+  code: string;
+  driver_id: string;
+  name_ru: string | null;
+  name_en: string;
+  points: number;
+}
+
+export interface TeamRoundEntryOut {
+  code: string;
+  driver_id: string;
+  name_ru: string | null;
+  name_en: string;
+  position: number;
+  status: string;
+  points: number;
+}
+
+export interface TeamRoundOut {
+  round: number;
+  name_ru: string | null;
+  name_en: string;
+  team_points: number;
+  entries: TeamRoundEntryOut[];
+}
+
+export interface TeamH2HOut {
+  a_id: string;
+  a_name: string;
+  b_id: string;
+  b_name: string;
+  a_ahead: number;
+  b_ahead: number;
+}
+
+export interface TeamProfileOut {
+  slug: string;
+  name: string;
+  nationality: string | null;
+  position: number | null;
+  points: number | null;
+  wins: number | null;
+  drivers: TeamDriverOut[];
+  rounds: TeamRoundOut[];
+  h2h: TeamH2HOut | null;
+}
+
+export function getTeam(slug: string): Promise<TeamProfileOut> {
+  return getJSON<TeamProfileOut>(`/api/v1/teams/${slug}`, 1800);
+}
+
 export interface RaceResultOut {
   position: number;
   points: number;

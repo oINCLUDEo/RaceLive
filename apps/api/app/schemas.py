@@ -104,6 +104,53 @@ class RaceResultOut(BaseModel):
     team_name: str
 
 
+class TeamDriverOut(BaseModel):
+    code: str
+    driver_id: str
+    name_ru: str | None
+    name_en: str
+    points: float
+
+
+class TeamRoundEntryOut(BaseModel):
+    code: str
+    driver_id: str
+    name_ru: str | None
+    name_en: str
+    position: int
+    status: str
+    points: float
+
+
+class TeamRoundOut(BaseModel):
+    round: int
+    name_ru: str | None
+    name_en: str
+    team_points: float
+    entries: list[TeamRoundEntryOut]
+
+
+class TeamH2HOut(BaseModel):
+    a_id: str
+    a_name: str
+    b_id: str
+    b_name: str
+    a_ahead: int
+    b_ahead: int
+
+
+class TeamProfileOut(BaseModel):
+    slug: str
+    name: str
+    nationality: str | None
+    position: int | None
+    points: float | None
+    wins: int | None
+    drivers: list[TeamDriverOut]
+    rounds: list[TeamRoundOut]
+    h2h: TeamH2HOut | None
+
+
 class ConstructorStandingOut(BaseModel):
     position: int
     points: float

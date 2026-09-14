@@ -15,6 +15,8 @@ from ..config import get_settings
 from ..localization import circuit_name_ru, country_ru, meeting_name_ru
 from ..ratelimit import TokenBucket
 from .base import (
+    ProviderConstructorInfo,
+    ProviderConstructorRound,
     ProviderConstructorStanding,
     ProviderDriverInfo,
     ProviderDriverSeasonResult,
@@ -22,6 +24,7 @@ from .base import (
     ProviderMeeting,
     ProviderQualifyingResult,
     ProviderRaceResult,
+    ProviderResultEntry,
     ProviderSession,
 )
 
@@ -275,6 +278,53 @@ class JolpicaProvider:
                     points=float(res.get("points", 0) or 0),
                     grid=int(res.get("grid", 0) or 0),
                     status=res.get("status", ""),
+                )
+            )
+        return out
+
+    async def constructor_info(
+        self, season: int, constructor_id: str
+    ) -> ProviderConstructorInfo | None:
+        data = await self._get(f"{season}/constructors/{constructor_id}/?format=json")
+        cons = data["MRData"]["ConstructorTable"]["Constructors"]
+        if not cons:
+            return None
+        c = cons[0]
+        return ProviderConstructorInfo(
+            constructor_id=c.get("constructorId", constructor_id),
+            name=c.get("name", ""),
+            nationality=c.get("nationality"),
+        )
+
+    async def constructor_results(
+        self, season: int, constructor_id: str
+    ) -> list[ProviderConstructorRound]:
+        data = await self._get(
+            f"{season}/constructors/{constructor_id}/results/?format=json&limit=100"
+        )
+        races = data["MRData"]["RaceTable"]["Races"]
+        out: list[ProviderConstructorRound] = []
+        for race in races:
+            entries: list[ProviderResultEntry] = []
+            for res in race.get("Results", []):
+                d = res.get("Driver", {})
+                entries.append(
+                    ProviderResultEntry(
+                        code=d.get("code") or d.get("driverId", "").upper()[:3],
+                        given=d.get("givenName", ""),
+                        family=d.get("familyName", ""),
+                        driver_id=d.get("driverId", ""),
+                        position=int(res.get("position", 0) or 0),
+                        status=res.get("status", ""),
+                        points=float(res.get("points", 0) or 0),
+                    )
+                )
+            out.append(
+                ProviderConstructorRound(
+                    round=int(race.get("round", 0)),
+                    race_name=race.get("raceName", ""),
+                    circuit_id=race.get("Circuit", {}).get("circuitId", ""),
+                    entries=entries,
                 )
             )
         return out

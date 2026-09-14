@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import get_settings
 from .db import Base, SessionLocal, engine
 from .providers import get_provider
-from .routers import circuits, drivers, health, results, schedule, standings
+from .routers import circuits, drivers, health, results, schedule, standings, teams
 from .services import schedule as sched_svc
 from .services import standings as stand_svc
 
@@ -64,6 +64,7 @@ app.include_router(standings.router)
 app.include_router(results.router)
 app.include_router(drivers.router)
 app.include_router(circuits.router)
+app.include_router(teams.router)
 
 
 @app.get("/")

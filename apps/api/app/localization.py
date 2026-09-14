@@ -115,3 +115,24 @@ def driver_name_ru(code: str, en_fallback: str) -> str | None:
 
 def team_slug_for(constructor_id: str) -> str | None:
     return CONSTRUCTORS.get(constructor_id)
+
+
+# наш slug -> канонический constructorId (для запросов к провайдеру по команде).
+CONSTRUCTOR_IDS: dict[str, str] = {
+    "redbull": "red_bull",
+    "mclaren": "mclaren",
+    "ferrari": "ferrari",
+    "mercedes": "mercedes",
+    "astonmartin": "aston_martin",
+    "williams": "williams",
+    "rb": "rb",
+    "haas": "haas",
+    "sauber": "sauber",
+    "alpine": "alpine",
+    "audi": "audi",
+    "cadillac": "cadillac",
+}
+
+
+def constructor_id_for(slug: str) -> str | None:
+    return CONSTRUCTOR_IDS.get(slug)
