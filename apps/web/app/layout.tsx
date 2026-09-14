@@ -8,6 +8,10 @@ const display = Geologica({
   weight: ["500", "600", "700"],
   variable: "--font-display",
   display: "swap",
+  // У вариативной Geologica нет метрик фолбэка в базе Next — отключаем авто-подгонку,
+  // чтобы убрать предупреждение сборки; свой фолбэк-стек задаём явно.
+  adjustFontFallback: false,
+  fallback: ["system-ui", "sans-serif"],
 });
 
 const sans = Golos_Text({
