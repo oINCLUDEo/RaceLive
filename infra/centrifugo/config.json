@@ -1,6 +1,12 @@
 {
   "health": true,
-  "allowed_origins": ["*"],
+  "allowed_origins": [
+    "http://localhost:3000",
+    "http://tensory.ulya.space:3000",
+    "https://tensory.ulya.space",
+    "https://race.live",
+    "https://www.race.live"
+  ],
   "allow_anonymous_connect_without_token": true,
   "namespaces": [
     {

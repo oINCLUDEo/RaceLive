@@ -1,7 +1,8 @@
 "use client";
 
 // Живой тайминг: подключается к Centrifugo и рисует кадры из канала timing:live.
-// Пока нет кадра (не подключились / нет эфира) — показываем демо-превью как заглушку.
+// Слева — таблица позиций, справа — лента рейс-контроля на русском (ключевая ценность).
+// Пока нет кадра — таблица показывает демо-превью, лента — заглушку.
 // centrifuge грузим динамически, чтобы он не попал в SSR-бандл.
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
@@ -16,11 +17,19 @@ type Row = {
   tyre: "S" | "M" | "H";
   best?: boolean;
 };
+type RcMessage = {
+  lap: number;
+  cat: string;
+  flag: string | null;
+  message: string;
+  message_ru: string;
+};
 type Frame = {
   session?: string;
   lap?: number;
   total_laps?: number;
   rows: Row[];
+  rc?: RcMessage[];
   demo?: boolean;
 };
 
@@ -29,6 +38,23 @@ const TYRE: Record<Row["tyre"], string> = {
   M: "var(--yellow)",
   H: "var(--bone)",
 };
+
+// Цвет маркера события рейс-контроля: сначала по флагу, иначе по категории.
+function rcColor(m: RcMessage): string {
+  switch (m.flag) {
+    case "yellow":
+      return "var(--yellow)";
+    case "green":
+      return "var(--green)";
+    case "red":
+      return "var(--red)";
+    case "blue":
+      return "var(--blue)";
+  }
+  if (m.cat === "penalty") return "var(--red)";
+  if (m.cat === "drs") return "var(--accent2)";
+  return "var(--mute)";
+}
 
 export function LiveTiming({ wsUrl }: { wsUrl?: string }) {
   const [frame, setFrame] = useState<Frame | null>(null);
@@ -65,22 +91,57 @@ export function LiveTiming({ wsUrl }: { wsUrl?: string }) {
     };
   }, [wsUrl]);
 
-  // Нет живого кадра — честная демо-заглушка (та же, что на главной).
-  if (!frame) return <TimingPreview />;
+  const rc = frame?.rc ?? [];
 
+  return (
+    <div className="grid gap-5 lg:grid-cols-[minmax(0,440px)_1fr]">
+      {/* ТАБЛИЦА ПОЗИЦИЙ */}
+      {frame ? <Tower frame={frame} prevOrder={prevOrder} /> : <TimingPreview />}
+
+      {/* ЛЕНТА РЕЙС-КОНТРОЛЯ */}
+      <div className="card-soft overflow-hidden self-start">
+        <div className="flex items-center justify-between border-b border-line px-4 py-3 text-xs text-mute">
+          <span>Рейс-контроль</span>
+          <span className="text-[10px] uppercase tracking-wide">на русском</span>
+        </div>
+        {rc.length === 0 ? (
+          <div className="px-4 py-6 text-sm text-mute">
+            Здесь появятся сообщения рейс-контроля — флаги, сейфти-кар, штрафы и расследования, переведённые на русский.
+          </div>
+        ) : (
+          <ul>
+            {rc.map((m, i) => (
+              <li key={`${m.lap}-${i}-${m.message}`} className={`flex gap-3 px-4 py-3 ${i < rc.length - 1 ? "border-b border-line" : ""}`}>
+                <span className="mt-1 h-3 w-[3px] shrink-0 rounded-full" style={{ background: rcColor(m) }} aria-hidden />
+                <div className="min-w-0">
+                  <div className="text-sm leading-snug">{m.message_ru}</div>
+                  <div className="mt-0.5 flex items-center gap-2 text-[11px] text-mute">
+                    <span className="tabular">круг {m.lap}</span>
+                    <span className="truncate opacity-70">{m.message}</span>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Tower({ frame, prevOrder }: { frame: Frame; prevOrder: React.MutableRefObject<string[]> }) {
   const order = prevOrder.current;
   const rows = frame.rows;
 
   return (
-    <div className="card-soft overflow-hidden">
+    <div className="card-soft overflow-hidden self-start">
       <div className="flex items-center justify-between border-b border-line px-4 py-3 text-xs text-mute">
         <span className="flex items-center gap-2">
           <span className="live-dot" aria-hidden />
           {frame.session ?? "Тайминг"}
           {frame.lap != null && frame.total_laps != null && (
             <span className="tabular text-bone">
-              {" "}
-              круг {frame.lap}/{frame.total_laps}
+              {" "}круг {frame.lap}/{frame.total_laps}
             </span>
           )}
         </span>
@@ -101,16 +162,10 @@ export function LiveTiming({ wsUrl }: { wsUrl?: string }) {
               <span className="tabular text-mute">{r.pos}</span>
               <TeamLogo slug={r.team} />
               <span className="font-display font-semibold">{r.code}</span>
-              <span
-                className="tabular text-right"
-                style={r.best ? { color: "var(--purple)" } : undefined}
-              >
+              <span className="tabular text-right" style={r.best ? { color: "var(--purple)" } : undefined}>
                 {r.gap}
               </span>
-              <span
-                className="tabular text-right text-xs font-semibold"
-                style={{ color: TYRE[r.tyre] }}
-              >
+              <span className="tabular text-right text-xs font-semibold" style={{ color: TYRE[r.tyre] }}>
                 {r.tyre}
               </span>
             </motion.div>

@@ -65,27 +65,26 @@ export default async function LivePage() {
         )}
       </section>
 
-      {/* ТАЙМИНГ (живой через Centrifugo, с фолбэком на демо-превью) */}
+      {/* ТАЙМИНГ + РЕЙС-КОНТРОЛЬ (живьём через Centrifugo, с фолбэком на демо) */}
       <section>
         <div className="mb-3 flex items-baseline justify-between gap-3">
           <h2 className="font-display text-lg font-semibold">Таблица тайминга</h2>
           <span className="text-[11px] uppercase tracking-wide text-mute">
-            позиции · интервалы · шины
+            позиции · интервалы · шины · рейс-контроль
           </span>
         </div>
-        <div className="max-w-[440px]">
-          <LiveTiming wsUrl={wsUrl} />
-        </div>
+        <LiveTiming wsUrl={wsUrl} />
       </section>
 
       {/* ЧЕСТНО О СТАТУСЕ ФАЗЫ 3 */}
       <section className="card-soft p-5 text-sm leading-relaxed text-mute">
-        <span className="font-display text-bone">Что здесь работает.</span> Таблица выше
-        обновляется в реальном времени через Centrifugo (WebSocket) — realtime-слой Фазы 3
-        уже подключён. Сейчас в канал идёт демо-поток (помечен как «демо»), пока
-        подключается коммерческий поток данных OpenF1 с настоящими позициями, интервалами,
-        кругами, шинами, флагами и сообщениями рейс-контроля на русском. Определение
-        «идёт ли сессия сейчас» уже работает по расписанию.
+        <span className="font-display text-bone">Что здесь работает.</span> Таблица позиций
+        и лента рейс-контроля обновляются в реальном времени через Centrifugo (WebSocket) —
+        realtime-слой Фазы 3 уже подключён. Сообщения рейс-контроля переводятся на русский
+        на бэкенде — это ядро продукта. Сейчас в канал идёт демо-поток (помечен как «демо»),
+        пока подключается коммерческий поток данных OpenF1 с настоящими позициями,
+        интервалами, шинами и флагами. Определение «идёт ли сессия сейчас» уже работает по
+        расписанию.
       </section>
     </div>
   );

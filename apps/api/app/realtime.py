@@ -13,9 +13,11 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import random
+from collections import deque
 
 import httpx
 
+from . import race_control
 from .config import get_settings
 
 TIMING_CHANNEL = "timing:live"
@@ -71,8 +73,12 @@ async def demo_publisher() -> None:
     # номинальный интервал до впереди идущего по позициям (P1 = 0)
     nominal = [0.0, 1.2, 1.6, 2.3, 2.9, 3.4, 4.1, 5.0][:n]
     intervals = list(nominal)
+    rc: deque[dict] = deque(maxlen=8)  # лента рейс-контроля, новые сверху
     lap = 1
     while True:
+        # изредка добавляем сообщение рейс-контроля (эмуляция ленты OpenF1)
+        if random.random() < 0.22:
+            rc.appendleft({"lap": lap, **race_control.random_event()})
         # интервалы «дышат» вокруг номинала: возврат к среднему + шум
         for i in range(1, n):
             intervals[i] += (nominal[i] - intervals[i]) * 0.25 + random.uniform(-0.4, 0.5)
@@ -103,7 +109,14 @@ async def demo_publisher() -> None:
         ]
         await publish(
             TIMING_CHANNEL,
-            {"session": "Гонка · Баку", "lap": lap, "total_laps": total_laps, "rows": rows, "demo": True},
+            {
+                "session": "Гонка · Баку",
+                "lap": lap,
+                "total_laps": total_laps,
+                "rows": rows,
+                "rc": list(rc),
+                "demo": True,
+            },
         )
         lap = lap % total_laps + 1
         await asyncio.sleep(1.6)
