@@ -45,6 +45,43 @@ class ProviderDriverStanding:
     family: str
     constructor_id: str
     constructor_name: str
+    driver_id: str = ""
+
+
+@dataclass
+class ProviderQualifyingResult:
+    position: int
+    code: str
+    given: str
+    family: str
+    constructor_id: str
+    constructor_name: str
+    q1: str | None
+    q2: str | None
+    q3: str | None
+    driver_id: str = ""
+
+
+@dataclass
+class ProviderDriverInfo:
+    driver_id: str
+    code: str
+    given: str
+    family: str
+    number: str | None
+    nationality: str | None
+    dob: str | None
+
+
+@dataclass
+class ProviderDriverSeasonResult:
+    round: int
+    race_name: str
+    circuit_id: str
+    position: int
+    points: float
+    grid: int
+    status: str
 
 
 @dataclass
@@ -68,6 +105,7 @@ class ProviderRaceResult:
     family: str
     constructor_id: str
     constructor_name: str
+    driver_id: str = ""
 
 
 @runtime_checkable
@@ -76,6 +114,22 @@ class DataProvider(Protocol):
 
     async def race_results(self, season: int, rnd: int | str) -> list[ProviderRaceResult]:
         """Финишный протокол гонки этапа (rnd — номер этапа или 'last')."""
+        ...
+
+    async def qualifying_results(
+        self, season: int, rnd: int | str
+    ) -> list[ProviderQualifyingResult]:
+        """Результаты квалификации этапа."""
+        ...
+
+    async def driver_info(self, season: int, driver_id: str) -> ProviderDriverInfo | None:
+        """Профиль пилота."""
+        ...
+
+    async def driver_results(
+        self, season: int, driver_id: str
+    ) -> list[ProviderDriverSeasonResult]:
+        """Результаты пилота по этапам сезона."""
         ...
 
     async def driver_standings(self, season: int) -> list[ProviderDriverStanding]:

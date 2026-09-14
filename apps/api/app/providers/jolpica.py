@@ -16,8 +16,11 @@ from ..localization import circuit_name_ru, country_ru, meeting_name_ru
 from ..ratelimit import TokenBucket
 from .base import (
     ProviderConstructorStanding,
+    ProviderDriverInfo,
+    ProviderDriverSeasonResult,
     ProviderDriverStanding,
     ProviderMeeting,
+    ProviderQualifyingResult,
     ProviderRaceResult,
     ProviderSession,
 )
@@ -150,6 +153,7 @@ class JolpicaProvider:
                     family=d.get("familyName", ""),
                     constructor_id=cons.get("constructorId", ""),
                     constructor_name=cons.get("name", ""),
+                    driver_id=d.get("driverId", ""),
                 )
             )
         return out
@@ -197,6 +201,75 @@ class JolpicaProvider:
                     family=d.get("familyName", ""),
                     constructor_id=c.get("constructorId", ""),
                     constructor_name=c.get("name", ""),
+                    driver_id=d.get("driverId", ""),
+                )
+            )
+        return out
+
+    async def qualifying_results(
+        self, season: int, rnd: int | str
+    ) -> list[ProviderQualifyingResult]:
+        data = await self._get(f"{season}/{rnd}/qualifying/?format=json&limit=100")
+        races = data["MRData"]["RaceTable"]["Races"]
+        if not races:
+            return []
+        out: list[ProviderQualifyingResult] = []
+        for row in races[0].get("QualifyingResults", []):
+            d = row.get("Driver", {})
+            c = row.get("Constructor", {})
+            out.append(
+                ProviderQualifyingResult(
+                    position=int(row.get("position", 0)),
+                    code=d.get("code") or d.get("driverId", "").upper()[:3],
+                    given=d.get("givenName", ""),
+                    family=d.get("familyName", ""),
+                    constructor_id=c.get("constructorId", ""),
+                    constructor_name=c.get("name", ""),
+                    driver_id=d.get("driverId", ""),
+                    q1=row.get("Q1") or None,
+                    q2=row.get("Q2") or None,
+                    q3=row.get("Q3") or None,
+                )
+            )
+        return out
+
+    async def driver_info(
+        self, season: int, driver_id: str
+    ) -> ProviderDriverInfo | None:
+        data = await self._get(f"{season}/drivers/{driver_id}/?format=json")
+        drivers = data["MRData"]["DriverTable"]["Drivers"]
+        if not drivers:
+            return None
+        d = drivers[0]
+        return ProviderDriverInfo(
+            driver_id=d.get("driverId", driver_id),
+            code=d.get("code") or driver_id.upper()[:3],
+            given=d.get("givenName", ""),
+            family=d.get("familyName", ""),
+            number=d.get("permanentNumber"),
+            nationality=d.get("nationality"),
+            dob=d.get("dateOfBirth"),
+        )
+
+    async def driver_results(
+        self, season: int, driver_id: str
+    ) -> list[ProviderDriverSeasonResult]:
+        data = await self._get(
+            f"{season}/drivers/{driver_id}/results/?format=json&limit=100"
+        )
+        races = data["MRData"]["RaceTable"]["Races"]
+        out: list[ProviderDriverSeasonResult] = []
+        for race in races:
+            res = (race.get("Results") or [{}])[0]
+            out.append(
+                ProviderDriverSeasonResult(
+                    round=int(race.get("round", 0)),
+                    race_name=race.get("raceName", ""),
+                    circuit_id=race.get("Circuit", {}).get("circuitId", ""),
+                    position=int(res.get("position", 0) or 0),
+                    points=float(res.get("points", 0) or 0),
+                    grid=int(res.get("grid", 0) or 0),
+                    status=res.get("status", ""),
                 )
             )
         return out

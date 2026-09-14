@@ -45,10 +45,49 @@ class DriverStandingOut(BaseModel):
     points: float
     wins: int
     code: str
+    driver_id: str
     name_ru: str | None
     name_en: str
     team_slug: str | None
     team_name: str | None
+
+
+class QualifyingResultOut(BaseModel):
+    position: int
+    code: str
+    driver_id: str
+    name_ru: str | None
+    name_en: str
+    team_slug: str | None
+    team_name: str
+    q1: str | None
+    q2: str | None
+    q3: str | None
+
+
+class DriverSeasonResultOut(BaseModel):
+    round: int
+    name_ru: str | None
+    name_en: str
+    position: int
+    points: float
+    status: str
+
+
+class DriverProfileOut(BaseModel):
+    driver_id: str
+    code: str
+    name_ru: str | None
+    name_en: str
+    number: str | None
+    nationality: str | None
+    dob: str | None
+    team_slug: str | None
+    team_name: str | None
+    position: int | None
+    points: float | None
+    wins: int | None
+    results: list[DriverSeasonResultOut]
 
 
 class RaceResultOut(BaseModel):
@@ -58,6 +97,7 @@ class RaceResultOut(BaseModel):
     status: str
     time: str | None
     code: str
+    driver_id: str
     name_ru: str | None
     name_en: str
     team_slug: str | None

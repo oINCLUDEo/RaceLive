@@ -8,8 +8,10 @@ import { TimezoneNote } from "@/components/TimezoneNote";
 import { TrackMap } from "@/components/TrackMap";
 import {
   getMeeting,
+  getQualifyingResults,
   getRaceResults,
   type MeetingOut,
+  type QualifyingResultOut,
   type RaceResultOut,
 } from "@/lib/api";
 import { sessionLabel } from "@/lib/format";
@@ -45,7 +47,10 @@ export default async function MeetingPage({
   }
 
   const now = Date.now();
-  const results = await getRaceResults(round).catch(() => [] as RaceResultOut[]);
+  const [results, qualifying] = await Promise.all([
+    getRaceResults(round).catch(() => [] as RaceResultOut[]),
+    getQualifyingResults(round).catch(() => [] as QualifyingResultOut[]),
+  ]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -89,11 +94,39 @@ export default async function MeetingPage({
                 <span className="tabular text-mute">{r.position}</span>
                 <span className="h-6 w-[4px] rounded-full" style={{ background: color }} />
                 <TeamLogo slug={r.team_slug ?? ""} size={26} />
-                <span className="truncate">{r.name_ru ?? r.name_en}</span>
+                <Link href={`/drivers/${r.driver_id}`} className="truncate hover:text-[var(--accent2)]">
+                  {r.name_ru ?? r.name_en}
+                </Link>
                 <span className="tabular hidden text-right text-sm text-mute sm:block">
                   {r.time ?? r.status}
                 </span>
                 <span className="tabular text-right font-display font-semibold">{r.points}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {qualifying.length > 0 && (
+        <div className="card-soft overflow-hidden">
+          <div className="border-b border-line px-5 py-3 text-xs uppercase tracking-wide text-mute">
+            Квалификация
+          </div>
+          {qualifying.map((r, i) => {
+            const color = (r.team_slug ? TEAMS[r.team_slug]?.color : undefined) ?? "var(--line)";
+            const best = r.q3 ?? r.q2 ?? r.q1;
+            return (
+              <div
+                key={r.code || r.position}
+                className={`grid grid-cols-[26px_4px_28px_1fr_auto] items-center gap-3 px-5 py-2.5 ${i < qualifying.length - 1 ? "border-b border-line" : ""} ${r.position === 1 ? "bg-surface-2" : ""}`}
+              >
+                <span className="tabular text-mute">{r.position}</span>
+                <span className="h-6 w-[4px] rounded-full" style={{ background: color }} />
+                <TeamLogo slug={r.team_slug ?? ""} size={26} />
+                <Link href={`/drivers/${r.driver_id}`} className="truncate hover:text-[var(--accent2)]">
+                  {r.name_ru ?? r.name_en}
+                </Link>
+                <span className="tabular text-right text-sm">{best ?? "—"}</span>
               </div>
             );
           })}

@@ -159,7 +159,9 @@ export default async function HomePage() {
                   <span className="font-display text-lg text-mute">{r.position}</span>
                   <TeamLogo slug={r.team_slug ?? ""} size={26} />
                   <div className="min-w-0">
-                    <div className="truncate text-sm">{r.name_ru ?? r.name_en}</div>
+                    <Link href={`/drivers/${r.driver_id}`} className="block truncate text-sm hover:text-[var(--accent2)]">
+                      {r.name_ru ?? r.name_en}
+                    </Link>
                     <div className="tabular text-[11px] text-mute">{r.time ?? r.status}</div>
                   </div>
                 </div>
@@ -303,7 +305,9 @@ export default async function HomePage() {
                       <span className="tabular text-mute">{d.position}</span>
                       <span className="h-6 w-[4px] rounded-full" style={{ background: color ?? "var(--line)" }} />
                       <TeamLogo slug={d.team_slug ?? ""} size={26} />
-                      <span className="truncate">{d.name_ru ?? d.name_en}</span>
+                      <Link href={`/drivers/${d.driver_id}`} className="truncate hover:text-[var(--accent2)]">
+                        {d.name_ru ?? d.name_en}
+                      </Link>
                       <span className="text-right leading-tight">
                         <span className="tabular block font-display font-semibold">{d.points}</span>
                         <span className="tabular block text-[11px] text-mute">

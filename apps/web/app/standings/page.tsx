@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { TeamLogo } from "@/components/TeamLogo";
 import {
   getConstructorStandings,
@@ -54,7 +55,9 @@ export default async function StandingsPage() {
                   <span className="tabular text-mute">{d.position}</span>
                   <span className="h-6 w-[4px] rounded-full" style={{ background: colorOf(d.team_slug) }} />
                   <TeamLogo slug={d.team_slug ?? ""} size={26} />
-                  <span className="truncate">{d.name_ru ?? d.name_en}</span>
+                  <Link href={`/drivers/${d.driver_id}`} className="truncate hover:text-[var(--accent2)]">
+                    {d.name_ru ?? d.name_en}
+                  </Link>
                   <span className="text-right leading-tight">
                     <span className="tabular block font-display font-semibold">{d.points}</span>
                     <span className="tabular block text-[11px] text-mute">

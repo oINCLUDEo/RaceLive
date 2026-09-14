@@ -62,6 +62,7 @@ export interface DriverStandingOut {
   points: number;
   wins: number;
   code: string;
+  driver_id: string;
   name_ru: string | null;
   name_en: string;
   team_slug: string | null;
@@ -91,6 +92,7 @@ export interface RaceResultOut {
   status: string;
   time: string | null;
   code: string;
+  driver_id: string;
   name_ru: string | null;
   name_en: string;
   team_slug: string | null;
@@ -99,4 +101,52 @@ export interface RaceResultOut {
 
 export function getRaceResults(round: number | string): Promise<RaceResultOut[]> {
   return getJSON<RaceResultOut[]>(`/api/v1/results/${round}`, 1800);
+}
+
+export interface QualifyingResultOut {
+  position: number;
+  code: string;
+  driver_id: string;
+  name_ru: string | null;
+  name_en: string;
+  team_slug: string | null;
+  team_name: string;
+  q1: string | null;
+  q2: string | null;
+  q3: string | null;
+}
+
+export function getQualifyingResults(
+  round: number | string,
+): Promise<QualifyingResultOut[]> {
+  return getJSON<QualifyingResultOut[]>(`/api/v1/qualifying/${round}`, 1800);
+}
+
+export interface DriverSeasonResultOut {
+  round: number;
+  name_ru: string | null;
+  name_en: string;
+  position: number;
+  points: number;
+  status: string;
+}
+
+export interface DriverProfileOut {
+  driver_id: string;
+  code: string;
+  name_ru: string | null;
+  name_en: string;
+  number: string | null;
+  nationality: string | null;
+  dob: string | null;
+  team_slug: string | null;
+  team_name: string | null;
+  position: number | null;
+  points: number | null;
+  wins: number | null;
+  results: DriverSeasonResultOut[];
+}
+
+export function getDriverProfile(id: string): Promise<DriverProfileOut> {
+  return getJSON<DriverProfileOut>(`/api/v1/drivers/${id}`, 1800);
 }

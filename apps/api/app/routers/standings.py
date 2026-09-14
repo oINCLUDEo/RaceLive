@@ -24,6 +24,7 @@ async def driver_standings(season: int = Query(default_factory=_year)):
             points=r.points,
             wins=r.wins,
             code=r.code,
+            driver_id=r.driver_id,
             name_ru=driver_name_ru(r.code, f"{r.given} {r.family}"),
             name_en=f"{r.given} {r.family}".strip(),
             team_slug=team_slug_for(r.constructor_id),
