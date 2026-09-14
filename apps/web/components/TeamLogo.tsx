@@ -42,7 +42,8 @@ export function TeamLogo({ slug, size = 26 }: { slug: string; size?: number }) {
       width={size}
       height={size}
       className="team-logo"
-      style={{ width: size, height: size }}
+      // небольшой равномерный отступ, чтобы лого не липло к краям квадрата
+      style={{ width: size, height: size, padding: Math.round(size * 0.08) }}
       onError={() => setI((n) => n + 1)}
     />
   );

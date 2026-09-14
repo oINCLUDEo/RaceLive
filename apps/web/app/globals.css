@@ -105,7 +105,10 @@ a.card-soft:active {
 
 .team-logo {
   width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0;
-  object-fit: cover; background: var(--surface-2);
+  /* contain (не cover): показываем логотип целиком, по центру, без обрезки/зума —
+     иначе файлы с разными пропорциями/полями выглядят вразнобой. */
+  object-fit: contain;
+  box-sizing: border-box;
 }
 
 /* Атмосферные фоны (тёмные, с умеренным тёплым свечением) */
