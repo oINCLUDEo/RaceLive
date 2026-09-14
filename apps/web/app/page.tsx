@@ -10,10 +10,12 @@ import { TrackMap } from "@/components/TrackMap";
 import {
   getDriverStandings,
   getNextSession,
+  getRaceResults,
   getSchedule,
   type DriverStandingOut,
   type MeetingOut,
   type NextSessionOut,
+  type RaceResultOut,
 } from "@/lib/api";
 import { sessionLabel } from "@/lib/format";
 import { TEAMS } from "@/lib/teams";
@@ -55,6 +57,14 @@ export default async function HomePage() {
     .filter((m) => m.starts_at && new Date(m.starts_at).getTime() > now)
     .slice(0, 4);
   const rounds = upcoming.length ? upcoming : schedule.slice(-4);
+
+  // прошедший этап + подиум
+  const lastDone = [...schedule]
+    .reverse()
+    .find((m) => m.ends_at && new Date(m.ends_at).getTime() < now);
+  const podium = lastDone
+    ? (await getRaceResults(lastDone.round).catch(() => [] as RaceResultOut[])).slice(0, 3)
+    : [];
 
   return (
     <div className="flex flex-col gap-8">
@@ -128,6 +138,36 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ПРОШЕДШИЙ ЭТАП — подиум */}
+      {lastDone && podium.length > 0 && (
+        <section>
+          <div className="mb-4 flex items-baseline justify-between gap-3">
+            <h2 className="font-display text-xl font-semibold">Прошедший этап</h2>
+            <Link href={`/schedule/${lastDone.round}`} className="text-sm text-mute hover:text-bone">
+              итоги →
+            </Link>
+          </div>
+          <div className="card-soft p-5">
+            <div className="mb-4 flex items-center gap-3">
+              <Flag code={lastDone.circuit?.country_code ?? null} w={30} />
+              <span className="font-display font-semibold">{lastDone.name_ru ?? lastDone.name_en}</span>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {podium.map((r) => (
+                <div key={r.code || r.position} className="flex items-center gap-3 rounded-xl bg-surface-2 px-3.5 py-3">
+                  <span className="font-display text-lg text-mute">{r.position}</span>
+                  <TeamLogo slug={r.team_slug ?? ""} size={26} />
+                  <div className="min-w-0">
+                    <div className="truncate text-sm">{r.name_ru ?? r.name_en}</div>
+                    <div className="tabular text-[11px] text-mute">{r.time ?? r.status}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* БЛИЖАЙШИЕ ЭТАПЫ (кусок календаря) */}
       {rounds.length > 0 && (

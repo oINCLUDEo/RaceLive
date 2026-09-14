@@ -83,3 +83,20 @@ export interface ConstructorStandingOut {
 export function getConstructorStandings(): Promise<ConstructorStandingOut[]> {
   return getJSON<ConstructorStandingOut[]>(`/api/v1/standings/constructors`, 1800);
 }
+
+export interface RaceResultOut {
+  position: number;
+  points: number;
+  grid: number;
+  status: string;
+  time: string | null;
+  code: string;
+  name_ru: string | null;
+  name_en: string;
+  team_slug: string | null;
+  team_name: string;
+}
+
+export function getRaceResults(round: number | string): Promise<RaceResultOut[]> {
+  return getJSON<RaceResultOut[]>(`/api/v1/results/${round}`, 1800);
+}

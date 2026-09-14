@@ -3,10 +3,17 @@ import { notFound } from "next/navigation";
 import { Countdown } from "@/components/Countdown";
 import { Flag } from "@/components/Flag";
 import { SessionTime } from "@/components/SessionTime";
+import { TeamLogo } from "@/components/TeamLogo";
 import { TimezoneNote } from "@/components/TimezoneNote";
 import { TrackMap } from "@/components/TrackMap";
-import { getMeeting, type MeetingOut } from "@/lib/api";
+import {
+  getMeeting,
+  getRaceResults,
+  type MeetingOut,
+  type RaceResultOut,
+} from "@/lib/api";
 import { sessionLabel } from "@/lib/format";
+import { TEAMS } from "@/lib/teams";
 
 export async function generateMetadata({
   params,
@@ -38,6 +45,7 @@ export default async function MeetingPage({
   }
 
   const now = Date.now();
+  const results = await getRaceResults(round).catch(() => [] as RaceResultOut[]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -65,6 +73,32 @@ export default async function MeetingPage({
           <TrackMap circuit={m.circuit?.key} size={132} className="hidden shrink-0 opacity-80 sm:block" />
         </div>
       </div>
+
+      {results.length > 0 && (
+        <div className="card-soft overflow-hidden">
+          <div className="border-b border-line px-5 py-3 text-xs uppercase tracking-wide text-mute">
+            Итоги гонки
+          </div>
+          {results.map((r, i) => {
+            const color = (r.team_slug ? TEAMS[r.team_slug]?.color : undefined) ?? "var(--line)";
+            return (
+              <div
+                key={r.code || r.position}
+                className={`grid grid-cols-[26px_4px_28px_1fr_auto] items-center gap-3 px-5 py-2.5 sm:grid-cols-[26px_4px_28px_1fr_auto_auto] ${i < results.length - 1 ? "border-b border-line" : ""} ${r.position === 1 ? "bg-surface-2" : ""}`}
+              >
+                <span className="tabular text-mute">{r.position}</span>
+                <span className="h-6 w-[4px] rounded-full" style={{ background: color }} />
+                <TeamLogo slug={r.team_slug ?? ""} size={26} />
+                <span className="truncate">{r.name_ru ?? r.name_en}</span>
+                <span className="tabular hidden text-right text-sm text-mute sm:block">
+                  {r.time ?? r.status}
+                </span>
+                <span className="tabular text-right font-display font-semibold">{r.points}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       <div className="card-soft overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3 text-xs uppercase tracking-wide text-mute">

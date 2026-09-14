@@ -56,9 +56,27 @@ class ProviderConstructorStanding:
     constructor_name: str
 
 
+@dataclass
+class ProviderRaceResult:
+    position: int
+    points: float
+    grid: int
+    status: str
+    time: str | None
+    code: str
+    given: str
+    family: str
+    constructor_id: str
+    constructor_name: str
+
+
 @runtime_checkable
 class DataProvider(Protocol):
     name: str
+
+    async def race_results(self, season: int, rnd: int | str) -> list[ProviderRaceResult]:
+        """Финишный протокол гонки этапа (rnd — номер этапа или 'last')."""
+        ...
 
     async def driver_standings(self, season: int) -> list[ProviderDriverStanding]:
         """Личный зачёт сезона."""

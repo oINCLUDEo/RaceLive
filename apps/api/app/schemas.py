@@ -51,6 +51,19 @@ class DriverStandingOut(BaseModel):
     team_name: str | None
 
 
+class RaceResultOut(BaseModel):
+    position: int
+    points: float
+    grid: int
+    status: str
+    time: str | None
+    code: str
+    name_ru: str | None
+    name_en: str
+    team_slug: str | None
+    team_name: str
+
+
 class ConstructorStandingOut(BaseModel):
     position: int
     points: float

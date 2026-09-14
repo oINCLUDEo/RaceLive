@@ -18,6 +18,7 @@ from .base import (
     ProviderConstructorStanding,
     ProviderDriverStanding,
     ProviderMeeting,
+    ProviderRaceResult,
     ProviderSession,
 )
 
@@ -168,6 +169,32 @@ class JolpicaProvider:
                     position=int(row.get("position", 0)),
                     points=float(row.get("points", 0)),
                     wins=int(row.get("wins", 0)),
+                    constructor_id=c.get("constructorId", ""),
+                    constructor_name=c.get("name", ""),
+                )
+            )
+        return out
+
+    async def race_results(self, season: int, rnd: int | str) -> list[ProviderRaceResult]:
+        data = await self._get(f"{season}/{rnd}/results/?format=json&limit=100")
+        races = data["MRData"]["RaceTable"]["Races"]
+        if not races:
+            return []
+        out: list[ProviderRaceResult] = []
+        for row in races[0].get("Results", []):
+            d = row.get("Driver", {})
+            c = row.get("Constructor", {})
+            t = row.get("Time") or {}
+            out.append(
+                ProviderRaceResult(
+                    position=int(row.get("position", 0)),
+                    points=float(row.get("points", 0)),
+                    grid=int(row.get("grid", 0)),
+                    status=row.get("status", ""),
+                    time=t.get("time"),
+                    code=d.get("code") or d.get("driverId", "").upper()[:3],
+                    given=d.get("givenName", ""),
+                    family=d.get("familyName", ""),
                     constructor_id=c.get("constructorId", ""),
                     constructor_name=c.get("name", ""),
                 )

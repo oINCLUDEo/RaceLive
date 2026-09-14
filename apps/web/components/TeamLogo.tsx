@@ -11,7 +11,16 @@ const EXTS = ["webp", "png", "svg"] as const;
 export function TeamLogo({ slug, size = 26 }: { slug: string; size?: number }) {
   const team = TEAMS[slug];
   const [i, setI] = useState(0);
-  if (!team) return null;
+  // Неизвестная команда — рендерим пустой слот (не null!), иначе ломается грид:
+  // соседние ячейки съезжают, а имя обрезается в узкую колонку логотипа.
+  if (!team) {
+    return (
+      <span
+        className="inline-block shrink-0 rounded-lg"
+        style={{ width: size, height: size, background: "var(--surface-2)" }}
+      />
+    );
+  }
 
   if (i >= EXTS.length) {
     // все форматы отсутствуют — аккуратный цветной запасной вариант

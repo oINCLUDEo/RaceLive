@@ -103,8 +103,8 @@ CONSTRUCTORS: dict[str, str] = {
     "red_bull": "redbull", "mclaren": "mclaren", "ferrari": "ferrari",
     "mercedes": "mercedes", "aston_martin": "astonmartin", "williams": "williams",
     "rb": "rb", "racing_bulls": "rb", "alphatauri": "rb",
-    "haas": "haas", "sauber": "sauber", "kick_sauber": "sauber", "audi": "sauber",
-    "alpine": "alpine",
+    "haas": "haas", "sauber": "sauber", "kick_sauber": "sauber",
+    "audi": "audi", "alpine": "alpine", "cadillac": "cadillac",
 }
 
 
