@@ -16,6 +16,7 @@ import {
   type NextSessionOut,
 } from "@/lib/api";
 import { sessionLabel } from "@/lib/format";
+import { TEAMS } from "@/lib/teams";
 
 // Главная зависит от живых данных (ближайшая сессия, отсчёт) — рендерим на каждый
 // запрос, иначе статичная сборка показывала пустой календарь до фоновой ревалидации.
@@ -46,7 +47,8 @@ export default async function HomePage() {
     getSchedule().catch(() => [] as MeetingOut[]),
     getDriverStandings().catch(() => [] as DriverStandingOut[]),
   ]);
-  const topStandings = standings.slice(0, 6);
+  const topStandings = standings.slice(0, 10);
+  const leaderPoints = standings[0]?.points ?? 0;
 
   const now = Date.now();
   const upcoming = schedule
@@ -247,20 +249,30 @@ export default async function HomePage() {
         <section className="card-soft overflow-hidden">
           <div className="flex items-center justify-between border-b border-line px-5 py-4">
             <span className="font-display text-base font-semibold">Личный зачёт</span>
-            <Link href="/schedule" className="text-[13px] text-mute hover:text-bone">весь календарь →</Link>
+            <span className="text-[11px] uppercase tracking-wide text-mute">очки · отставание</span>
           </div>
           <div className="grid md:grid-cols-2">
-            {topStandings.map((d, idx) => (
-              <div
-                key={d.code || d.position}
-                className={`grid grid-cols-[24px_28px_1fr_auto] items-center gap-3 px-5 py-3 ${idx < 4 ? "border-b border-line" : ""} ${idx % 2 === 1 ? "md:border-l md:border-line" : ""}`}
-              >
-                <span className="tabular text-mute">{d.position}</span>
-                <TeamLogo slug={d.team_slug ?? ""} size={28} />
-                <span className="truncate">{d.name_ru ?? d.name_en}</span>
-                <span className="tabular font-display font-semibold">{d.points}</span>
-              </div>
-            ))}
+            {topStandings.map((d, idx) => {
+              const color = d.team_slug ? TEAMS[d.team_slug]?.color : undefined;
+              const gap = leaderPoints - d.points;
+              return (
+                <div
+                  key={d.code || d.position}
+                  className={`relative grid grid-cols-[22px_4px_28px_1fr_auto] items-center gap-3 px-5 py-2.5 ${idx < 8 ? "border-b border-line" : ""} ${idx % 2 === 1 ? "md:border-l md:border-line" : ""} ${d.position === 1 ? "bg-surface-2" : ""}`}
+                >
+                  <span className="tabular text-mute">{d.position}</span>
+                  <span className="h-6 w-[4px] rounded-full" style={{ background: color ?? "var(--line)" }} />
+                  <TeamLogo slug={d.team_slug ?? ""} size={26} />
+                  <span className="truncate">{d.name_ru ?? d.name_en}</span>
+                  <span className="text-right leading-tight">
+                    <span className="tabular block font-display font-semibold">{d.points}</span>
+                    <span className="tabular block text-[11px] text-mute">
+                      {d.position === 1 ? "лидер" : `−${gap}`}
+                    </span>
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </section>
       )}

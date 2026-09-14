@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 
 UTC = timezone.utc
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -55,9 +55,10 @@ async def ensure_cached(db: AsyncSession, provider: DataProvider, year: int) -> 
         db.add(season)
         await db.flush()
     else:
-        # полная замена этапов сезона (cascade удалит старые сессии)
-        for old in list(season.meetings):
-            await db.delete(old)
+        # полная замена этапов сезона: прямой DELETE без ленивой загрузки
+        # relationship (иначе MissingGreenlet в async). FK ondelete=CASCADE в БД
+        # снесёт связанные сессии.
+        await db.execute(delete(Meeting).where(Meeting.season_id == season.id))
         await db.flush()
 
     for pm in meetings:
