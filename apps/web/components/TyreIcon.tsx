@@ -1,28 +1,29 @@
 // SVG-иконка шины в стиле ТВ-худа: цветное кольцо + буква состава. Возраст — рядом.
 type Tyre = "S" | "M" | "H" | "I" | "W";
 
+// Явные hex (не CSS-переменные): var() в SVG-атрибутах fill/stroke не резолвится.
+// Функциональные цвета данных всё равно фиксированы и не меняются от темы.
 const COLOR: Record<Tyre, string> = {
-  S: "var(--red)",
-  M: "var(--yellow)",
-  H: "var(--bone)",
-  I: "var(--green)",
-  W: "var(--blue)",
+  S: "#E5484D",
+  M: "#E8C13A",
+  H: "#EDE6E4",
+  I: "#4FD87A",
+  W: "#3E8FE0",
 };
 
-export function TyreIcon({ compound, size = 20 }: { compound: Tyre; size?: number }) {
+export function TyreIcon({ compound, size = 22 }: { compound: Tyre; size?: number }) {
   const c = COLOR[compound];
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-label={`шина ${compound}`}>
-      <circle cx="12" cy="12" r="10.5" fill="#0e0d10" stroke={c} strokeWidth="3" />
-      <circle cx="12" cy="12" r="5.5" fill="none" stroke={c} strokeWidth="1.4" strokeOpacity="0.4" />
+      <circle cx="12" cy="12" r="10.4" fill="#0e0d10" stroke={c} strokeWidth="3.2" />
       <text
         x="12"
-        y="12"
+        y="12.5"
         textAnchor="middle"
         dominantBaseline="central"
         fontFamily="Arial, Helvetica, sans-serif"
-        fontSize="9"
-        fontWeight="700"
+        fontSize="12"
+        fontWeight="800"
         fill={c}
       >
         {compound}

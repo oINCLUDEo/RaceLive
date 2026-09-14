@@ -220,8 +220,8 @@ function Tower({ frame, prevOrder }: { frame: Frame; prevOrder: React.MutableRef
               <span className="flex min-w-0 items-center gap-1.5">
                 <span className="font-display font-semibold">{r.code}</span>
                 {r.pen ? <StatusBadge color="var(--red)" text={`+${r.pen}с`} title="Штраф по времени" /> : null}
-                {r.inv === "invest" ? <StatusBadge color="var(--yellow)" text="расс." title="Под расследованием" /> : null}
-                {r.inv === "noted" ? <StatusBadge color="var(--mute)" text="замеч." title="Инцидент замечен" /> : null}
+                {r.inv === "invest" ? <InvestBlock color="var(--yellow)" title="Под расследованием" /> : null}
+                {r.inv === "noted" ? <InvestBlock color="var(--mute)" title="Инцидент замечен" /> : null}
               </span>
               <span className="text-right leading-tight">
                 <span className="tabular block" style={r.best ? { color: "var(--purple)" } : undefined}>
@@ -242,7 +242,7 @@ function Tower({ frame, prevOrder }: { frame: Frame; prevOrder: React.MutableRef
   );
 }
 
-// Маркер статуса пилота: штраф / под расследованием / замечен.
+// Маркер статуса пилота: штраф (+Nс).
 function StatusBadge({ color, text, title }: { color: string; text: string; title: string }) {
   return (
     <span
@@ -251,6 +251,20 @@ function StatusBadge({ color, text, title }: { color: string; text: string; titl
       title={title}
     >
       {text}
+    </span>
+  );
+}
+
+// Расследование/замечен — восклицательный знак в блоке (как в оригинальном худе).
+function InvestBlock({ color, title }: { color: string; title: string }) {
+  return (
+    <span
+      className="inline-flex h-[15px] w-[13px] shrink-0 items-center justify-center rounded-[3px] text-[11px] font-extrabold leading-none"
+      style={{ color: "#151316", background: color }}
+      title={title}
+      aria-label={title}
+    >
+      !
     </span>
   );
 }
