@@ -2,7 +2,7 @@
 
 // Навбар-рейл с активным пунктом по текущему маршруту (раньше «Главная» подсвечивалась
 // всегда, т.к. активность была захардкожена).
-import Link from "next/link";
+import { Link } from "next-view-transitions";
 import { usePathname } from "next/navigation";
 
 const RAIL = [

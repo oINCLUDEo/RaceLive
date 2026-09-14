@@ -82,6 +82,19 @@ a.card-soft:active {
   transform: translateY(0);
 }
 
+/* View Transitions: плавный кросс-фейд между страницами (native API). */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.3s;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
+
 .rail-i {
   display: flex; align-items: center; justify-content: center;
   width: 44px; height: 44px; border-radius: 14px; color: var(--mute);

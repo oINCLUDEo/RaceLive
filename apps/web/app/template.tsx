@@ -1,20 +1,10 @@
 "use client";
 
-// Плавный переход между страницами: контент мягко проявляется при каждой навигации.
-// MotionConfig reducedMotion="user" — уважает системную настройку «меньше движения»
-// для всех анимаций внутри (переходы, перестроение тайминга, счётчики).
-import { MotionConfig, motion } from "framer-motion";
+// Переходы между страницами теперь делает View Transitions API (см. layout +
+// globals). Здесь оставляем только MotionConfig reducedMotion="user" — он уважает
+// системную «меньше движения» для остальных анимаций (тайминг, count-up).
+import { MotionConfig } from "framer-motion";
 
 export default function Template({ children }: { children: React.ReactNode }) {
-  return (
-    <MotionConfig reducedMotion="user">
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.28, ease: [0.2, 0, 0, 1] }}
-      >
-        {children}
-      </motion.div>
-    </MotionConfig>
-  );
+  return <MotionConfig reducedMotion="user">{children}</MotionConfig>;
 }

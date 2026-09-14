@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "next-view-transitions";
 import { Flag } from "@/components/Flag";
 import { TrackMap } from "@/components/TrackMap";
 import { getCircuits, type CircuitListItemOut } from "@/lib/api";

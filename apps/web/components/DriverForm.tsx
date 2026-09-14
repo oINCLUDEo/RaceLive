@@ -3,14 +3,15 @@
 // (preserveAspectRatio="none"), а точки — HTML в процентных координатах поверх,
 // поэтому они идеально ложатся на линию и остаются круглыми.
 import type { DriverSeasonResultOut } from "@/lib/api";
+import { isDnf } from "@/lib/format";
 import { TEAMS } from "@/lib/teams";
 
-function finishColor(position: number): string {
-  if (position === 1) return "var(--ember)";
-  if (position >= 2 && position <= 3) return "var(--accent2)";
-  if (position >= 4 && position <= 10) return "var(--bone)";
-  if (position > 10) return "var(--mute)";
-  return "var(--red)";
+function finishColor(r: DriverSeasonResultOut): string {
+  if (isDnf(r.status)) return "var(--red)"; // сход — по статусу, не по позиции
+  if (r.position === 1) return "var(--ember)";
+  if (r.position >= 2 && r.position <= 3) return "var(--accent2)";
+  if (r.position >= 4 && r.position <= 10) return "var(--bone)";
+  return "var(--mute)"; // вне очков
 }
 
 const PAD = 10; // % вертикальный отступ, чтобы точки не липли к краям
@@ -85,7 +86,7 @@ export function DriverForm({
               p.c.r.position > 0 ? "P" + p.c.r.position : p.c.r.status
             } · ${p.c.sum} очк.`}
             className="absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-[var(--surface-1)] transition-transform hover:scale-150"
-            style={{ left: `${p.xPct}%`, top: `${p.yPct}%`, background: finishColor(p.c.r.position) }}
+            style={{ left: `${p.xPct}%`, top: `${p.yPct}%`, background: finishColor(p.c.r) }}
           />
         ))}
       </div>

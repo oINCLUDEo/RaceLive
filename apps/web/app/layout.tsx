@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geologica, Golos_Text } from "next/font/google";
-import Link from "next/link";
+import { Link, ViewTransitions } from "next-view-transitions";
 import { RailNav } from "@/components/RailNav";
 import "./globals.css";
 
@@ -33,7 +33,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru" className={`${display.variable} ${sans.variable}`}>
+    <ViewTransitions>
+      <html lang="ru" className={`${display.variable} ${sans.variable}`}>
       <body>
         <div className="flex min-h-screen glow-page">
           {/* LEFT RAIL */}
@@ -105,6 +106,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] uppercase tracking-wide text-mute">скоро</span>
         </div>
       </body>
-    </html>
+      </html>
+    </ViewTransitions>
   );
 }

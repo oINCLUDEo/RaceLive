@@ -34,6 +34,46 @@ export function sessionLabel(type: string, nameRu: string | null, nameEn: string
   return nameRu ?? SESSION_LABEL[type] ?? nameEn;
 }
 
+// Сход/не финишировал: у сошедшего пилота есть классификационная позиция (напр. P16),
+// поэтому определяем DNF по статусу, а не по позиции. Классифицированы: "Finished"
+// и "+N Lap(s)".
+export function isDnf(status: string): boolean {
+  const s = status || "";
+  if (s === "Finished") return false;
+  if (/^\+\d+\s+Lap/.test(s)) return false;
+  return true;
+}
+
+const STATUS_RU: Record<string, string> = {
+  Retired: "Сход",
+  Accident: "Авария",
+  Collision: "Столкновение",
+  "Collision damage": "Повреждение",
+  Engine: "Мотор",
+  Gearbox: "КПП",
+  Transmission: "Трансмиссия",
+  Hydraulics: "Гидравлика",
+  Electrical: "Электрика",
+  Brakes: "Тормоза",
+  Suspension: "Подвеска",
+  "Power Unit": "Силовая установка",
+  Overheating: "Перегрев",
+  Puncture: "Прокол",
+  "Fuel system": "Топливо",
+  Disqualified: "Дисквал.",
+  "Did not start": "Не стартовал",
+  "Did not qualify": "Не квалиф.",
+  Withdrew: "Снялся",
+};
+
+// Человекочитаемый статус финиша по-русски.
+export function statusRu(status: string): string {
+  if (status === "Finished") return "Финиш";
+  const m = /^\+(\d+)\s+Lap/.exec(status);
+  if (m) return `+${m[1]} круг`;
+  return STATUS_RU[status] ?? "Сход";
+}
+
 // Часовой пояс устройства пользователя: IANA-имя и краткая метка со смещением (напр. "GMT+4").
 export function userTimeZone(): { iana: string; label: string } {
   let iana = "UTC";

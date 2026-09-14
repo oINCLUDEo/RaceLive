@@ -1,10 +1,11 @@
-import Link from "next/link";
+import { Link } from "next-view-transitions";
 import { notFound } from "next/navigation";
 import { CountUp } from "@/components/CountUp";
 import { DriverForm } from "@/components/DriverForm";
 import { Flag } from "@/components/Flag";
 import { TeamLogo } from "@/components/TeamLogo";
 import { getDriverProfile, type DriverProfileOut } from "@/lib/api";
+import { isDnf } from "@/lib/format";
 import { NATIONALITY } from "@/lib/nationality";
 import { TEAMS } from "@/lib/teams";
 
@@ -90,8 +91,8 @@ export default async function DriverPage({ params }: { params: { id: string } })
             >
               <span className="tabular text-mute">{r.round}</span>
               <span className="truncate">{r.name_ru ?? r.name_en}</span>
-              <span className={`tabular text-right text-sm ${r.position === 1 ? "text-[var(--ember)]" : r.position > 0 ? "text-bone" : "text-mute"}`}>
-                {r.position > 0 ? `P${r.position}` : r.status}
+              <span className={`tabular text-right text-sm ${isDnf(r.status) ? "text-[var(--red)]" : r.position === 1 ? "text-[var(--ember)]" : r.position > 0 ? "text-bone" : "text-mute"}`}>
+                {isDnf(r.status) ? "Сход" : `P${r.position}`}
               </span>
               <span className="tabular w-10 text-right font-display font-semibold">{r.points}</span>
             </Link>

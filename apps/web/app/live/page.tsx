@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "next-view-transitions";
 import { Countdown } from "@/components/Countdown";
 import { SessionTime } from "@/components/SessionTime";
 import { TimingPreview } from "@/components/TimingPreview";

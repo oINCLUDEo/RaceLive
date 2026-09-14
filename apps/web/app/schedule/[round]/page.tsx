@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "next-view-transitions";
 import { notFound } from "next/navigation";
 import { Countdown } from "@/components/Countdown";
 import { Flag } from "@/components/Flag";
@@ -13,7 +13,7 @@ import {
   type QualifyingResultOut,
   type RaceResultOut,
 } from "@/lib/api";
-import { sessionLabel } from "@/lib/format";
+import { sessionLabel, statusRu } from "@/lib/format";
 import { TEAMS } from "@/lib/teams";
 
 // ISR: страница кэшируется на 5 минут (повторные открытия — мгновенные), данные
@@ -98,7 +98,7 @@ export default async function MeetingPage({
                   {r.name_ru ?? r.name_en}
                 </Link>
                 <span className="tabular hidden text-right text-sm text-mute sm:block">
-                  {r.time ?? r.status}
+                  {r.time ?? statusRu(r.status)}
                 </span>
                 <span className="tabular text-right font-display font-semibold">{r.points}</span>
               </div>
