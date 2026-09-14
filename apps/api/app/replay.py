@@ -12,7 +12,7 @@ import asyncio
 import bisect
 import contextlib
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Awaitable, Callable
 
 from . import race_control
@@ -143,6 +143,22 @@ class Timeline:
         for series in (*self.pos.values(), *self.gap.values(), *self.lap.values()):
             series.sort(key=lambda x: x[0])
 
+        # Быстрейший круг: когда меняется обладатель лучшего времени круга (t → driver_number).
+        fl_events = sorted(
+            (
+                (_ts(r.get("date_start")), r["driver_number"], r["lap_duration"])
+                for r in laps
+                if r.get("lap_duration") and r.get("date_start") and r.get("driver_number") is not None
+            ),
+            key=lambda x: x[0] if x[0] is not None else 0.0,
+        )
+        self.fastest: list[tuple[float, object]] = []
+        best = float("inf")
+        for t, num, dur in fl_events:
+            if t is not None and dur < best:
+                best = dur
+                self.fastest.append((t, num))
+
         starts = [s[0][0] for s in self.pos.values() if s] + ([self.rc[0][0]] if self.rc else [])
         ends = [s[-1][0] for s in self.pos.values() if s] + ([self.rc[-1][0]] if self.rc else [])
         self.t_start = min(starts) if starts else 0.0
@@ -179,6 +195,7 @@ class Timeline:
                 }
             )
         entries.sort(key=lambda e: e["pos"])
+        fl_holder = _latest(self.fastest, t)  # кто держит быстрейший круг на момент t
         rows = [
             {
                 "pos": e["pos"],
@@ -186,7 +203,7 @@ class Timeline:
                 "team": e["team"],
                 "gap": "ЛИДЕР" if e["pos"] == 1 else _fmt_gap(e["gap"]),
                 "tyre": e["tyre"],
-                "best": False,
+                "best": e["num"] == fl_holder,
             }
             for e in entries
         ]
@@ -202,6 +219,20 @@ class Timeline:
         }
 
 
+async def _latest_race_key(client: OpenF1Client) -> int:
+    """session_key последней уже прошедшей гонки (текущий сезон, иначе прошлый)."""
+    now = datetime.now(timezone.utc)
+    for year in (now.year, now.year - 1):
+        try:
+            rows = await client.race_sessions(year)
+        except Exception:
+            rows = []
+        past = [(t, r) for r in rows if (t := _ts(r.get("date_start"))) and t <= now.timestamp()]
+        if past:
+            return max(past, key=lambda x: x[0])[1].get("session_key") or 0
+    return 0
+
+
 async def run_replay(
     session_key: int,
     speed: float,
@@ -210,6 +241,14 @@ async def run_replay(
 ) -> None:
     """Тянет сессию OpenF1 и бесконечно проигрывает её кадрами в channel."""
     client = OpenF1Client()
+
+    # session_key <= 0 → автоматически берём последнюю прошедшую гонку сезона
+    if session_key <= 0:
+        session_key = await _latest_race_key(client)
+        if not session_key:
+            log.warning("OpenF1 replay: не нашёл последнюю прошедшую гонку")
+            return
+
     try:
         sess = await client.session(session_key)
     except Exception as exc:

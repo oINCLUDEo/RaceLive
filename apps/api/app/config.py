@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     # Источник тайминга: "openf1_replay" — проигрывать прошедшую гонку из OpenF1;
     # иначе (пусто) работает демо по live_demo.
     live_source: str = ""
-    openf1_session_key: int = 0  # session_key гонки OpenF1 для реплея (напр. 9606)
+    openf1_session_key: int = 0  # 0 = последняя прошедшая гонка; иначе session_key OpenF1
     openf1_replay_speed: float = 60.0  # во сколько раз ускорять гоночное время
 
     @property

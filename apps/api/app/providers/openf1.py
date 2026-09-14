@@ -50,6 +50,9 @@ class OpenF1Client:
         rows = await self._get("sessions", session_key=session_key)
         return rows[0] if rows else None
 
+    async def race_sessions(self, year: int) -> list[dict]:
+        return await self._get("sessions", year=year, session_name="Race")
+
     async def drivers(self, session_key: int) -> list[dict]:
         return await self._get("drivers", session_key=session_key)
 

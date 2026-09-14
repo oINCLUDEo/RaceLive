@@ -128,8 +128,10 @@ def start_live_source() -> asyncio.Task | None:
     s = get_settings()
     if not (s.centrifugo_api_url and s.centrifugo_api_key):
         return None
-    if s.live_source == "openf1_replay" and s.openf1_session_key:
+    if s.live_source == "openf1_replay":
         from . import replay  # локальный импорт: тянет providers.openf1 только при нужде
+
+        # 0 → replay сам выберет последнюю прошедшую гонку
 
         return asyncio.create_task(
             replay.run_replay(s.openf1_session_key, s.openf1_replay_speed, publish, TIMING_CHANNEL)
