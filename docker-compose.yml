@@ -73,6 +73,12 @@ services:
     # /docs доступен через SSH-туннель на 127.0.0.1:8000.
     ports:
       - "127.0.0.1:8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/api/health', timeout=3).status < 500 else 1)"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   web:
     build:
@@ -90,6 +96,12 @@ services:
     # Только localhost: наружу отдаёт Caddy (https://<домен>). Прямой доступ — через туннель.
     ports:
       - "127.0.0.1:3000:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
 
   # Reverse-proxy с автоматическим HTTPS (Let's Encrypt). Отдаёт сайт на 443,
   # /connection/* проксирует в Centrifugo (WebSocket) на том же домене → wss://.
