@@ -18,9 +18,8 @@ export function TyreIcon({ compound, size = 22 }: { compound: Tyre; size?: numbe
       <circle cx="12" cy="12" r="10.4" fill="#0e0d10" stroke={c} strokeWidth="3.2" />
       <text
         x="12"
-        y="12"
+        y="16.1"
         textAnchor="middle"
-        dominantBaseline="central"
         fontFamily="Arial, Helvetica, sans-serif"
         fontSize="12"
         fontWeight="800"

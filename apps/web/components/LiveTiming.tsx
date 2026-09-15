@@ -198,18 +198,31 @@ function Tower({ frame, prevOrder }: { frame: Frame; prevOrder: React.MutableRef
             </span>
           )}
           {frame.fastest?.code && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-2.5 py-1" title="Быстрейший круг">
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1"
+              style={{ background: "color-mix(in srgb, var(--purple) 15%, transparent)" }}
+              title="Быстрейший круг"
+            >
               <span style={{ color: "var(--purple)" }}>{Icon.stop}</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: "var(--purple)" }}>БК</span>
               <span className="font-semibold text-bone">{frame.fastest.code}</span>
               {frame.fastest.time && <span className="tabular text-mute">{frame.fastest.time}</span>}
             </span>
           )}
           {w && (w.track != null || w.air != null) && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-2.5 py-1 text-mute" title="Температура трассы / воздуха">
-              <span className="text-bone">{Icon.temp}</span>
-              {w.track != null && <span className="tabular text-bone">{Math.round(w.track)}°</span>}
-              {w.air != null && <span className="tabular">{Math.round(w.air)}°</span>}
-              {w.rain && <span style={{ color: "var(--blue)" }}>{Icon.rain}</span>}
+            <span className="inline-flex items-center gap-2 rounded-full bg-surface-2 px-2.5 py-1 text-mute">
+              <span className="inline-flex items-center gap-1" title="Температура трассы">
+                <span className="text-bone">{Icon.temp}</span>
+                {w.track != null && <span className="tabular text-bone">{Math.round(w.track)}°</span>}
+                <span className="text-[9px] uppercase">трасса</span>
+              </span>
+              {w.air != null && (
+                <span className="inline-flex items-center gap-1" title="Температура воздуха">
+                  <span className="tabular">{Math.round(w.air)}°</span>
+                  <span className="text-[9px] uppercase">возд.</span>
+                </span>
+              )}
+              {w.rain && <span style={{ color: "var(--blue)" }} title="Дождь">{Icon.rain}</span>}
             </span>
           )}
         </div>
@@ -243,9 +256,11 @@ function Tower({ frame, prevOrder }: { frame: Frame; prevOrder: React.MutableRef
                 </span>
                 {subGap && <span className="tabular block text-[10px] text-mute">{subGap}</span>}
               </span>
-              <span className="flex items-center justify-end gap-1">
+              <span className="flex w-8 flex-col items-center justify-center" title="Шина и её возраст (кругов)">
                 {r.tyre && <TyreIcon compound={r.tyre} />}
-                {r.tyre_age != null && <span className="tabular w-4 text-right text-[10px] text-mute">{r.tyre_age}</span>}
+                {r.tyre_age != null && (
+                  <span className="tabular mt-0.5 text-[9px] leading-none text-mute">{r.tyre_age} кр</span>
+                )}
               </span>
             </motion.div>
           );

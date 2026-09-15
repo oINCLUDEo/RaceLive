@@ -58,8 +58,12 @@ _COMPOUND = {
 
 def _slug_for(team_name: str | None) -> str:
     n = (team_name or "").lower()
-    # «Red Bull Racing» содержит и "red bull" — проверяем «rb» как отдельное слово
-    if n == "rb" or n.startswith("rb "):
+    if not n:
+        return ""
+    # Порядок важен: «Red Bull Racing» vs «Racing Bulls / Visa Cash App RB»
+    if "red bull racing" in n:
+        return "redbull"
+    if "racing bulls" in n or "visa cash" in n or "vcarb" in n or "alphatauri" in n or n == "rb" or n.startswith("rb "):
         return "rb"
     for needle, slug in _TEAM_SLUGS:
         if needle in n:

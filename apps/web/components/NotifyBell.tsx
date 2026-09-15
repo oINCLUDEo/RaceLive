@@ -1,41 +1,43 @@
 "use client";
 
-// Напоминание о старте сессии, пока сайт открыт: браузерное уведомление за 10 минут
-// до старта и в момент старта. Без серверной части — работает во вкладке.
-// (Пуш при закрытом сайте — отдельная фича, потребует Web Push/VAPID.)
+// Напоминание о старте, пока сайт открыт. Показываем уведомление ПРЯМО В ОКНЕ сайта
+// (тост) — без запроса разрешений браузера. За 10 минут до старта и в момент старта.
+// Если разрешение на системные уведомления уже выдано — продублируем и в ОС (бонус,
+// сами не просим). Работает, пока вкладка открыта.
 import { useEffect, useRef, useState } from "react";
 
-type Perm = "default" | "granted" | "denied" | "unsupported";
-
-function notify(title: string, body: string) {
-  try {
-    new Notification(title, { body, icon: "/icon.svg" });
-  } catch {
-    /* Safari/итд иногда требует SW — тихо игнорируем */
-  }
-}
+const KEY = "racelive:notify";
 
 export function NotifyBell({ iso, label }: { iso: string | null; label: string }) {
-  const [perm, setPerm] = useState<Perm>("default");
   const [on, setOn] = useState(false);
-  const [hint, setHint] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
   const fired = useRef<{ soon?: boolean; start?: boolean }>({});
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !("Notification" in window)) {
-      setPerm("unsupported");
-      return;
-    }
-    setPerm(Notification.permission as Perm);
     try {
-      setOn(localStorage.getItem("racelive:notify") === "1");
+      setOn(localStorage.getItem(KEY) === "1");
     } catch {
       /* приватный режим */
     }
   }, []);
 
+  const showToast = (text: string) => {
+    setToast(text);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 9000);
+    // бонус: если разрешение на системные уведомления уже есть — продублируем в ОС
+    try {
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("race.live", { body: text, icon: "/icon.svg" });
+      }
+    } catch {
+      /* noop */
+    }
+  };
+
   useEffect(() => {
-    if (!on || perm !== "granted" || !iso) return;
+    if (!on || !iso) return;
     const start = new Date(iso).getTime();
     if (Number.isNaN(start)) return;
 
@@ -43,46 +45,18 @@ export function NotifyBell({ iso, label }: { iso: string | null; label: string }
       const ms = start - Date.now();
       if (ms <= 0 && ms > -3 * 3600_000 && !fired.current.start) {
         fired.current.start = true;
-        notify("race.live — старт!", `${label} начинается`);
+        showToast(`${label} — старт!`);
       } else if (ms > 0 && ms <= 10 * 60_000 && !fired.current.soon) {
         fired.current.soon = true;
-        notify("race.live — скоро старт", `${label} через ${Math.ceil(ms / 60_000)} мин`);
+        showToast(`Скоро старт: ${label} — через ${Math.ceil(ms / 60_000)} мин`);
       }
     };
     tick();
     const id = setInterval(tick, 20_000);
     return () => clearInterval(id);
-  }, [on, perm, iso, label]);
+  }, [on, iso, label]);
 
-  if (perm === "unsupported" || !iso) return null;
-
-  const enable = async () => {
-    let p = Notification.permission as Perm;
-    if (p === "default") p = (await Notification.requestPermission()) as Perm;
-    setPerm(p);
-    if (p === "granted") {
-      fired.current = {};
-      setOn(true);
-      setHint(false);
-      try {
-        localStorage.setItem("racelive:notify", "1");
-      } catch {
-        /* noop */
-      }
-      notify("race.live", `Напомним о старте: ${label}`);
-    } else {
-      setHint(true); // отклонено — мягкая подсказка, без пугающего чипа
-    }
-  };
-
-  const disable = () => {
-    setOn(false);
-    try {
-      localStorage.setItem("racelive:notify", "0");
-    } catch {
-      /* noop */
-    }
-  };
+  if (!iso) return null;
 
   const Bell = (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -91,31 +65,54 @@ export function NotifyBell({ iso, label }: { iso: string | null; label: string }
     </svg>
   );
 
-  if (on && perm === "granted") {
-    return (
-      <button
-        onClick={disable}
-        className="inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-medium"
-        style={{ borderColor: "var(--accent2-soft)", background: "var(--accent2-soft)", color: "var(--accent2)" }}
-      >
-        {Bell} Напоминание включено
-      </button>
-    );
-  }
+  const enable = () => {
+    setOn(true);
+    fired.current = {};
+    try {
+      localStorage.setItem(KEY, "1");
+    } catch {
+      /* noop */
+    }
+    showToast(`Напомним о старте: ${label}`);
+  };
 
-  // Кнопка всегда кликабельна; при отказе — тихая подсказка, а не постоянный «заблокировано».
-  const denied = perm === "denied" || hint;
+  const disable = () => {
+    setOn(false);
+    try {
+      localStorage.setItem(KEY, "0");
+    } catch {
+      /* noop */
+    }
+  };
+
   return (
-    <span className="inline-flex flex-col items-start gap-1">
-      <button
-        onClick={enable}
-        className="inline-flex items-center gap-2 rounded-full border border-line px-3.5 py-2 text-xs font-medium text-bone transition-colors hover:bg-surface-2"
-      >
-        {Bell} Напомнить о старте
-      </button>
-      {denied && (
-        <span className="text-[11px] text-mute">Разрешите уведомления для сайта в настройках браузера</span>
+    <>
+      {on ? (
+        <button
+          onClick={disable}
+          className="inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-medium"
+          style={{ borderColor: "var(--accent2-soft)", background: "var(--accent2-soft)", color: "var(--accent2)" }}
+        >
+          {Bell} Напоминание включено
+        </button>
+      ) : (
+        <button
+          onClick={enable}
+          className="inline-flex items-center gap-2 rounded-full border border-line px-3.5 py-2 text-xs font-medium text-bone transition-colors hover:bg-surface-2"
+        >
+          {Bell} Напомнить о старте
+        </button>
       )}
-    </span>
+
+      {toast && (
+        <div className="card-soft fixed bottom-5 left-5 z-40 flex max-w-[320px] items-start gap-2.5 px-4 py-3 text-sm shadow-[var(--soft)]">
+          <span className="mt-0.5 shrink-0" style={{ color: "var(--ember)" }}>{Bell}</span>
+          <span className="leading-snug">{toast}</span>
+          <button onClick={() => setToast(null)} className="ml-1 shrink-0 text-mute hover:text-bone" aria-label="Закрыть">
+            ✕
+          </button>
+        </div>
+      )}
+    </>
   );
 }
