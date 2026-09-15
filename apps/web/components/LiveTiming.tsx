@@ -25,6 +25,8 @@ type Row = {
   best?: boolean;
   pen?: number | null;
   inv?: "invest" | "noted" | null;
+  pit?: boolean;
+  stops?: number;
 };
 type RcMessage = {
   lap: number;
@@ -287,6 +289,7 @@ function Tower({
               <TeamLogo slug={r.team} />
               <span className="flex min-w-0 items-center gap-1.5">
                 <span className="font-display font-semibold">{r.code}</span>
+                {r.pit ? <StatusBadge color="var(--blue)" text="БОКС" title="На пит-стопе" /> : null}
                 {r.pen ? <StatusBadge color="var(--red)" text={`+${r.pen}с`} title="Штраф по времени" /> : null}
                 {r.inv === "invest" ? <InvestBlock color="var(--yellow)" title="Под расследованием" /> : null}
                 {r.inv === "noted" ? <InvestBlock color="var(--mute)" title="Инцидент замечен" /> : null}
@@ -297,10 +300,12 @@ function Tower({
                 </span>
                 {subGap && <span className="tabular block text-[10px] text-mute">{subGap}</span>}
               </span>
-              <span className="flex w-8 flex-col items-center justify-center" title="Шина и её возраст (кругов)">
+              <span className="flex w-10 flex-col items-center justify-center" title="Шина, возраст в кругах и число пит-стопов">
                 {r.tyre && <TyreIcon compound={r.tyre} />}
                 {r.tyre_age != null && (
-                  <span className="tabular mt-0.5 text-[9px] leading-none text-mute">{r.tyre_age} кр</span>
+                  <span className="tabular mt-0.5 text-[9px] leading-none text-mute">
+                    {r.tyre_age} кр{r.stops ? ` · ${r.stops}п` : ""}
+                  </span>
                 )}
               </span>
             </motion.div>

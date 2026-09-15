@@ -73,3 +73,6 @@ class OpenF1Client:
 
     async def weather(self, session_key: int) -> list[dict]:
         return await self._get("weather", session_key=session_key)
+
+    async def pit(self, session_key: int) -> list[dict]:
+        return await self._get("pit", session_key=session_key)

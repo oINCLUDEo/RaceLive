@@ -137,6 +137,7 @@ class Timeline:
         rc: list[dict],
         session_label: str,
         weather: list[dict] | None = None,
+        pits: list[dict] | None = None,
     ) -> None:
         self.session_label = session_label
         self.info: dict[int, dict] = {
@@ -187,6 +188,16 @@ class Timeline:
             key=lambda x: x[0],
         )
 
+        # Пит-стопы: (время, длительность) по пилотам.
+        self.pits: dict[int, list[tuple[float, object]]] = {}
+        for p in pits or []:
+            t = _ts(p.get("date"))
+            num = p.get("driver_number")
+            if t is not None and num is not None:
+                self.pits.setdefault(num, []).append((t, p.get("pit_duration")))
+        for series in self.pits.values():
+            series.sort(key=lambda x: x[0])
+
         for series in (*self.pos.values(), *self.gap.values(), *self.itv.values(), *self.lap.values()):
             series.sort(key=lambda x: x[0])
 
@@ -235,6 +246,9 @@ class Timeline:
             lap = _latest(self.lap.get(num, []), t)
             comp, stint_start = self._stint(num, lap)
             age = (lap - stint_start + 1) if isinstance(lap, int) and stint_start is not None else None
+            pit_list = self.pits.get(num, [])
+            stops = sum(1 for pt, _ in pit_list if pt <= t)
+            in_pit = any(pt <= t <= pt + 30 for pt, _ in pit_list)  # окно пит-лейна ~30 c
             entries.append(
                 {
                     "num": num,
@@ -245,6 +259,8 @@ class Timeline:
                     "int": _latest(self.itv.get(num, []), t),
                     "tyre": comp,
                     "tyre_age": age if age and age > 0 else None,
+                    "pit": in_pit,
+                    "stops": stops,
                     "lap": lap,
                 }
             )
@@ -262,6 +278,8 @@ class Timeline:
                 "int": "" if e["pos"] == 1 else _fmt_gap(e["int"]),
                 "tyre": e["tyre"],
                 "tyre_age": e["tyre_age"],
+                "pit": e["pit"],
+                "stops": e["stops"],
                 "best": e["num"] == fl_num,
                 "pen": status.get(e["code"], {}).get("pen"),
                 "inv": status.get(e["code"], {}).get("inv"),
@@ -341,11 +359,12 @@ async def run_replay(
         stints = await client.stints(session_key)
         rc = await client.race_control(session_key)
         weather = await client.weather(session_key)
+        pits = await client.pit(session_key)
     except Exception as exc:
         log.warning("OpenF1 replay: не удалось загрузить данные сессии %s: %s", session_key, exc)
         return
 
-    tl = Timeline(drivers, position, intervals, laps, stints, rc, label, weather)
+    tl = Timeline(drivers, position, intervals, laps, stints, rc, label, weather, pits)
     if tl.t_end <= tl.t_start:
         log.warning("OpenF1 replay: пустой таймлайн для сессии %s", session_key)
         return
