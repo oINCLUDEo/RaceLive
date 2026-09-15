@@ -14,7 +14,9 @@ export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Зачёт сезона",
-  description: "Личный зачёт и Кубок конструкторов текущего сезона Формулы-1.",
+  description:
+    "Личный зачёт пилотов и Кубок конструкторов Формулы-1: очки, победы и отставания по ходу сезона.",
+  alternates: { canonical: "/standings" },
 };
 
 function colorOf(slug: string | null): string {

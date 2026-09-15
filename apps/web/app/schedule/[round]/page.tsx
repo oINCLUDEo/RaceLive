@@ -14,6 +14,7 @@ import {
   type RaceResultOut,
 } from "@/lib/api";
 import { sessionLabel, statusCode, statusRu } from "@/lib/format";
+import { SITE_URL } from "@/lib/seo";
 import { TEAMS } from "@/lib/teams";
 
 // ISR: страница кэшируется на 5 минут (повторные открытия — мгновенные), данные
@@ -28,7 +29,14 @@ export async function generateMetadata({
   try {
     const m = await getMeeting(Number(params.round));
     const name = m.name_ru ?? m.name_en;
-    return { title: name, description: `Расписание сессий: ${name}.` };
+    const circuit = m.circuit?.name_ru ?? m.circuit?.name_en;
+    const description = `${name}${circuit ? ` · ${circuit}` : ""}: расписание сессий, результаты гонки и квалификации, время по вашему часовому поясу.`;
+    return {
+      title: name,
+      description,
+      alternates: { canonical: `/schedule/${params.round}` },
+      openGraph: { title: name, description },
+    };
   } catch {
     return { title: "Этап" };
   }
@@ -51,8 +59,28 @@ export default async function MeetingPage({
   if (!m) notFound();
   const now = Date.now();
 
+  const eventLd = {
+    "@context": "https://schema.org",
+    "@type": "SportsEvent",
+    name: m.name_ru ?? m.name_en,
+    sport: "Formula 1",
+    ...(m.starts_at ? { startDate: m.starts_at } : {}),
+    ...(m.ends_at ? { endDate: m.ends_at } : {}),
+    ...(m.circuit
+      ? {
+          location: {
+            "@type": "Place",
+            name: m.circuit.name_ru ?? m.circuit.name_en,
+            ...(m.circuit.country ? { address: m.circuit.country } : {}),
+          },
+        }
+      : {}),
+    url: `${SITE_URL}/schedule/${m.round}`,
+  };
+
   return (
     <div className="flex flex-col gap-6">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(eventLd) }} />
       <div>
         <Link href="/schedule" className="text-sm text-mute hover:text-bone">
           ← Расписание

@@ -10,7 +10,8 @@ export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Эфир",
-  description: "Живой тайминг гонки в реальном времени на русском.",
+  description: "Живой тайминг гонки в реальном времени на русском: позиции, интервалы, шины, рейс-контроль.",
+  alternates: { canonical: "/live" },
 };
 
 export default async function LivePage() {

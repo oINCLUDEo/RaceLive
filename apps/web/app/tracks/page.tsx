@@ -8,7 +8,8 @@ export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Трассы",
-  description: "Трассы текущего сезона Формулы-1: контуры, страны, этапы.",
+  description: "Трассы текущего сезона Формулы-1: контуры кругов, страны и этапы календаря.",
+  alternates: { canonical: "/tracks" },
 };
 
 export default async function TracksPage() {

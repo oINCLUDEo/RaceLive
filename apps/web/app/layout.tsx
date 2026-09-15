@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geologica, Golos_Text } from "next/font/google";
 import { Link, ViewTransitions } from "next-view-transitions";
 import { RailNav } from "@/components/RailNav";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
 import "./globals.css";
 
 const display = Geologica({
@@ -23,12 +24,31 @@ const sans = Golos_Text({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Смотрим Формулу вместе — race.live",
     template: "%s · race.live",
   },
-  description:
-    "Живой тайминг на русском, чат во время гонки, стримы комьюнити. Место, куда возвращаются между этапами.",
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: [
+    "Формула-1", "F1", "автогонки", "расписание Формулы-1", "результаты гран-при",
+    "живой тайминг", "зачёт пилотов", "кубок конструкторов", "рейс-контроль", "на русском",
+  ],
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    locale: "ru_RU",
+    url: SITE_URL,
+    title: "Смотрим Формулу вместе — race.live",
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Смотрим Формулу вместе — race.live",
+    description: SITE_DESCRIPTION,
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

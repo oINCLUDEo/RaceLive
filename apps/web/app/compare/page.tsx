@@ -6,6 +6,7 @@ export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Сравнение пилотов",
   description: "Сравнение двух пилотов по кругам гонки: времена кругов, лучший и средний темп.",
+  alternates: { canonical: "/compare" },
 };
 
 export default async function ComparePage() {

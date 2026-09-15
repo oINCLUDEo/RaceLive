@@ -20,7 +20,17 @@ import {
   type RaceResultOut,
 } from "@/lib/api";
 import { sessionLabel } from "@/lib/format";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
 import { TEAMS } from "@/lib/teams";
+
+const WEBSITE_LD = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: SITE_NAME,
+  url: SITE_URL,
+  inLanguage: "ru",
+  description: SITE_DESCRIPTION,
+};
 
 // Главная зависит от живых данных (ближайшая сессия, отсчёт) — рендерим на каждый
 // запрос, иначе статичная сборка показывала пустой календарь до фоновой ревалидации.
@@ -54,6 +64,7 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col gap-8">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(WEBSITE_LD) }} />
       {/* HERO — болид статично встроен в сцену */}
       <section
         className="relative flex min-h-[560px] flex-col justify-between overflow-hidden rounded-[24px] shadow-[var(--soft)]"

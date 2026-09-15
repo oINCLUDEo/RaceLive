@@ -4,6 +4,7 @@ export const metadata = {
   title: "Словарь",
   description:
     "Термины автогонок по-русски: статусы протокола (DNF, DNS, DSQ), сессии уик-энда, шины, флаги, тайминг и гоночный сленг.",
+  alternates: { canonical: "/glossary" },
 };
 
 type Item = { badge?: { text: string; color: string }; term: string; desc: string };
