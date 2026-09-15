@@ -20,6 +20,20 @@ from .providers.openf1 import OpenF1Client
 
 log = logging.getLogger("uvicorn.error")
 
+# Скорость реплея — общая, меняется на лету через API (/api/v1/live/speed).
+ALLOWED_SPEEDS = [0.5, 1, 2, 5, 15, 60]
+current_speed = 60.0
+
+
+def set_speed(value: float) -> float:
+    """Устанавливает скорость реплея (с ограничением). Возвращает применённое значение."""
+    global current_speed
+    try:
+        current_speed = max(0.1, min(120.0, float(value)))
+    except (TypeError, ValueError):
+        pass
+    return current_speed
+
 # OpenF1 team_name -> наш slug (для логотипа). Матчим по подстроке, регистр не важен.
 _TEAM_SLUGS: list[tuple[str, str]] = [
     ("red bull", "redbull"),
@@ -316,15 +330,15 @@ async def run_replay(
         label, len(tl.info), len(tl.rc), tl.total_laps, speed,
     )
 
-    # Кадр раз в ~2 реальные секунды; гоночное время за кадр = 2с × speed.
-    # speed=1 → реальный темп гонки; speed=60 → 2-часовая гонка за ~2 мин.
+    # Кадр раз в ~2 реальные секунды; гоночное время за кадр = 2с × скорость.
+    # Скорость читается на каждой итерации, поэтому меняется на лету через API.
+    set_speed(speed)  # стартовое значение из настроек
     real_step = 2.0
-    race_step = real_step * max(speed, 0.1)
     while True:
         t = tl.t_start
         while t <= tl.t_end:
             with contextlib.suppress(Exception):
                 await publish(channel, tl.frame_at(t))
-            t += race_step
+            t += real_step * current_speed
             await asyncio.sleep(real_step)
         await asyncio.sleep(3.0)  # пауза перед повтором реплея

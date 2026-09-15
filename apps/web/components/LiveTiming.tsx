@@ -6,6 +6,7 @@
 // centrifuge грузим динамически, чтобы он не попал в SSR-бандл.
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { ReplaySpeed } from "@/components/ReplaySpeed";
 import { TeamLogo } from "@/components/TeamLogo";
 import { TimingPreview } from "@/components/TimingPreview";
 import { TyreIcon } from "@/components/TyreIcon";
@@ -117,9 +118,17 @@ export function LiveTiming({ wsUrl }: { wsUrl?: string }) {
   const rc = frame?.rc ?? [];
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,440px)_1fr]">
-      {/* ТАБЛИЦА ПОЗИЦИЙ */}
-      {frame ? <Tower frame={frame} prevOrder={prevOrder} /> : <TimingPreview />}
+    <div className="flex flex-col gap-4">
+      {/* УПРАВЛЕНИЕ РЕПЛЕЕМ (только когда идёт реплей) */}
+      {frame?.badge === "реплей" && (
+        <div className="flex justify-end">
+          <ReplaySpeed />
+        </div>
+      )}
+
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,440px)_1fr]">
+        {/* ТАБЛИЦА ПОЗИЦИЙ */}
+        {frame ? <Tower frame={frame} prevOrder={prevOrder} /> : <TimingPreview />}
 
       {/* ЛЕНТА РЕЙС-КОНТРОЛЯ (прокручивается — можно отмотать всю гонку) */}
       <div className="card-soft flex max-h-[560px] flex-col overflow-hidden self-start">
@@ -147,6 +156,7 @@ export function LiveTiming({ wsUrl }: { wsUrl?: string }) {
             ))}
           </ul>
         )}
+      </div>
       </div>
     </div>
   );
