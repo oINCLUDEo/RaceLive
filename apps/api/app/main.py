@@ -10,7 +10,7 @@ from . import realtime
 from .config import get_settings
 from .db import Base, SessionLocal, engine
 from .providers import get_provider
-from .routers import circuits, drivers, health, live, results, schedule, standings, teams
+from .routers import circuits, compare, drivers, health, live, results, schedule, standings, teams
 from .services import results as results_svc
 from .services import schedule as sched_svc
 from .services import standings as stand_svc
@@ -88,6 +88,7 @@ app.include_router(drivers.router)
 app.include_router(circuits.router)
 app.include_router(teams.router)
 app.include_router(live.router)
+app.include_router(compare.router)
 
 
 @app.get("/")

@@ -249,3 +249,26 @@ export function getCircuits(): Promise<CircuitListItemOut[]> {
 export function getCircuit(key: string): Promise<CircuitPageOut> {
   return getJSON<CircuitPageOut>(`/api/v1/circuits/${key}`, 1800);
 }
+
+export interface CompareLap {
+  lap: number;
+  time: number;
+}
+export interface CompareDriver {
+  num: number;
+  code: string;
+  name_ru: string;
+  name_en: string;
+  team: string | null;
+  laps: CompareLap[];
+}
+export interface CompareOut {
+  session: string | null;
+  session_key: number | null;
+  drivers: CompareDriver[];
+}
+
+export function getCompare(session?: number): Promise<CompareOut> {
+  const q = session ? `?session=${session}` : "";
+  return getJSON<CompareOut>(`/api/v1/compare${q}`, 3600);
+}

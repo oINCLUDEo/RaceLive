@@ -95,6 +95,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <Link href="/glossary" className="hover:text-bone">
                     Словарь терминов
                   </Link>
+                  <Link href="/compare" className="hover:text-bone">
+                    Сравнение пилотов
+                  </Link>
                 </span>
                 <span>Данные — Jolpica / Ergast · логотипы команд — плейсхолдеры · проект в разработке</span>
               </div>

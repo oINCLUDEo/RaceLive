@@ -6,7 +6,9 @@
 import { useState } from "react";
 import { TEAMS } from "@/lib/teams";
 
-const EXTS = ["webp", "png", "svg"] as const;
+// webp (настоящее лого) → svg (плейсхолдер). Без png: лишний формат = холостой 404
+// и мельтешение на страницах с 20 логотипами.
+const EXTS = ["webp", "svg"] as const;
 
 export function TeamLogo({ slug, size = 26 }: { slug: string; size?: number }) {
   const team = TEAMS[slug];
