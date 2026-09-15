@@ -185,6 +185,25 @@ def driver_statuses(messages: list[str]) -> dict[str, dict]:
     return {c: v for c, v in st.items() if v}
 
 
+def session_flag(messages: list[str]) -> str:
+    """Общий статус сессии из ленты РК (в хронологическом порядке):
+    green / sc / vsc / red / chequered. Секторные жёлтые не поднимают общий флаг."""
+    flag = "green"
+    for msg in messages:
+        u = (msg or "").upper()
+        if "CHEQUERED FLAG" in u:  # проверяем ДО «RED FLAG»: «chequeRED FLAG» содержит его
+            flag = "chequered"
+        elif "RED FLAG" in u:
+            flag = "red"
+        elif "VIRTUAL SAFETY CAR" in u:
+            flag = "green" if "ENDING" in u else "vsc"
+        elif "SAFETY CAR" in u:
+            flag = "green" if "IN THIS LAP" in u else "sc"
+        elif "GREEN LIGHT" in u or "SESSION STARTED" in u:
+            flag = "green"
+    return flag
+
+
 def feed_item(rc: dict, lap: int | None = None) -> dict:
     """Готовит сообщение к публикации: русский текст + оригинал + метки для UI."""
     return {

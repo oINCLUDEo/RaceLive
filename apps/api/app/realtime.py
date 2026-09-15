@@ -96,7 +96,8 @@ async def demo_publisher() -> None:
             gaps.append(cum)
         # быстрейший круг — иногда подсвечиваем кого-то из середины/хвоста
         best_idx = random.randint(1, n - 1) if random.random() < 0.25 else -1
-        status = race_control.driver_statuses([m["message"] for m in reversed(rc)])
+        rc_msgs = [m["message"] for m in reversed(rc)]
+        status = race_control.driver_statuses(rc_msgs)
         rows = [
             {
                 "pos": i + 1,
@@ -119,6 +120,7 @@ async def demo_publisher() -> None:
                 "total_laps": total_laps,
                 "rows": rows,
                 "rc": list(rc),
+                "flag": race_control.session_flag(rc_msgs),
                 "demo": True,
                 "badge": "демо-поток",
             },

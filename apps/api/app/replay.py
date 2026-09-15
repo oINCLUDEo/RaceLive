@@ -236,7 +236,8 @@ class Timeline:
         entries.sort(key=lambda e: e["pos"])
         fl = _latest(self.fastest, t)  # (driver_number, lap_duration) держателя быстрейшего круга
         fl_num = fl[0] if fl else None
-        status = race_control.driver_statuses([r.get("message") or "" for tt, r in self.rc if tt <= t])
+        msgs = [r.get("message") or "" for tt, r in self.rc if tt <= t]
+        status = race_control.driver_statuses(msgs)
         rows = [
             {
                 "pos": e["pos"],
@@ -264,9 +265,13 @@ class Timeline:
             "rows": rows,
             "rc": list(reversed(recent[-150:])),
             "fastest": {"code": fl_code, "time": _fmt_laptime(fl[1])} if fl else None,
+            "flag": race_control.session_flag(msgs),
             "weather": {
                 "track": w.get("track_temperature"),
                 "air": w.get("air_temperature"),
+                "humidity": w.get("humidity"),
+                "wind": w.get("wind_speed"),
+                "wind_dir": w.get("wind_direction"),
                 "rain": bool(w.get("rainfall")),
             } if w else None,
             "badge": "реплей",

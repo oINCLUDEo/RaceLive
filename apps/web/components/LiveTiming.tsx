@@ -7,9 +7,11 @@
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { ReplaySpeed } from "@/components/ReplaySpeed";
+import { SessionFlag } from "@/components/SessionFlag";
 import { TeamLogo } from "@/components/TeamLogo";
 import { TimingPreview } from "@/components/TimingPreview";
 import { TyreIcon } from "@/components/TyreIcon";
+import { WeatherCard } from "@/components/WeatherCard";
 
 type Tyre = "S" | "M" | "H" | "I" | "W";
 type Row = {
@@ -39,8 +41,16 @@ type Frame = {
   rc?: RcMessage[];
   demo?: boolean;
   badge?: string;
+  flag?: string;
   fastest?: { code: string | null; time: string | null } | null;
-  weather?: { track: number | null; air: number | null; rain: boolean } | null;
+  weather?: {
+    track: number | null;
+    air: number | null;
+    humidity: number | null;
+    wind: number | null;
+    wind_dir: number | null;
+    rain: boolean;
+  } | null;
 };
 
 // Иконки для строки статистики
@@ -158,6 +168,9 @@ export function LiveTiming({ wsUrl }: { wsUrl?: string }) {
         )}
       </div>
       </div>
+
+      {/* ПОГОДА НА ТРАССЕ */}
+      {frame?.weather && <WeatherCard w={frame.weather} />}
     </div>
   );
 }
@@ -169,8 +182,7 @@ function Tower({ frame, prevOrder }: { frame: Frame; prevOrder: React.MutableRef
     frame.lap != null && frame.total_laps
       ? Math.min(100, Math.round((frame.lap / frame.total_laps) * 100))
       : null;
-  const w = frame.weather;
-  const hasStats = pct != null || frame.fastest?.code || (w && (w.track != null || w.air != null));
+  const hasStats = pct != null || !!frame.fastest?.code;
 
   return (
     <div className="card-soft overflow-hidden self-start">
@@ -179,8 +191,11 @@ function Tower({ frame, prevOrder }: { frame: Frame; prevOrder: React.MutableRef
           <span className="live-dot" aria-hidden />
           <span className="truncate">{frame.session ?? "Тайминг"}</span>
         </span>
-        <span className="shrink-0 rounded-full bg-surface-2 px-2 py-0.5 text-[10px] uppercase tracking-wide">
-          {frame.badge ?? (frame.demo ? "демо-поток" : "эфир")}
+        <span className="flex shrink-0 items-center gap-2">
+          {frame.flag && <SessionFlag status={frame.flag} />}
+          <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] uppercase tracking-wide">
+            {frame.badge ?? (frame.demo ? "демо-поток" : "эфир")}
+          </span>
         </span>
       </div>
 
@@ -207,22 +222,6 @@ function Tower({ frame, prevOrder }: { frame: Frame; prevOrder: React.MutableRef
               <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: "var(--purple)" }}>БК</span>
               <span className="font-semibold text-bone">{frame.fastest.code}</span>
               {frame.fastest.time && <span className="tabular text-mute">{frame.fastest.time}</span>}
-            </span>
-          )}
-          {w && (w.track != null || w.air != null) && (
-            <span className="inline-flex items-center gap-2 rounded-full bg-surface-2 px-2.5 py-1 text-mute">
-              <span className="inline-flex items-center gap-1" title="Температура трассы">
-                <span className="text-bone">{Icon.temp}</span>
-                {w.track != null && <span className="tabular text-bone">{Math.round(w.track)}°</span>}
-                <span className="text-[9px] uppercase">трасса</span>
-              </span>
-              {w.air != null && (
-                <span className="inline-flex items-center gap-1" title="Температура воздуха">
-                  <span className="tabular">{Math.round(w.air)}°</span>
-                  <span className="text-[9px] uppercase">возд.</span>
-                </span>
-              )}
-              {w.rain && <span style={{ color: "var(--blue)" }} title="Дождь">{Icon.rain}</span>}
             </span>
           )}
         </div>
