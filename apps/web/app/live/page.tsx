@@ -36,7 +36,7 @@ export default async function LivePage() {
             </span>
           ) : (
             <span className="inline-flex items-center gap-2 rounded-full border border-line bg-black/30 px-3 py-1 text-xs text-mute">
-              <span className="live-dot" aria-hidden /> сейчас эфира нет
+              <span className="live-dot" aria-hidden /> Сейчас эфира нет
             </span>
           )}
           <h1 className="mt-3 font-display text-3xl font-semibold">
@@ -57,7 +57,7 @@ export default async function LivePage() {
         {!s?.live && sess?.starts_at && (
           <div className="flex flex-wrap items-center gap-4">
             <div className="font-display text-lg text-bone">
-              до старта <span className="tabular"><Countdown iso={sess.starts_at} /></span>
+              До старта <span className="tabular"><Countdown iso={sess.starts_at} /></span>
             </div>
             <NotifyBell
               iso={sess.starts_at}

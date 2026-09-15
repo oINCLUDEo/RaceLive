@@ -24,6 +24,9 @@ log = logging.getLogger("uvicorn.error")
 ALLOWED_SPEEDS = [0.5, 1, 2, 5, 15, 60]
 current_speed = 60.0
 
+# Управление перемоткой: race_start — время старта гонки; seek — запрос перемотки.
+_replay_ctl: dict = {"race_start": None, "seek": None}
+
 
 def set_speed(value: float) -> float:
     """Устанавливает скорость реплея (с ограничением). Возвращает применённое значение."""
@@ -33,6 +36,15 @@ def set_speed(value: float) -> float:
     except (TypeError, ValueError):
         pass
     return current_speed
+
+
+def request_seek_start() -> bool:
+    """Перемотать реплей к старту гонки (после прогрева). True, если старт известен."""
+    rs = _replay_ctl.get("race_start")
+    if rs is not None:
+        _replay_ctl["seek"] = rs
+        return True
+    return False
 
 # OpenF1 team_name -> наш slug (для логотипа). Матчим по подстроке, регистр не важен.
 _TEAM_SLUGS: list[tuple[str, str]] = [
@@ -198,6 +210,9 @@ class Timeline:
         ends = [s[-1][0] for s in self.pos.values() if s] + ([self.rc[-1][0]] if self.rc else [])
         self.t_start = min(starts) if starts else 0.0
         self.t_end = max(ends) if ends else 0.0
+        # Старт гонки = начало 1-го круга (после прогревочного), иначе — начало данных.
+        lap1 = [tt for series in self.lap.values() for (tt, ln) in series if ln == 1]
+        self.race_start = min(lap1) if lap1 else self.t_start
         self.total_laps = max(
             (v for series in self.lap.values() for _, v in series if isinstance(v, int)),
             default=0,
@@ -340,12 +355,16 @@ async def run_replay(
     )
 
     # Кадр раз в ~2 реальные секунды; гоночное время за кадр = 2с × скорость.
-    # Скорость читается на каждой итерации, поэтому меняется на лету через API.
+    # Скорость и перемотка читаются на каждой итерации — меняются на лету через API.
     set_speed(speed)  # стартовое значение из настроек
+    _replay_ctl["race_start"] = tl.race_start
     real_step = 2.0
     while True:
         t = tl.t_start
         while t <= tl.t_end:
+            if _replay_ctl.get("seek") is not None:
+                t = _replay_ctl["seek"]
+                _replay_ctl["seek"] = None
             with contextlib.suppress(Exception):
                 await publish(channel, tl.frame_at(t))
             t += real_step * current_speed

@@ -40,9 +40,28 @@ export function ReplaySpeed() {
     }
   };
 
+  const seekStart = async () => {
+    try {
+      await fetch("/api/live/seek-start", { method: "POST" });
+    } catch {
+      /* noop */
+    }
+  };
+
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <span className="mr-0.5 text-[11px] uppercase tracking-wide text-mute">скорость</span>
+      <button
+        onClick={seekStart}
+        className="inline-flex items-center gap-1.5 rounded-full border border-line px-2.5 py-1 text-xs font-medium text-bone transition-colors hover:bg-surface-2"
+        title="Перемотать к старту гонки (пропустить прогрев)"
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M6 5h2v14H6zM20 5l-11 7 11 7z" />
+        </svg>
+        К старту
+      </button>
+      <span className="mx-1 h-4 w-px bg-line" aria-hidden />
+      <span className="mr-0.5 text-[11px] uppercase tracking-wide text-mute">Скорость</span>
       {opts.map((o) => {
         const active = speed === o;
         return (

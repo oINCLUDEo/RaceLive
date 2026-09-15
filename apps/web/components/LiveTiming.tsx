@@ -92,7 +92,9 @@ function rcColor(m: RcMessage): string {
 
 export function LiveTiming({ wsUrl }: { wsUrl?: string }) {
   const [frame, setFrame] = useState<Frame | null>(null);
+  const [changes, setChanges] = useState<Record<string, "up" | "down">>({});
   const prevOrder = useRef<string[]>([]);
+  const prevPos = useRef<Record<string, number>>({});
 
   useEffect(() => {
     if (!wsUrl) return;
@@ -105,7 +107,31 @@ export function LiveTiming({ wsUrl }: { wsUrl?: string }) {
         const c = new Centrifuge(wsUrl);
         const sub = c.newSubscription("timing:live");
         sub.on("publication", (ctx: { data: Frame }) => {
-          if (!cancelled && ctx.data?.rows) setFrame(ctx.data);
+          const data = ctx.data;
+          if (cancelled || !data?.rows) return;
+          // отмечаем, кто с кем разменялся позициями (стрелка держится ~6 c)
+          const np: Record<string, number> = {};
+          const nc: Record<string, "up" | "down"> = {};
+          for (const r of data.rows) {
+            np[r.code] = r.pos;
+            const prev = prevPos.current[r.code];
+            if (prev != null && prev !== r.pos) nc[r.code] = r.pos < prev ? "up" : "down";
+          }
+          prevPos.current = np;
+          if (Object.keys(nc).length) {
+            setChanges((c) => ({ ...c, ...nc }));
+            for (const code of Object.keys(nc)) {
+              window.setTimeout(() => {
+                if (!cancelled)
+                  setChanges((c) => {
+                    const n = { ...c };
+                    delete n[code];
+                    return n;
+                  });
+              }, 6000);
+            }
+          }
+          setFrame(data);
         });
         sub.subscribe();
         c.connect();
@@ -136,9 +162,12 @@ export function LiveTiming({ wsUrl }: { wsUrl?: string }) {
         </div>
       )}
 
+      {/* ПОГОДА НА ТРАССЕ (вверху) */}
+      {frame?.weather && <WeatherCard w={frame.weather} />}
+
       <div className="grid gap-5 lg:grid-cols-[minmax(0,440px)_1fr]">
         {/* ТАБЛИЦА ПОЗИЦИЙ */}
-        {frame ? <Tower frame={frame} prevOrder={prevOrder} /> : <TimingPreview />}
+        {frame ? <Tower frame={frame} prevOrder={prevOrder} changes={changes} /> : <TimingPreview />}
 
       {/* ЛЕНТА РЕЙС-КОНТРОЛЯ (прокручивается — можно отмотать всю гонку) */}
       <div className="card-soft flex max-h-[560px] flex-col overflow-hidden self-start">
@@ -158,7 +187,7 @@ export function LiveTiming({ wsUrl }: { wsUrl?: string }) {
                 <div className="min-w-0">
                   <div className="text-sm leading-snug">{m.message_ru}</div>
                   <div className="mt-0.5 flex items-center gap-2 text-[11px] text-mute">
-                    {m.lap != null && <span className="tabular">круг {m.lap}</span>}
+                    {m.lap != null && <span className="tabular">Круг {m.lap}</span>}
                     <span className="truncate opacity-70">{m.message}</span>
                   </div>
                 </div>
@@ -168,14 +197,19 @@ export function LiveTiming({ wsUrl }: { wsUrl?: string }) {
         )}
       </div>
       </div>
-
-      {/* ПОГОДА НА ТРАССЕ */}
-      {frame?.weather && <WeatherCard w={frame.weather} />}
     </div>
   );
 }
 
-function Tower({ frame, prevOrder }: { frame: Frame; prevOrder: React.MutableRefObject<string[]> }) {
+function Tower({
+  frame,
+  prevOrder,
+  changes,
+}: {
+  frame: Frame;
+  prevOrder: React.MutableRefObject<string[]>;
+  changes: Record<string, "up" | "down">;
+}) {
   const order = prevOrder.current;
   const rows = frame.rows;
   const pct =
@@ -205,7 +239,7 @@ function Tower({ frame, prevOrder }: { frame: Frame; prevOrder: React.MutableRef
           {pct != null && (
             <span className="flex min-w-[150px] flex-1 items-center gap-2 text-mute">
               <span className="tabular whitespace-nowrap font-semibold text-bone">
-                круг {frame.lap}/{frame.total_laps}
+                Круг {frame.lap}/{frame.total_laps}
               </span>
               <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-2">
                 <span className="block h-full rounded-full bg-[var(--ember)] transition-[width] duration-500" style={{ width: `${pct}%` }} />
@@ -239,9 +273,17 @@ function Tower({ frame, prevOrder }: { frame: Frame; prevOrder: React.MutableRef
               layout
               key={r.code}
               transition={{ layout: { duration: 0.24, ease: [0.2, 0, 0, 1] } }}
-              className={`grid grid-cols-[20px_24px_1fr_auto_auto] items-center gap-2.5 px-4 py-2 ${moved ? "row-flash" : ""}`}
+              className={`grid grid-cols-[34px_24px_1fr_auto_auto] items-center gap-2.5 px-4 py-2 ${moved ? "row-flash" : ""}`}
             >
-              <span className="tabular text-mute">{r.pos}</span>
+              <span className="tabular flex items-center gap-0.5 text-mute">
+                <span>{r.pos}</span>
+                {changes[r.code] === "up" && (
+                  <span className="text-[9px] leading-none" style={{ color: "var(--green)" }}>▲</span>
+                )}
+                {changes[r.code] === "down" && (
+                  <span className="text-[9px] leading-none" style={{ color: "var(--red)" }}>▼</span>
+                )}
+              </span>
               <TeamLogo slug={r.team} />
               <span className="flex min-w-0 items-center gap-1.5">
                 <span className="font-display font-semibold">{r.code}</span>

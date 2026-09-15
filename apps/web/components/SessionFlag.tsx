@@ -1,41 +1,29 @@
-// Индикатор статуса сессии (флаг): зелёный / SC / VSC / красный / клетчатый.
+// Индикатор статуса сессии. Зелёный — приглушённо; SC/VSC/красный/финиш — заметно
+// (сплошная плашка, у тревожных статусов пульсирующая точка), как в трансляции.
 type Status = "green" | "yellow" | "sc" | "vsc" | "red" | "chequered";
 
-const MAP: Record<Status, { label: string; color: string }> = {
-  green: { label: "Гонка идёт", color: "var(--green)" },
+type Cfg = { label: string; color: string; solid?: boolean; pulse?: boolean; checker?: boolean };
+
+const MAP: Record<Status, Cfg> = {
+  green: { label: "Зелёный флаг", color: "var(--green)" },
   yellow: { label: "Жёлтый флаг", color: "var(--yellow)" },
-  sc: { label: "Сейфти-кар", color: "var(--yellow)" },
-  vsc: { label: "Virtual SC", color: "var(--yellow)" },
-  red: { label: "Красный флаг", color: "var(--red)" },
-  chequered: { label: "Финиш", color: "var(--bone)" },
+  sc: { label: "Safety Car", color: "var(--yellow)", solid: true, pulse: true },
+  vsc: { label: "Virtual SC", color: "var(--yellow)", solid: true, pulse: true },
+  red: { label: "Красный флаг", color: "var(--red)", solid: true, pulse: true },
+  chequered: { label: "Финиш", color: "var(--bone)", solid: true, checker: true },
 };
 
-function Flag({ status, color }: { status: Status; color: string }) {
-  if (status === "sc" || status === "vsc") {
-    return (
-      <span className="text-[10px] font-extrabold" style={{ color }}>
-        {status === "sc" ? "SC" : "VSC"}
-      </span>
-    );
-  }
-  if (status === "chequered") {
-    return (
-      <svg width="13" height="13" viewBox="0 0 24 24">
-        <path d="M5 2v20" stroke="var(--bone)" strokeWidth="2" strokeLinecap="round" />
-        <g>
-          <rect x="6" y="3" width="4" height="3" fill="var(--bone)" />
-          <rect x="14" y="3" width="4" height="3" fill="var(--bone)" />
-          <rect x="10" y="6" width="4" height="3" fill="var(--bone)" />
-          <rect x="6" y="9" width="4" height="3" fill="var(--bone)" />
-          <rect x="14" y="9" width="4" height="3" fill="var(--bone)" />
-        </g>
-      </svg>
-    );
-  }
+function Checker() {
   return (
-    <svg width="13" height="13" viewBox="0 0 24 24">
-      <path d="M5 2v20" stroke={color} strokeWidth="2" strokeLinecap="round" />
-      <path d="M5 3h13l-2.6 4 2.6 4H5z" fill={color} />
+    <svg width="12" height="9" viewBox="0 0 12 9" aria-hidden>
+      <rect width="12" height="9" fill="#151316" opacity="0.12" />
+      <g fill="#151316">
+        <rect x="0" y="0" width="4" height="3" />
+        <rect x="8" y="0" width="4" height="3" />
+        <rect x="4" y="3" width="4" height="3" />
+        <rect x="0" y="6" width="4" height="3" />
+        <rect x="8" y="6" width="4" height="3" />
+      </g>
     </svg>
   );
 }
@@ -43,14 +31,26 @@ function Flag({ status, color }: { status: Status; color: string }) {
 export function SessionFlag({ status }: { status?: string }) {
   const s = (status ?? "green") as Status;
   const cfg = MAP[s] ?? MAP.green;
+  const dark = "#151316";
+  const style = cfg.solid
+    ? { background: cfg.color, color: s === "red" ? "#fff" : dark }
+    : { background: `color-mix(in srgb, ${cfg.color} 16%, transparent)`, color: cfg.color };
+
   return (
     <span
-      className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5"
-      style={{ background: `color-mix(in srgb, ${cfg.color} 16%, transparent)`, color: cfg.color }}
+      className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+      style={style}
       title={cfg.label}
     >
-      <Flag status={s} color={cfg.color} />
-      <span className="text-[10px] font-semibold uppercase tracking-wide">{cfg.label}</span>
+      {cfg.pulse && (
+        <span
+          className="live-dot"
+          style={{ background: s === "red" ? "#fff" : dark }}
+          aria-hidden
+        />
+      )}
+      {cfg.checker && <Checker />}
+      {cfg.label}
     </span>
   );
 }

@@ -20,3 +20,8 @@ async def get_speed() -> dict:
 @router.post("/speed")
 async def post_speed(body: SpeedIn) -> dict:
     return {"speed": replay.set_speed(body.speed), "options": replay.ALLOWED_SPEEDS}
+
+
+@router.post("/seek-start")
+async def post_seek_start() -> dict:
+    return {"ok": replay.request_seek_start()}
