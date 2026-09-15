@@ -125,7 +125,7 @@ export function CompareView({ data: initial }: { data: CompareOut }) {
     const marks = (d: CompareDriver) => {
       const byLap = new Map(d.laps.map((l) => [l.lap, l.time]));
       const bestLap = d.laps.reduce((m, l) => (l.time < m.time ? l : m), d.laps[0]);
-      const pits = d.pits
+      const pits = (d.pits ?? [])
         .filter((lap) => byLap.has(lap))
         .map((lap) => ({ x: x(lap), y: y(byLap.get(lap)!) }));
       return { pits, best: { x: x(bestLap.lap), y: y(bestLap.time) } };
@@ -142,7 +142,7 @@ export function CompareView({ data: initial }: { data: CompareOut }) {
   return (
     <div className={`flex flex-col gap-5 ${loading ? "opacity-60" : ""}`}>
       {/* ВЫБОР ГОНКИ */}
-      {data.sessions.length > 0 && (
+      {(data.sessions ?? []).length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-[11px] uppercase tracking-wide text-mute">Гонка</span>
           <select
@@ -150,7 +150,7 @@ export function CompareView({ data: initial }: { data: CompareOut }) {
             onChange={(e) => onRace(Number(e.target.value))}
             className="rounded-lg border border-line bg-surface-1 px-3 py-2 text-sm"
           >
-            {data.sessions.map((s) => (
+            {(data.sessions ?? []).map((s) => (
               <option key={s.key} value={s.key}>
                 {s.label}
               </option>

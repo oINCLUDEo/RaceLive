@@ -92,4 +92,6 @@ async def _build(session_key: int) -> dict:
 @router.get("/compare")
 async def compare(session: int | None = Query(None)) -> dict:
     key = session or 0
-    return await cached(f"compare:{key}", 6 * 3600, lambda: _build(key))
+    # v2: форма ответа изменилась (добавлены pits/sessions) — новый ключ, чтобы не
+    # отдавать устаревший кэш старого формата.
+    return await cached(f"compare:v2:{key}", 6 * 3600, lambda: _build(key))

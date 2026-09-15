@@ -4,9 +4,14 @@
 SCHEDULE_TTL_HOURS. Это выполняет требование «кэширование вместо повторных обращений».
 """
 
+import asyncio
 from datetime import datetime, timedelta, timezone
 
 UTC = timezone.utc
+
+# Обновление сезона (DELETE+INSERT) не потокобезопасно: прогрев и запрос могли
+# перезаписывать meetings одновременно → duplicate key. Сериализуем обновление.
+_refresh_lock = asyncio.Lock()
 
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -48,6 +53,20 @@ async def ensure_cached(db: AsyncSession, provider: DataProvider, year: int) -> 
     if season and await _is_fresh(season):
         return season
 
+    # Только один обновляющий одновременно. Дождавшись лока, перепроверяем свежесть:
+    # другой мог уже обновить сезон, пока мы ждали (тогда не перезаписываем).
+    async with _refresh_lock:
+        season = (
+            await db.execute(select(Season).where(Season.year == year))
+        ).scalar_one_or_none()
+        if season and await _is_fresh(season):
+            return season
+        return await _refresh(db, provider, year, season)
+
+
+async def _refresh(
+    db: AsyncSession, provider: DataProvider, year: int, season: Season | None
+) -> Season:
     meetings = await provider.schedule(year)
 
     if season is None:
