@@ -11,22 +11,41 @@ from .config import get_settings
 from .db import Base, SessionLocal, engine
 from .providers import get_provider
 from .routers import circuits, drivers, health, live, results, schedule, standings, teams
+from .services import results as results_svc
 from .services import schedule as sched_svc
 from .services import standings as stand_svc
 
+# Как часто обновлять горячие кэши. Меньше самого короткого TTL (зачёт — 1 ч),
+# чтобы пользователь практически никогда не попадал на холодный запрос к провайдеру.
+WARM_INTERVAL_SEC = 25 * 60
 
-async def _prewarm() -> None:
-    """Прогрев кэшей при старте: расписание + зачёты уже тёплые к первому запросу
-    пользователя (иначе холодная страница ждёт провайдера). Ошибки не критичны."""
+
+async def _warm_once() -> None:
+    """Прогрев горячих кэшей: расписание, зачёты, результаты последней гонки."""
     year = datetime.now(timezone.utc).year
     provider = get_provider()
+    last_round: int | None = None
     with contextlib.suppress(Exception):
         async with SessionLocal() as db:
-            await sched_svc.get_schedule(db, provider, year)
+            meetings = await sched_svc.get_schedule(db, provider, year)
+            now = datetime.now(timezone.utc)
+            # round/ends_at — колонки (не связи), безопасно читать вне сессии
+            done = [m for m in meetings if m.ends_at and m.ends_at < now]
+            last_round = done[-1].round if done else None
     with contextlib.suppress(Exception):
         await stand_svc.get_driver_standings(year)
     with contextlib.suppress(Exception):
         await stand_svc.get_constructor_standings(year)
+    if last_round is not None:
+        with contextlib.suppress(Exception):
+            await results_svc.get_race_results(year, last_round)
+
+
+async def _cache_warmer() -> None:
+    """Держит горячие кэши тёплыми: прогрев на старте и периодически до истечения TTL."""
+    while True:
+        await _warm_once()
+        await asyncio.sleep(WARM_INTERVAL_SEC)
 
 
 @asynccontextmanager
@@ -34,7 +53,7 @@ async def lifespan(app: FastAPI):
     # MVP: создаём таблицы на старте. С Фазы 3 — Alembic-миграции (см. журнал решений).
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    task = asyncio.create_task(_prewarm())  # в фоне, не блокирует старт
+    task = asyncio.create_task(_cache_warmer())  # в фоне, не блокирует старт
     live_task = realtime.start_live_source()  # реплей OpenF1 или демо-тайминг
     yield
     task.cancel()

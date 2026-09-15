@@ -1,4 +1,5 @@
 import { Link } from "next-view-transitions";
+import { Suspense } from "react";
 import { Countdown } from "@/components/Countdown";
 import { CountdownBoxes } from "@/components/CountdownBoxes";
 import { Flag } from "@/components/Flag";
@@ -47,27 +48,9 @@ const SOON = [
 ];
 
 export default async function HomePage() {
-  const [next, schedule, standings] = await Promise.all([
-    getNextSession().catch(() => null as NextSessionOut | null),
-    getSchedule().catch(() => [] as MeetingOut[]),
-    getDriverStandings().catch(() => [] as DriverStandingOut[]),
-  ]);
-  const topStandings = standings.slice(0, 10);
-  const leaderPoints = standings[0]?.points ?? 0;
-
-  const now = Date.now();
-  const upcoming = schedule
-    .filter((m) => m.starts_at && new Date(m.starts_at).getTime() > now)
-    .slice(0, 4);
-  const rounds = upcoming.length ? upcoming : schedule.slice(-4);
-
-  // прошедший этап + подиум
-  const lastDone = [...schedule]
-    .reverse()
-    .find((m) => m.ends_at && new Date(m.ends_at).getTime() < now);
-  const podium = lastDone
-    ? (await getRaceResults(lastDone.round).catch(() => [] as RaceResultOut[])).slice(0, 3)
-    : [];
+  // Только ближайшая сессия для героя (лёгкий запрос) — герой рисуется сразу,
+  // тяжёлые секции (календарь, зачёт, подиум) подгружаются потоком ниже.
+  const next = await getNextSession().catch(() => null as NextSessionOut | null);
 
   return (
     <div className="flex flex-col gap-8">
@@ -76,20 +59,16 @@ export default async function HomePage() {
         className="relative flex min-h-[560px] flex-col justify-between overflow-hidden rounded-[24px] shadow-[var(--soft)]"
         style={{ background: "linear-gradient(180deg,#180d10 0%, #130a0c 62%)" }}
       >
-        {/* красный подсвет-пол (за прозрачным canvas) */}
         <div
           className="pointer-events-none absolute inset-x-0 bottom-0 h-[60%]"
           style={{ background: "radial-gradient(55% 100% at 50% 112%, rgba(224,64,47,0.4), rgba(224,64,47,0.1) 44%, transparent 72%)" }}
         />
-        {/* болид — фоновый наполнитель справа + переключатель (three.js по требованию) */}
         <HeroCar />
-        {/* градиент для читаемости текста слева */}
         <div
           className="pointer-events-none absolute inset-0"
           style={{ background: "linear-gradient(100deg, rgba(19,10,12,0.94) 0%, rgba(19,10,12,0.68) 34%, rgba(19,10,12,0.22) 58%, transparent 82%)" }}
         />
 
-        {/* верх: бренд + заголовок */}
         <div className="relative p-8 md:p-10">
           <span className="inline-flex w-fit items-center gap-2 rounded-full border border-line bg-black/40 px-3.5 py-1.5 text-xs backdrop-blur">
             <span className="live-dot" aria-hidden />
@@ -100,11 +79,10 @@ export default async function HomePage() {
           </h1>
         </div>
 
-        {/* низ: карточка ближайшей гонки + присутствие */}
         <div className="relative flex flex-wrap items-end justify-between gap-4 p-6 md:p-8">
           <div className="w-full max-w-[330px] rounded-2xl border border-line bg-[rgba(18,11,13,0.62)] p-5 backdrop-blur-md">
             <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-mute">
-              <span className="live-dot" aria-hidden /> ближайшая гонка
+              <span className="live-dot" aria-hidden /> Ближайшая гонка
             </div>
             <div className="mt-2 font-display text-xl font-semibold">
               {next ? next.meeting_name_ru ?? next.meeting_name_en : "Скоро объявим"}
@@ -137,6 +115,62 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Тяжёлые секции — потоком, с скелетоном (герой уже виден) */}
+      <Suspense fallback={<HomeDataSkeleton />}>
+        <HomeData />
+      </Suspense>
+
+      {/* СКОРО — честный роадмап вместо демо-данных */}
+      <section>
+        <div className="mb-4 flex items-baseline gap-3.5">
+          <h2 className="font-display text-xl font-semibold">Скоро</h2>
+          <span className="text-sm text-mute">что готовим дальше</span>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          {SOON.map((s) => (
+            <div key={s.title} className="card-soft p-5">
+              <div className="flex items-center justify-between">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--bone)" strokeWidth="1.6">
+                  <path d={s.icon} />
+                </svg>
+                <span className="rounded-full bg-[var(--accent2-soft)] px-2.5 py-1 text-[11px] font-medium" style={{ color: "var(--accent2)" }}>
+                  {s.phase}
+                </span>
+              </div>
+              <h3 className="mt-4 font-display text-base font-semibold">{s.title}</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-mute">{s.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+// Данные календаря/зачёта/подиума — грузятся потоком отдельно от героя.
+async function HomeData() {
+  const [schedule, standings] = await Promise.all([
+    getSchedule().catch(() => [] as MeetingOut[]),
+    getDriverStandings().catch(() => [] as DriverStandingOut[]),
+  ]);
+  const topStandings = standings.slice(0, 10);
+  const leaderPoints = standings[0]?.points ?? 0;
+
+  const now = Date.now();
+  const upcoming = schedule
+    .filter((m) => m.starts_at && new Date(m.starts_at).getTime() > now)
+    .slice(0, 4);
+  const rounds = upcoming.length ? upcoming : schedule.slice(-4);
+
+  const lastDone = [...schedule]
+    .reverse()
+    .find((m) => m.ends_at && new Date(m.ends_at).getTime() < now);
+  const podium = lastDone
+    ? (await getRaceResults(lastDone.round).catch(() => [] as RaceResultOut[])).slice(0, 3)
+    : [];
+
+  return (
+    <>
       {/* ПРОШЕДШИЙ ЭТАП — подиум */}
       {lastDone && podium.length > 0 && (
         <section>
@@ -251,30 +285,20 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+    </>
+  );
+}
 
-      {/* СКОРО — честный роадмап вместо демо-данных */}
-      <section>
-        <div className="mb-4 flex items-baseline gap-3.5">
-          <h2 className="font-display text-xl font-semibold">Скоро</h2>
-          <span className="text-sm text-mute">что готовим дальше</span>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-3">
-          {SOON.map((s) => (
-            <div key={s.title} className="card-soft p-5">
-              <div className="flex items-center justify-between">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--bone)" strokeWidth="1.6">
-                  <path d={s.icon} />
-                </svg>
-                <span className="rounded-full bg-[var(--accent2-soft)] px-2.5 py-1 text-[11px] font-medium" style={{ color: "var(--accent2)" }}>
-                  {s.phase}
-                </span>
-              </div>
-              <h3 className="mt-4 font-display text-base font-semibold">{s.title}</h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-mute">{s.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+function HomeDataSkeleton() {
+  return (
+    <div className="flex animate-pulse flex-col gap-8">
+      <div className="h-44 rounded-[18px] bg-surface-1" />
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-36 rounded-[18px] bg-surface-1" />
+        ))}
+      </div>
+      <div className="h-64 rounded-[18px] bg-surface-1" />
     </div>
   );
 }
