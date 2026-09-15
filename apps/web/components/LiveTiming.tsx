@@ -141,7 +141,7 @@ export function LiveTiming({ wsUrl }: { wsUrl?: string }) {
             Здесь появятся сообщения рейс-контроля — флаги, сейфти-кар, штрафы и расследования, переведённые на русский.
           </div>
         ) : (
-          <ul className="overflow-y-auto">
+          <ul className="no-scrollbar overflow-y-auto">
             {rc.map((m, i) => (
               <li key={`${m.lap}-${i}-${m.message}`} className={`flex gap-3 px-4 py-3 ${i < rc.length - 1 ? "border-b border-line" : ""}`}>
                 <span className="mt-1 h-3 w-[3px] shrink-0 rounded-full" style={{ background: rcColor(m) }} aria-hidden />
@@ -218,6 +218,10 @@ function Tower({ frame, prevOrder }: { frame: Frame; prevOrder: React.MutableRef
       <div className="py-1.5">
         {rows.map((r) => {
           const moved = order.length > 0 && order[r.pos - 1] !== r.code;
+          const hasInt = !!r.int && r.int !== "";
+          // Главное число — интервал до впереди идущего; мелким снизу — отрыв от лидера.
+          const mainGap = r.pos === 1 ? r.gap : hasInt ? r.int : r.gap;
+          const subGap = r.pos === 1 ? "" : hasInt ? r.gap : "";
           return (
             <motion.div
               layout
@@ -235,9 +239,9 @@ function Tower({ frame, prevOrder }: { frame: Frame; prevOrder: React.MutableRef
               </span>
               <span className="text-right leading-tight">
                 <span className="tabular block" style={r.best ? { color: "var(--purple)" } : undefined}>
-                  {r.gap}
+                  {mainGap}
                 </span>
-                {r.int && <span className="tabular block text-[10px] text-mute">{r.int}</span>}
+                {subGap && <span className="tabular block text-[10px] text-mute">{subGap}</span>}
               </span>
               <span className="flex items-center justify-end gap-1">
                 {r.tyre && <TyreIcon compound={r.tyre} />}
