@@ -261,11 +261,17 @@ export interface CompareDriver {
   name_en: string;
   team: string | null;
   laps: CompareLap[];
+  pits: number[];
+}
+export interface CompareSession {
+  key: number;
+  label: string;
 }
 export interface CompareOut {
   session: string | null;
   session_key: number | null;
   drivers: CompareDriver[];
+  sessions: CompareSession[];
 }
 
 export function getCompare(session?: number): Promise<CompareOut> {
