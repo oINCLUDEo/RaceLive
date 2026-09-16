@@ -84,6 +84,36 @@ export default async function TeamPage({ params }: { params: { slug: string } })
         </section>
       )}
 
+      {/* ФОРМА КОМАНДЫ — очки по этапам */}
+      {t.rounds.length > 1 && (
+        <section>
+          <div className="mb-3 flex items-baseline justify-between gap-3">
+            <h2 className="font-display text-lg font-semibold">Форма команды</h2>
+            <span className="text-xs text-mute">очки по этапам</span>
+          </div>
+          <div className="card-soft flex items-end gap-1.5 overflow-x-auto px-4 pb-3 pt-4">
+            {(() => {
+              const maxPts = Math.max(...t.rounds.map((r) => r.team_points), 1);
+              return t.rounds.map((r) => (
+                <Link
+                  key={r.round}
+                  href={`/schedule/${r.round}`}
+                  title={`Этап ${r.round}: ${r.team_points} очк.`}
+                  className="flex flex-col items-center gap-1"
+                >
+                  <span className="tabular text-[9px] text-mute">{r.team_points}</span>
+                  <div
+                    className="w-4 rounded-t-[3px] transition-opacity hover:opacity-80"
+                    style={{ height: `${Math.max(4, Math.round((r.team_points / maxPts) * 96))}px`, background: color }}
+                  />
+                  <span className="tabular text-[9px] text-mute">{r.round}</span>
+                </Link>
+              ));
+            })()}
+          </div>
+        </section>
+      )}
+
       {/* СОСТАВ + H2H */}
       <section className="grid gap-5 lg:grid-cols-[1fr_1fr]">
         {t.drivers.length > 0 && (

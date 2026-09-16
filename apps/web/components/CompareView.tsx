@@ -32,7 +32,7 @@ function DriverPicker({
 }: {
   drivers: CompareDriver[];
   value: number;
-  exclude: number;
+  exclude: number | undefined;
   dot: string;
   onChange: (n: number) => void;
 }) {
@@ -75,12 +75,15 @@ function DriverPicker({
   );
 }
 
-export function CompareView({ data: initial }: { data: CompareOut }) {
+export function CompareView({ data: initial, initialDriver }: { data: CompareOut; initialDriver?: string }) {
   const [data, setData] = useState(initial);
   const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState<"laps" | "delta">("laps");
   const drivers = data.drivers;
-  const [aNum, setA] = useState(drivers[0]?.num);
-  const [bNum, setB] = useState(drivers[1]?.num);
+  // Предвыбор пилота из ссылки (?driver=CODE) — например «Сравнить» со страницы пилота.
+  const aInit = drivers.find((d) => d.code === initialDriver)?.num ?? drivers[0]?.num;
+  const [aNum, setA] = useState(aInit);
+  const [bNum, setB] = useState(drivers.find((d) => d.num !== aInit)?.num);
 
   const a = drivers.find((d) => d.num === aNum) ?? drivers[0];
   const b = drivers.find((d) => d.num === bNum) ?? drivers[1];
@@ -131,6 +134,32 @@ export function CompareView({ data: initial }: { data: CompareOut }) {
       return { pits, best: { x: x(bestLap.lap), y: y(bestLap.time) } };
     };
     return { W, H, padL, padR, x, y, line, grid, marks };
+  }, [a, b]);
+
+  // Дельта: нарастающая разница A−B по общим кругам (тест). >0 — B впереди, <0 — A впереди.
+  const delta = useMemo(() => {
+    if (!a || !b) return null;
+    const bByLap = new Map(b.laps.map((l) => [l.lap, l.time]));
+    const pts: { lap: number; cum: number }[] = [];
+    let cum = 0;
+    for (const l of a.laps) {
+      const tb = bByLap.get(l.lap);
+      if (tb == null) continue;
+      cum += l.time - tb;
+      pts.push({ lap: l.lap, cum });
+    }
+    if (pts.length < 2) return null;
+    const maxAbs = Math.max(...pts.map((p) => Math.abs(p.cum)), 0.5);
+    const maxLap = Math.max(...pts.map((p) => p.lap));
+    const W = 720, H = 260, padL = 52, padR = 12, padT = 16, padB = 22;
+    const plotW = W - padL - padR;
+    const plotH = H - padT - padB;
+    const zeroY = padT + plotH / 2;
+    const x = (lap: number) => padL + ((lap - 1) / Math.max(1, maxLap - 1)) * plotW;
+    const y = (c: number) => zeroY + (c / maxAbs) * (plotH / 2);
+    const line = pts.map((p) => `${x(p.lap).toFixed(1)},${y(p.cum).toFixed(1)}`).join(" ");
+    const last = pts[pts.length - 1].cum;
+    return { W, H, padL, padR, padT, zeroY, x, y, line, maxAbs, last };
   }, [a, b]);
 
   if (!a || !b) return null;
@@ -187,47 +216,85 @@ export function CompareView({ data: initial }: { data: CompareOut }) {
 
       {/* ГРАФИК */}
       <div className="card-soft p-4">
-        <div className="mb-2 flex items-center justify-between text-xs text-mute">
-          <span>Время круга (ниже — быстрее)</span>
-          <span className="flex items-center gap-3">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex rounded-full border border-line p-0.5 text-xs">
+            {([["laps", "Времена кругов"], ["delta", "Дельта"]] as const).map(([m, label]) => (
+              <button
+                key={m}
+                onClick={() => setMode(m)}
+                className="rounded-full px-3 py-1 font-medium transition-colors"
+                style={mode === m ? { background: "var(--accent2-soft)", color: "var(--accent2)" } : { color: "var(--mute)" }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <span className="flex items-center gap-3 text-xs text-mute">
             <span className="flex items-center gap-1.5"><span className="h-2 w-4 rounded-full" style={{ background: cA }} />{a.code}</span>
             <span className="flex items-center gap-1.5"><span className="inline-block w-4" style={{ borderTop: `2px dashed ${cB}` }} />{b.code}</span>
           </span>
         </div>
-        {chart && mA && mB ? (
-          <div className="overflow-x-auto">
-            <svg viewBox={`0 0 ${chart.W} ${chart.H}`} className="h-auto w-full min-w-[520px]">
-              {chart.grid.map((g, i) => (
-                <g key={i}>
-                  <line x1={chart.padL} y1={g.y} x2={chart.W - chart.padR} y2={g.y} stroke="var(--line)" strokeWidth="1" />
-                  <text x={chart.padL - 6} y={g.y + 3} textAnchor="end" fontSize="10" fill="var(--mute)" className="tabular">{g.label}</text>
-                </g>
-              ))}
-              <polyline points={chart.line(a.laps)} fill="none" stroke={cA} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
-              <polyline points={chart.line(b.laps)} fill="none" stroke={cB} strokeWidth="2" strokeDasharray="5 4" strokeLinejoin="round" strokeLinecap="round" />
-              {/* быстрейший круг */}
-              {[{ m: mA, c: cA }, { m: mB, c: cB }].map(({ m, c }, i) => (
-                <circle key={i} cx={m.best.x} cy={m.best.y} r="3.5" fill="var(--purple)" stroke={c} strokeWidth="1.5" />
-              ))}
-              {/* пит-стопы */}
-              {[{ m: mA, c: cA }, { m: mB, c: cB }].map(({ m, c }, di) =>
-                m.pits.map((pt, i) => (
-                  <g key={`${di}-${i}`}>
-                    <circle cx={pt.x} cy={pt.y} r="3" fill={c} />
-                    <text x={pt.x} y={pt.y - 6} textAnchor="middle" fontSize="9" fontWeight="700" fill={c}>П</text>
+
+        {mode === "laps" ? (
+          chart && mA && mB ? (
+            <div className="overflow-x-auto">
+              <svg viewBox={`0 0 ${chart.W} ${chart.H}`} className="h-auto w-full min-w-[520px]">
+                {chart.grid.map((g, i) => (
+                  <g key={i}>
+                    <line x1={chart.padL} y1={g.y} x2={chart.W - chart.padR} y2={g.y} stroke="var(--line)" strokeWidth="1" />
+                    <text x={chart.padL - 6} y={g.y + 3} textAnchor="end" fontSize="10" fill="var(--mute)" className="tabular">{g.label}</text>
                   </g>
-                )),
-              )}
+                ))}
+                <polyline points={chart.line(a.laps)} fill="none" stroke={cA} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+                <polyline points={chart.line(b.laps)} fill="none" stroke={cB} strokeWidth="2" strokeDasharray="5 4" strokeLinejoin="round" strokeLinecap="round" />
+                {[{ m: mA, c: cA }, { m: mB, c: cB }].map(({ m, c }, i) => (
+                  <circle key={i} cx={m.best.x} cy={m.best.y} r="3.5" fill="var(--purple)" stroke={c} strokeWidth="1.5" />
+                ))}
+                {[{ m: mA, c: cA }, { m: mB, c: cB }].map(({ m, c }, di) =>
+                  m.pits.map((pt, i) => (
+                    <g key={`${di}-${i}`}>
+                      <circle cx={pt.x} cy={pt.y} r="3" fill={c} />
+                      <text x={pt.x} y={pt.y - 6} textAnchor="middle" fontSize="9" fontWeight="700" fill={c}>П</text>
+                    </g>
+                  )),
+                )}
+              </svg>
+            </div>
+          ) : (
+            <div className="py-8 text-center text-sm text-mute">Нет данных по кругам.</div>
+          )
+        ) : delta ? (
+          <div className="overflow-x-auto">
+            <svg viewBox={`0 0 ${delta.W} ${delta.H}`} className="h-auto w-full min-w-[520px]">
+              <line x1={delta.padL} y1={delta.zeroY} x2={delta.W - delta.padR} y2={delta.zeroY} stroke="var(--line-strong)" strokeWidth="1" strokeDasharray="4 4" />
+              <text x={delta.padL - 6} y={delta.padT + 12} textAnchor="end" fontSize="9" fill={cA}>{a.code} ↑</text>
+              <text x={delta.padL - 6} y={delta.H - 14} textAnchor="end" fontSize="9" fill={cB}>{b.code} ↓</text>
+              <polyline points={delta.line} fill="none" stroke="var(--bone)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
             </svg>
           </div>
         ) : (
-          <div className="py-8 text-center text-sm text-mute">Нет данных по кругам.</div>
+          <div className="py-8 text-center text-sm text-mute">Недостаточно общих кругов для дельты.</div>
         )}
-        <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-mute">
-          <span><b className="text-bone">П</b> — пит-стоп</span>
-          <span><span className="mr-1 inline-block h-2 w-2 rounded-full align-middle" style={{ background: "var(--purple)" }} />быстрейший круг</span>
-          <span>пики вверх — питы/сейфти-кар</span>
-        </div>
+
+        {mode === "laps" ? (
+          <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-mute">
+            <span><b className="text-bone">П</b> — пит-стоп</span>
+            <span><span className="mr-1 inline-block h-2 w-2 rounded-full align-middle" style={{ background: "var(--purple)" }} />быстрейший круг</span>
+            <span>пики вверх — питы/сейфти-кар</span>
+          </div>
+        ) : (
+          <div className="mt-1 text-[11px] text-mute">
+            Выше центра — впереди <b style={{ color: cA }}>{a.code}</b>, ниже — <b style={{ color: cB }}>{b.code}</b>.
+            {delta && (
+              <>
+                {" "}Итог по общим кругам:{" "}
+                <b className="text-bone">
+                  {delta.last <= 0 ? a.code : b.code} впереди на {Math.abs(delta.last).toFixed(1)} с
+                </b>.
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
