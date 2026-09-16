@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "react";
 
 const KEY = "racelive:notify";
 
-export function NotifyBell({ iso, label }: { iso: string | null; label: string }) {
+export function NotifyBell({ iso, label, compact }: { iso: string | null; label: string; compact?: boolean }) {
   const [on, setOn] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const fired = useRef<{ soon?: boolean; start?: boolean }>({});
@@ -85,13 +85,25 @@ export function NotifyBell({ iso, label }: { iso: string | null; label: string }
     }
   };
 
+  const onStyle = { borderColor: "var(--accent2-soft)", background: "var(--accent2-soft)", color: "var(--accent2)" };
+
   return (
     <>
-      {on ? (
+      {compact ? (
+        <button
+          onClick={on ? disable : enable}
+          title={on ? "Напоминание включено — нажмите, чтобы выключить" : "Напомнить о старте"}
+          aria-label={on ? "Напоминание включено" : "Напомнить о старте"}
+          className="inline-flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-full border transition-colors"
+          style={on ? onStyle : { borderColor: "var(--line)", color: "var(--bone)" }}
+        >
+          {Bell}
+        </button>
+      ) : on ? (
         <button
           onClick={disable}
           className="inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-medium"
-          style={{ borderColor: "var(--accent2-soft)", background: "var(--accent2-soft)", color: "var(--accent2)" }}
+          style={onStyle}
         >
           {Bell} Напоминание включено
         </button>

@@ -1,6 +1,7 @@
 import { Link } from "next-view-transitions";
 import { notFound } from "next/navigation";
 import { CountUp } from "@/components/CountUp";
+import { DriverPhoto } from "@/components/DriverPhoto";
 import { Flag } from "@/components/Flag";
 import { TeamLogo } from "@/components/TeamLogo";
 import { getDriverProfile, type DriverProfileOut } from "@/lib/api";
@@ -33,10 +34,6 @@ export default async function DriverPage({ params }: { params: { id: string } })
   const finished = d.results.filter((r) => r.position > 0 && !isDnf(r.status));
   const podiums = finished.filter((r) => r.position <= 3).length;
   const bestFinish = finished.length ? Math.min(...finished.map((r) => r.position)) : null;
-  const dnfCount = d.results.filter((r) => isDnf(r.status)).length;
-  const avgFinish = finished.length
-    ? Math.round(finished.reduce((s, r) => s + r.position, 0) / finished.length)
-    : null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -68,7 +65,7 @@ export default async function DriverPage({ params }: { params: { id: string } })
           {d.number ?? d.code}
         </span>
         <div className="relative flex flex-wrap items-center gap-5">
-          <TeamLogo slug={d.team_slug ?? ""} size={52} />
+          <DriverPhoto id={d.driver_id} name={d.name_ru ?? d.name_en} teamSlug={d.team_slug} size={78} />
           <div className="min-w-0">
             <div className="flex items-center gap-2 text-sm text-mute">
               {nat && <Flag code={nat.code} w={24} />}
@@ -77,7 +74,8 @@ export default async function DriverPage({ params }: { params: { id: string } })
             </div>
             <h1 className="mt-1 font-display text-4xl font-semibold">{d.name_ru ?? d.name_en}</h1>
             {d.team_slug ? (
-              <Link href={`/teams/${d.team_slug}`} className="mt-1 inline-block text-mute hover:text-bone">
+              <Link href={`/teams/${d.team_slug}`} className="mt-1 inline-flex items-center gap-2 text-mute hover:text-bone">
+                <TeamLogo slug={d.team_slug} size={18} />
                 {d.team_name ?? ""}
               </Link>
             ) : (
@@ -95,46 +93,6 @@ export default async function DriverPage({ params }: { params: { id: string } })
         <Stat value={bestFinish ? `P${bestFinish}` : "—"} label={`лучший финиш · ${podiums} подиума(ов)`} />
       </section>
 
-      {/* ФОРМА СЕЗОНА — тренд финишных позиций (выше — лучше) */}
-      {d.results.length > 1 && (
-        <section className="card-soft p-5">
-          <div className="mb-3 flex items-baseline justify-between gap-3">
-            <h2 className="font-display text-base font-semibold">Форма сезона</h2>
-            <span className="text-xs text-mute">
-              сходов: {dnfCount}
-              {avgFinish ? ` · средний финиш P${avgFinish}` : ""}
-            </span>
-          </div>
-          {(() => {
-            const res = d.results;
-            const cl = res.map((r, i) => ({ i, r })).filter((o) => o.r.position > 0 && !isDnf(o.r.status));
-            const maxPos = Math.max(3, ...cl.map((o) => o.r.position));
-            const W = Math.max(340, res.length * 34), H = 92, padX = 16, padT = 14, padB = 16;
-            const plotH = H - padT - padB;
-            const step = (W - padX * 2) / Math.max(1, res.length - 1);
-            const px = (i: number) => padX + i * step;
-            const py = (pos: number) => padT + ((pos - 1) / Math.max(1, maxPos - 1)) * plotH;
-            const linePts = cl.map((o) => `${px(o.i).toFixed(1)},${py(o.r.position).toFixed(1)}`).join(" ");
-            return (
-              <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full">
-                <polyline points={linePts} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
-                {res.map((r, i) => {
-                  const dnf = isDnf(r.status);
-                  const c = dnf ? "var(--red)" : formColor(r);
-                  const cy = dnf ? py(maxPos) : py(r.position);
-                  return (
-                    <circle key={r.round} cx={px(i)} cy={cy} r="3.5" fill={c} stroke="var(--surface-1)" strokeWidth="1.5" />
-                  );
-                })}
-              </svg>
-            );
-          })()}
-          <div className="mt-1 flex justify-between text-[10px] text-mute">
-            <span>P1 сверху</span>
-            <span>этапы 1–{d.results.length}</span>
-          </div>
-        </section>
-      )}
 
       {/* РЕЗУЛЬТАТЫ СЕЗОНА */}
       {d.results.length > 0 && (
@@ -165,15 +123,6 @@ export default async function DriverPage({ params }: { params: { id: string } })
       <p className="text-xs text-mute">Источник данных: Jolpica / Ergast.</p>
     </div>
   );
-}
-
-// Цвет клетки «формы»: победа — красный, подиум — индиго, очки — bone, иначе/сход — приглушённо.
-function formColor(r: { position: number; status: string }): string {
-  if (isDnf(r.status)) return "var(--mute)";
-  if (r.position === 1) return "var(--red)";
-  if (r.position <= 3) return "var(--accent2)";
-  if (r.position <= 10) return "var(--bone)";
-  return "var(--mute)";
 }
 
 function Stat({ value, label }: { value: React.ReactNode; label: string }) {

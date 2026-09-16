@@ -107,11 +107,12 @@ export default async function HomePage() {
                 <div className="mt-4">
                   <CountdownBoxes iso={next.session.starts_at} />
                 </div>
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="mt-4 flex items-center gap-2">
                   <Link href={`/schedule/${next.round}`} className="cta flex-1 justify-center">
                     Смотреть
                   </Link>
                   <NotifyBell
+                    compact
                     iso={next.session.starts_at}
                     label={`${next.meeting_name_ru ?? next.meeting_name_en} · ${sessionLabel(next.session.type, next.session.name_ru, next.session.name_en)}`}
                   />
@@ -191,40 +192,32 @@ async function HomeData() {
               итоги →
             </Link>
           </div>
-          <div className="glow-panel overflow-hidden rounded-[20px] p-5 shadow-[var(--soft)]">
+          <div className="card-soft p-5">
             <div className="mb-4 flex items-center gap-3">
-              <Flag code={lastDone.circuit?.country_code ?? null} w={34} />
-              <div className="min-w-0">
-                <div className="truncate font-display text-lg font-semibold">{lastDone.name_ru ?? lastDone.name_en}</div>
-                {lastDone.circuit && (
-                  <div className="truncate text-xs text-mute">{lastDone.circuit.name_ru ?? lastDone.circuit.name_en}</div>
-                )}
-              </div>
+              <Flag code={lastDone.circuit?.country_code ?? null} w={30} />
+              <span className="font-display font-semibold">{lastDone.name_ru ?? lastDone.name_en}</span>
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               {podium.map((r) => {
-                const tc = (r.team_slug ? TEAMS[r.team_slug]?.color : undefined) ?? "var(--line)";
-                const rankColor = r.position === 1 ? "var(--red)" : r.position <= 3 ? "var(--accent2)" : "var(--mute)";
+                const medal = r.position === 1 ? "#E7B24B" : r.position === 2 ? "#C4CAD0" : "#CD7F45";
                 return (
-                  <div
+                  <Link
                     key={r.code || r.position}
-                    className={`relative flex items-center gap-3 overflow-hidden rounded-2xl border border-line py-3 pl-4 pr-3 ${r.position === 1 ? "bg-surface-2" : "bg-surface-1"}`}
+                    href={`/drivers/${r.driver_id}`}
+                    className="card-soft flex items-center gap-3 bg-surface-2 p-3.5"
                   >
-                    <span className="absolute left-0 top-2.5 bottom-2.5 w-[3px] rounded-full" style={{ background: tc }} aria-hidden />
                     <span
                       className="tabular flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-display text-sm font-bold"
-                      style={{ background: `color-mix(in srgb, ${rankColor} 20%, transparent)`, color: rankColor }}
+                      style={{ background: `color-mix(in srgb, ${medal} 22%, transparent)`, color: medal }}
                     >
                       {r.position}
                     </span>
-                    <TeamLogo slug={r.team_slug ?? ""} size={28} />
+                    <TeamLogo slug={r.team_slug ?? ""} size={26} />
                     <div className="min-w-0">
-                      <Link href={`/drivers/${r.driver_id}`} className="block truncate text-sm font-medium hover:text-[var(--accent2)]">
-                        {r.name_ru ?? r.name_en}
-                      </Link>
+                      <div className="truncate text-sm font-medium">{r.name_ru ?? r.name_en}</div>
                       <div className="tabular text-[11px] text-mute">{r.time ?? r.status}</div>
                     </div>
-                  </div>
+                  </Link>
                 );
               })}
             </div>
