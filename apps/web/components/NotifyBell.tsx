@@ -121,7 +121,7 @@ export function NotifyBell({ iso, label, compact }: { iso: string | null; label:
       )}
 
       {toast && (
-        <div className="card-soft fixed bottom-6 left-1/2 z-50 flex max-w-[340px] -translate-x-1/2 items-start gap-2.5 px-4 py-3 text-sm shadow-[var(--soft)]">
+        <div className="card-soft fixed right-4 top-[76px] z-50 flex w-[300px] max-w-[calc(100vw-2rem)] items-start gap-2.5 px-4 py-3 text-sm shadow-[var(--soft)]">
           <span className="mt-0.5 shrink-0" style={{ color: "var(--ember)" }}>{Bell}</span>
           <span className="leading-snug">{toast}</span>
           <button onClick={() => setToast(null)} className="ml-1 shrink-0 text-mute hover:text-bone" aria-label="Закрыть">
