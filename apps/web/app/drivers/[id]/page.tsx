@@ -2,6 +2,7 @@ import { Link } from "next-view-transitions";
 import { notFound } from "next/navigation";
 import { CountUp } from "@/components/CountUp";
 import { DriverPhoto } from "@/components/DriverPhoto";
+import { FavoriteStar } from "@/components/FavoriteStar";
 import { Flag } from "@/components/Flag";
 import { TeamLogo } from "@/components/TeamLogo";
 import { getDriverProfile, type DriverProfileOut } from "@/lib/api";
@@ -41,16 +42,19 @@ export default async function DriverPage({ params }: { params: { id: string } })
         <Link href="/standings" className="text-sm text-mute hover:text-bone">
           ← Зачёт
         </Link>
-        <Link
-          href={`/compare?driver=${d.code}`}
-          className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium"
-          style={{ borderColor: "var(--accent2-soft)", background: "var(--accent2-soft)", color: "var(--accent2)" }}
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 5L5 9l4 4M15 19l4-4-4-4M5 9h13M19 15H6" />
-          </svg>
-          Сравнить
-        </Link>
+        <div className="flex items-center gap-2">
+          <FavoriteStar kind="driver" id={d.driver_id} withLabel />
+          <Link
+            href={`/compare?driver=${d.code}`}
+            className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium"
+            style={{ borderColor: "var(--accent2-soft)", background: "var(--accent2-soft)", color: "var(--accent2)" }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 5L5 9l4 4M15 19l4-4-4-4M5 9h13M19 15H6" />
+            </svg>
+            Сравнить
+          </Link>
+        </div>
       </div>
 
       {/* ШАПКА */}

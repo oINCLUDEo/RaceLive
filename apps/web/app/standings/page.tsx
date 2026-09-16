@@ -1,4 +1,5 @@
 import { Link } from "next-view-transitions";
+import { FavoriteStar } from "@/components/FavoriteStar";
 import { TeamLogo } from "@/components/TeamLogo";
 import {
   getConstructorStandings,
@@ -59,9 +60,12 @@ export default async function StandingsPage() {
                   <span className="tabular text-mute">{d.position}</span>
                   <span className="h-6 w-[4px] rounded-full" style={{ background: colorOf(d.team_slug) }} />
                   <TeamLogo slug={d.team_slug ?? ""} size={26} />
-                  <Link href={`/drivers/${d.driver_id}`} className="truncate hover:text-[var(--accent2)]">
-                    {d.name_ru ?? d.name_en}
-                  </Link>
+                  <span className="flex min-w-0 items-center gap-2">
+                    <Link href={`/drivers/${d.driver_id}`} className="truncate hover:text-[var(--accent2)]">
+                      {d.name_ru ?? d.name_en}
+                    </Link>
+                    <FavoriteStar kind="driver" id={d.driver_id} size={14} />
+                  </span>
                   <span className="text-right leading-tight">
                     <span className="tabular block font-display font-semibold">{d.points}</span>
                     <span className="tabular block text-[11px] text-mute">
@@ -89,9 +93,12 @@ export default async function StandingsPage() {
                   <span className="h-6 w-[4px] rounded-full" style={{ background: colorOf(c.team_slug) }} />
                   <TeamLogo slug={c.team_slug ?? ""} size={26} />
                   {c.team_slug ? (
-                    <Link href={`/teams/${c.team_slug}`} className="truncate hover:text-[var(--accent2)]">
-                      {c.team_name}
-                    </Link>
+                    <span className="flex min-w-0 items-center gap-2">
+                      <Link href={`/teams/${c.team_slug}`} className="truncate hover:text-[var(--accent2)]">
+                        {c.team_name}
+                      </Link>
+                      <FavoriteStar kind="team" id={c.team_slug} size={14} />
+                    </span>
                   ) : (
                     <span className="truncate">{c.team_name}</span>
                   )}

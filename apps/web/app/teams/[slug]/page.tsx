@@ -1,6 +1,7 @@
 import { Link } from "next-view-transitions";
 import { notFound } from "next/navigation";
 import { CountUp } from "@/components/CountUp";
+import { FavoriteStar } from "@/components/FavoriteStar";
 import { Flag } from "@/components/Flag";
 import { TeamLogo } from "@/components/TeamLogo";
 import { getTeam, type TeamProfileOut, type TeamRoundEntryOut } from "@/lib/api";
@@ -48,9 +49,12 @@ export default async function TeamPage({ params }: { params: { slug: string } })
 
   return (
     <div className="flex flex-col gap-6">
-      <Link href="/standings" className="text-sm text-mute hover:text-bone">
-        ← Зачёт
-      </Link>
+      <div className="flex items-center justify-between gap-3">
+        <Link href="/standings" className="text-sm text-mute hover:text-bone">
+          ← Зачёт
+        </Link>
+        <FavoriteStar kind="team" id={slug} withLabel />
+      </div>
 
       {/* ШАПКА */}
       <section
