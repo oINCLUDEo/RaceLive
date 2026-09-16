@@ -87,6 +87,7 @@ class DriverProfileOut(BaseModel):
     position: int | None
     points: float | None
     wins: int | None
+    photo_url: str | None = None
     results: list[DriverSeasonResultOut]
 
 

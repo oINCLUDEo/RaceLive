@@ -6,17 +6,17 @@
 import { useState } from "react";
 import { TEAMS } from "@/lib/teams";
 
-const EXTS = ["webp", "png"] as const;
-
 export function DriverPhoto({
   id,
   name,
   teamSlug,
+  photoUrl,
   size = 76,
 }: {
   id: string;
   name: string;
   teamSlug?: string | null;
+  photoUrl?: string | null;
   size?: number;
 }) {
   const [i, setI] = useState(0);
@@ -28,7 +28,10 @@ export function DriverPhoto({
     .join("")
     .toUpperCase();
 
-  if (i >= EXTS.length) {
+  // Источники по приоритету: локальный webp → локальный png → фото OpenF1 → инициалы.
+  const sources = [`/driver-photos/${id}.webp`, `/driver-photos/${id}.png`, ...(photoUrl ? [photoUrl] : [])];
+
+  if (i >= sources.length) {
     return (
       <span
         className="flex shrink-0 items-center justify-center rounded-2xl font-display font-bold"
@@ -49,7 +52,7 @@ export function DriverPhoto({
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={`/driver-photos/${id}.${EXTS[i]}`}
+      src={sources[i]}
       alt={name}
       width={size}
       height={size}

@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException, Query
 from ..localization import driver_name_ru, meeting_name_ru, team_slug_for
 from ..schemas import DriverProfileOut, DriverSeasonResultOut
 from ..services import drivers as dsvc
+from ..services import headshots as hsvc
 from ..services import standings as ssvc
 
 router = APIRouter(prefix="/api/v1", tags=["drivers"])
@@ -38,6 +39,12 @@ async def driver_profile(driver_id: str, season: int = Query(default_factory=_ye
     st = next((s for s in standings if s.driver_id == driver_id), None)
     name_en = f"{info.given} {info.family}".strip()
 
+    photos = {}
+    try:
+        photos = await hsvc.get_headshots()
+    except Exception:
+        photos = {}
+
     return DriverProfileOut(
         driver_id=info.driver_id,
         code=info.code,
@@ -51,6 +58,7 @@ async def driver_profile(driver_id: str, season: int = Query(default_factory=_ye
         position=st.position if st else None,
         points=st.points if st else None,
         wins=st.wins if st else None,
+        photo_url=photos.get(info.code),
         results=[
             DriverSeasonResultOut(
                 round=r.round,

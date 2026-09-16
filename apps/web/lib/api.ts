@@ -207,6 +207,7 @@ export interface DriverProfileOut {
   position: number | null;
   points: number | null;
   wins: number | null;
+  photo_url: string | null;
   results: DriverSeasonResultOut[];
 }
 

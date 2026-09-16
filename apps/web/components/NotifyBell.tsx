@@ -11,6 +11,7 @@ const KEY = "racelive:notify";
 export function NotifyBell({ iso, label, compact }: { iso: string | null; label: string; compact?: boolean }) {
   const [on, setOn] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [ringing, setRinging] = useState(false);
   const fired = useRef<{ soon?: boolean; start?: boolean }>({});
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -67,6 +68,8 @@ export function NotifyBell({ iso, label, compact }: { iso: string | null; label:
 
   const enable = () => {
     setOn(true);
+    setRinging(true);
+    setTimeout(() => setRinging(false), 900);
     fired.current = {};
     try {
       localStorage.setItem(KEY, "1");
@@ -85,6 +88,7 @@ export function NotifyBell({ iso, label, compact }: { iso: string | null; label:
     }
   };
 
+  const BellWrap = <span className={ringing ? "bell-ring" : ""}>{Bell}</span>;
   const onStyle = { borderColor: "var(--accent2-soft)", background: "var(--accent2-soft)", color: "var(--accent2)" };
 
   return (
@@ -97,7 +101,7 @@ export function NotifyBell({ iso, label, compact }: { iso: string | null; label:
           className="inline-flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-full border transition-colors"
           style={on ? onStyle : { borderColor: "var(--line)", color: "var(--bone)" }}
         >
-          {Bell}
+          {BellWrap}
         </button>
       ) : on ? (
         <button
@@ -105,19 +109,19 @@ export function NotifyBell({ iso, label, compact }: { iso: string | null; label:
           className="inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-medium"
           style={onStyle}
         >
-          {Bell} Напоминание включено
+          {BellWrap} Напоминание включено
         </button>
       ) : (
         <button
           onClick={enable}
           className="inline-flex items-center gap-2 rounded-full border border-line px-3.5 py-2 text-xs font-medium text-bone transition-colors hover:bg-surface-2"
         >
-          {Bell} Напомнить о старте
+          {BellWrap} Напомнить о старте
         </button>
       )}
 
       {toast && (
-        <div className="card-soft fixed bottom-5 left-5 z-40 flex max-w-[320px] items-start gap-2.5 px-4 py-3 text-sm shadow-[var(--soft)]">
+        <div className="card-soft fixed bottom-6 left-1/2 z-50 flex max-w-[340px] -translate-x-1/2 items-start gap-2.5 px-4 py-3 text-sm shadow-[var(--soft)]">
           <span className="mt-0.5 shrink-0" style={{ color: "var(--ember)" }}>{Bell}</span>
           <span className="leading-snug">{toast}</span>
           <button onClick={() => setToast(null)} className="ml-1 shrink-0 text-mute hover:text-bone" aria-label="Закрыть">
