@@ -191,24 +191,42 @@ async function HomeData() {
               итоги →
             </Link>
           </div>
-          <div className="card-soft p-5">
+          <div className="glow-panel overflow-hidden rounded-[20px] p-5 shadow-[var(--soft)]">
             <div className="mb-4 flex items-center gap-3">
-              <Flag code={lastDone.circuit?.country_code ?? null} w={30} />
-              <span className="font-display font-semibold">{lastDone.name_ru ?? lastDone.name_en}</span>
+              <Flag code={lastDone.circuit?.country_code ?? null} w={34} />
+              <div className="min-w-0">
+                <div className="truncate font-display text-lg font-semibold">{lastDone.name_ru ?? lastDone.name_en}</div>
+                {lastDone.circuit && (
+                  <div className="truncate text-xs text-mute">{lastDone.circuit.name_ru ?? lastDone.circuit.name_en}</div>
+                )}
+              </div>
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
-              {podium.map((r) => (
-                <div key={r.code || r.position} className="flex items-center gap-3 rounded-xl bg-surface-2 px-3.5 py-3">
-                  <span className="font-display text-lg text-mute">{r.position}</span>
-                  <TeamLogo slug={r.team_slug ?? ""} size={26} />
-                  <div className="min-w-0">
-                    <Link href={`/drivers/${r.driver_id}`} className="block truncate text-sm hover:text-[var(--accent2)]">
-                      {r.name_ru ?? r.name_en}
-                    </Link>
-                    <div className="tabular text-[11px] text-mute">{r.time ?? r.status}</div>
+              {podium.map((r) => {
+                const tc = (r.team_slug ? TEAMS[r.team_slug]?.color : undefined) ?? "var(--line)";
+                const rankColor = r.position === 1 ? "var(--red)" : r.position <= 3 ? "var(--accent2)" : "var(--mute)";
+                return (
+                  <div
+                    key={r.code || r.position}
+                    className={`relative flex items-center gap-3 overflow-hidden rounded-2xl border border-line py-3 pl-4 pr-3 ${r.position === 1 ? "bg-surface-2" : "bg-surface-1"}`}
+                  >
+                    <span className="absolute left-0 top-2.5 bottom-2.5 w-[3px] rounded-full" style={{ background: tc }} aria-hidden />
+                    <span
+                      className="tabular flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-display text-sm font-bold"
+                      style={{ background: `color-mix(in srgb, ${rankColor} 20%, transparent)`, color: rankColor }}
+                    >
+                      {r.position}
+                    </span>
+                    <TeamLogo slug={r.team_slug ?? ""} size={28} />
+                    <div className="min-w-0">
+                      <Link href={`/drivers/${r.driver_id}`} className="block truncate text-sm font-medium hover:text-[var(--accent2)]">
+                        {r.name_ru ?? r.name_en}
+                      </Link>
+                      <div className="tabular text-[11px] text-mute">{r.time ?? r.status}</div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>

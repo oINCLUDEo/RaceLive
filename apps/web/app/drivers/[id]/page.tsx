@@ -40,9 +40,21 @@ export default async function DriverPage({ params }: { params: { id: string } })
 
   return (
     <div className="flex flex-col gap-6">
-      <Link href="/standings" className="text-sm text-mute hover:text-bone">
-        ← Зачёт
-      </Link>
+      <div className="flex items-center justify-between gap-3">
+        <Link href="/standings" className="text-sm text-mute hover:text-bone">
+          ← Зачёт
+        </Link>
+        <Link
+          href={`/compare?driver=${d.code}`}
+          className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium"
+          style={{ borderColor: "var(--accent2-soft)", background: "var(--accent2-soft)", color: "var(--accent2)" }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 5L5 9l4 4M15 19l4-4-4-4M5 9h13M19 15H6" />
+          </svg>
+          Сравнить
+        </Link>
+      </div>
 
       {/* ШАПКА */}
       <section
@@ -72,17 +84,6 @@ export default async function DriverPage({ params }: { params: { id: string } })
               <div className="mt-1 text-mute">{d.team_name ?? ""}</div>
             )}
           </div>
-
-          <Link
-            href={`/compare?driver=${d.code}`}
-            className="relative z-10 ml-auto inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium"
-            style={{ borderColor: "var(--accent2-soft)", background: "var(--accent2-soft)", color: "var(--accent2)" }}
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 5L5 9l4 4M15 19l4-4-4-4M5 9h13M19 15H6" />
-            </svg>
-            Сравнить
-          </Link>
         </div>
       </section>
 
@@ -94,31 +95,43 @@ export default async function DriverPage({ params }: { params: { id: string } })
         <Stat value={bestFinish ? `P${bestFinish}` : "—"} label={`лучший финиш · ${podiums} подиума(ов)`} />
       </section>
 
-      {/* ФОРМА СЕЗОНА */}
-      {d.results.length > 0 && (
-        <section>
+      {/* ФОРМА СЕЗОНА — тренд финишных позиций (выше — лучше) */}
+      {d.results.length > 1 && (
+        <section className="card-soft p-5">
           <div className="mb-3 flex items-baseline justify-between gap-3">
-            <h2 className="font-display text-lg font-semibold">Форма сезона</h2>
+            <h2 className="font-display text-base font-semibold">Форма сезона</h2>
             <span className="text-xs text-mute">
               сходов: {dnfCount}
               {avgFinish ? ` · средний финиш P${avgFinish}` : ""}
             </span>
           </div>
-          <div className="flex flex-wrap gap-1.5">
-            {d.results.map((r) => {
-              const c = formColor(r);
-              return (
-                <Link
-                  key={r.round}
-                  href={`/schedule/${r.round}`}
-                  title={`Этап ${r.round}: ${isDnf(r.status) ? statusRu(r.status) : `P${r.position}`}`}
-                  className="tabular flex h-9 w-9 items-center justify-center rounded-lg text-xs font-semibold transition-transform hover:-translate-y-0.5"
-                  style={{ background: `color-mix(in srgb, ${c} 18%, transparent)`, color: c }}
-                >
-                  {isDnf(r.status) ? "—" : r.position}
-                </Link>
-              );
-            })}
+          {(() => {
+            const res = d.results;
+            const cl = res.map((r, i) => ({ i, r })).filter((o) => o.r.position > 0 && !isDnf(o.r.status));
+            const maxPos = Math.max(3, ...cl.map((o) => o.r.position));
+            const W = Math.max(340, res.length * 34), H = 92, padX = 16, padT = 14, padB = 16;
+            const plotH = H - padT - padB;
+            const step = (W - padX * 2) / Math.max(1, res.length - 1);
+            const px = (i: number) => padX + i * step;
+            const py = (pos: number) => padT + ((pos - 1) / Math.max(1, maxPos - 1)) * plotH;
+            const linePts = cl.map((o) => `${px(o.i).toFixed(1)},${py(o.r.position).toFixed(1)}`).join(" ");
+            return (
+              <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full">
+                <polyline points={linePts} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+                {res.map((r, i) => {
+                  const dnf = isDnf(r.status);
+                  const c = dnf ? "var(--red)" : formColor(r);
+                  const cy = dnf ? py(maxPos) : py(r.position);
+                  return (
+                    <circle key={r.round} cx={px(i)} cy={cy} r="3.5" fill={c} stroke="var(--surface-1)" strokeWidth="1.5" />
+                  );
+                })}
+              </svg>
+            );
+          })()}
+          <div className="mt-1 flex justify-between text-[10px] text-mute">
+            <span>P1 сверху</span>
+            <span>этапы 1–{d.results.length}</span>
           </div>
         </section>
       )}

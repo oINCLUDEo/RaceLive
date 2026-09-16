@@ -29,7 +29,8 @@ async def _race_list(client: OpenF1Client) -> list[dict]:
             return [
                 {
                     "key": r.get("session_key"),
-                    "label": r.get("country_name") or r.get("circuit_short_name") or f"#{r.get('session_key')}",
+                    # circuit_short_name уникальнее country_name (в США несколько гонок)
+                    "label": r.get("circuit_short_name") or r.get("country_name") or f"#{r.get('session_key')}",
                 }
                 for _, r in past
             ]

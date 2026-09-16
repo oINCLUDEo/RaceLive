@@ -29,7 +29,7 @@ export default async function ComparePage({
           <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] normal-case tracking-normal">тест</span>
         </div>
         <h1 className="mt-2 font-display text-3xl font-semibold">Сравнение пилотов</h1>
-        {data?.session && <p className="mt-1 text-mute">{data.session}</p>}
+        <p className="mt-1 text-mute">Времена кругов и темп по данным гонки — выбери гонку и двух пилотов.</p>
       </div>
 
       {data && data.drivers.length >= 2 ? (

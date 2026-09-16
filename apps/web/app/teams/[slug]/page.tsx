@@ -91,7 +91,7 @@ export default async function TeamPage({ params }: { params: { slug: string } })
             <h2 className="font-display text-lg font-semibold">Форма команды</h2>
             <span className="text-xs text-mute">очки по этапам</span>
           </div>
-          <div className="card-soft flex items-end gap-1.5 overflow-x-auto px-4 pb-3 pt-4">
+          <div className="card-soft flex items-end gap-2 overflow-x-auto px-4 pb-2 pt-3">
             {(() => {
               const maxPts = Math.max(...t.rounds.map((r) => r.team_points), 1);
               return t.rounds.map((r) => (
@@ -99,12 +99,12 @@ export default async function TeamPage({ params }: { params: { slug: string } })
                   key={r.round}
                   href={`/schedule/${r.round}`}
                   title={`Этап ${r.round}: ${r.team_points} очк.`}
-                  className="flex flex-col items-center gap-1"
+                  className="flex flex-col items-center gap-0.5"
                 >
                   <span className="tabular text-[9px] text-mute">{r.team_points}</span>
                   <div
-                    className="w-4 rounded-t-[3px] transition-opacity hover:opacity-80"
-                    style={{ height: `${Math.max(4, Math.round((r.team_points / maxPts) * 96))}px`, background: color }}
+                    className="w-3.5 rounded-t-[3px] transition-opacity hover:opacity-80"
+                    style={{ height: `${Math.max(3, Math.round((r.team_points / maxPts) * 52))}px`, background: color }}
                   />
                   <span className="tabular text-[9px] text-mute">{r.round}</span>
                 </Link>

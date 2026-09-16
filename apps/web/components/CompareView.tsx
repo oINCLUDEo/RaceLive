@@ -15,6 +15,17 @@ function fmt(sec: number): string {
 const teamColor = (team: string | null, fallback = "var(--mute)") =>
   (team && TEAMS[team]?.color) || fallback;
 
+// Название трассы (circuit_short_name из OpenF1) → русский Гран-при.
+const CIRCUIT_RU: Record<string, string> = {
+  Sakhir: "Бахрейн", Jeddah: "Саудовская Аравия", Melbourne: "Австралия", Suzuka: "Япония",
+  Shanghai: "Китай", Miami: "Майами", Imola: "Имола", Monaco: "Монако", Catalunya: "Испания",
+  Montreal: "Канада", Spielberg: "Австрия", Silverstone: "Великобритания", Hungaroring: "Венгрия",
+  "Spa-Francorchamps": "Бельгия", Zandvoort: "Нидерланды", Monza: "Италия", Baku: "Азербайджан",
+  Singapore: "Сингапур", Austin: "США", "Mexico City": "Мексика", Interlagos: "Бразилия",
+  "Las Vegas": "Лас-Вегас", Lusail: "Катар", "Yas Marina": "Абу-Даби", Madring: "Мадрид",
+};
+const raceLabel = (label: string) => CIRCUIT_RU[label] ?? label;
+
 function stats(d: CompareDriver) {
   const times = d.laps.map((l) => l.time);
   const best = Math.min(...times);
@@ -177,11 +188,11 @@ export function CompareView({ data: initial, initialDriver }: { data: CompareOut
           <select
             value={data.session_key ?? ""}
             onChange={(e) => onRace(Number(e.target.value))}
-            className="rounded-lg border border-line bg-surface-1 px-3 py-2 text-sm"
+            className="min-w-[220px] rounded-lg border border-line bg-surface-1 px-3 py-2 text-sm"
           >
             {(data.sessions ?? []).map((s) => (
               <option key={s.key} value={s.key}>
-                {s.label}
+                {raceLabel(s.label)}
               </option>
             ))}
           </select>
@@ -252,10 +263,17 @@ export function CompareView({ data: initial, initialDriver }: { data: CompareOut
                 ))}
                 {[{ m: mA, c: cA }, { m: mB, c: cB }].map(({ m, c }, di) =>
                   m.pits.map((pt, i) => (
-                    <g key={`${di}-${i}`}>
-                      <circle cx={pt.x} cy={pt.y} r="3" fill={c} />
-                      <text x={pt.x} y={pt.y - 6} textAnchor="middle" fontSize="9" fontWeight="700" fill={c}>П</text>
-                    </g>
+                    <rect
+                      key={`${di}-${i}`}
+                      x={pt.x - 4.5}
+                      y={pt.y - 4.5}
+                      width="9"
+                      height="9"
+                      rx="2.5"
+                      fill={c}
+                      stroke="var(--surface-1)"
+                      strokeWidth="1.5"
+                    />
                   )),
                 )}
               </svg>
@@ -278,8 +296,8 @@ export function CompareView({ data: initial, initialDriver }: { data: CompareOut
 
         {mode === "laps" ? (
           <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-mute">
-            <span><b className="text-bone">П</b> — пит-стоп</span>
-            <span><span className="mr-1 inline-block h-2 w-2 rounded-full align-middle" style={{ background: "var(--purple)" }} />быстрейший круг</span>
+            <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-[2px]" style={{ background: "var(--mute)" }} />пит-стоп</span>
+            <span className="flex items-center gap-1.5"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "var(--purple)" }} />быстрейший круг</span>
             <span>пики вверх — питы/сейфти-кар</span>
           </div>
         ) : (
