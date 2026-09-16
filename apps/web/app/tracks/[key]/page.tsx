@@ -2,6 +2,7 @@ import { Link } from "next-view-transitions";
 import { notFound } from "next/navigation";
 import { Flag } from "@/components/Flag";
 import { SessionTime } from "@/components/SessionTime";
+import { ShareButton } from "@/components/ShareButton";
 import { TeamLogo } from "@/components/TeamLogo";
 import { TrackMap } from "@/components/TrackMap";
 import { getCircuit, type CircuitPageOut } from "@/lib/api";
@@ -12,7 +13,8 @@ export async function generateMetadata({ params }: { params: { key: string } }) 
   try {
     const c = await getCircuit(params.key);
     const name = c.name_ru ?? c.name_en;
-    return { title: name, description: `Трасса ${name}: контур, факты, этап сезона.` };
+    const description = `Трасса ${name}${c.country ? `, ${c.country}` : ""}: контур круга, факты, этап сезона и победитель.`;
+    return { title: name, description, alternates: { canonical: `/tracks/${params.key}` } };
   } catch {
     return { title: "Трасса" };
   }
@@ -34,9 +36,12 @@ export default async function TrackPage({ params }: { params: { key: string } })
 
   return (
     <div className="flex flex-col gap-6">
-      <Link href="/tracks" className="text-sm text-mute hover:text-bone">
-        ← Трассы
-      </Link>
+      <div className="flex items-center justify-between gap-3">
+        <Link href="/tracks" className="text-sm text-mute hover:text-bone">
+          ← Трассы
+        </Link>
+        <ShareButton title={c.name_ru ?? c.name_en} />
+      </div>
 
       {/* ШАПКА */}
       <section className="glow-panel flex flex-col items-center gap-6 overflow-hidden rounded-[24px] p-8 shadow-[var(--soft)] md:flex-row md:justify-between md:p-10">

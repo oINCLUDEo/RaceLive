@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Countdown } from "@/components/Countdown";
 import { Flag } from "@/components/Flag";
 import { SessionTime } from "@/components/SessionTime";
+import { ShareButton } from "@/components/ShareButton";
 import { TeamLogo } from "@/components/TeamLogo";
 import { TimezoneNote } from "@/components/TimezoneNote";
 import { TrackMap } from "@/components/TrackMap";
@@ -82,9 +83,12 @@ export default async function MeetingPage({
     <div className="flex flex-col gap-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(eventLd) }} />
       <div>
-        <Link href="/schedule" className="text-sm text-mute hover:text-bone">
-          ← Расписание
-        </Link>
+        <div className="flex items-center justify-between gap-3">
+          <Link href="/schedule" className="text-sm text-mute hover:text-bone">
+            ← Расписание
+          </Link>
+          <ShareButton title={m.name_ru ?? m.name_en} />
+        </div>
         <div className="mt-4 flex items-center gap-6">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-mute">

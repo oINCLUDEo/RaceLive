@@ -2,7 +2,8 @@
 
 // Сравнение двух пилотов по кругам (тест): выбор гонки и двоих пилотов, график
 // времён кругов с отметками пит-стопов и быстрейшего круга, лучший/средний темп.
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { ShareButton } from "@/components/ShareButton";
 import type { CompareDriver, CompareOut } from "@/lib/api";
 import { TEAMS } from "@/lib/teams";
 
@@ -86,18 +87,39 @@ function DriverPicker({
   );
 }
 
-export function CompareView({ data: initial, initialDriver }: { data: CompareOut; initialDriver?: string }) {
+export function CompareView({
+  data: initial,
+  initialA,
+  initialB,
+}: {
+  data: CompareOut;
+  initialA?: string;
+  initialB?: string;
+}) {
   const [data, setData] = useState(initial);
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<"laps" | "delta">("laps");
   const drivers = data.drivers;
-  // Предвыбор пилота из ссылки (?driver=CODE) — например «Сравнить» со страницы пилота.
-  const aInit = drivers.find((d) => d.code === initialDriver)?.num ?? drivers[0]?.num;
+  // Предвыбор пилотов из ссылки (?a=CODE&b=CODE / ?driver=CODE) — для шаринга.
+  const aInit = drivers.find((d) => d.code === initialA)?.num ?? drivers[0]?.num;
+  const bInit =
+    drivers.find((d) => d.code === initialB && d.num !== aInit)?.num ??
+    drivers.find((d) => d.num !== aInit)?.num;
   const [aNum, setA] = useState(aInit);
-  const [bNum, setB] = useState(drivers.find((d) => d.num !== aInit)?.num);
+  const [bNum, setB] = useState(bInit);
 
   const a = drivers.find((d) => d.num === aNum) ?? drivers[0];
   const b = drivers.find((d) => d.num === bNum) ?? drivers[1];
+
+  // Синхронизируем выбор в URL, чтобы ссылку можно было расшарить.
+  useEffect(() => {
+    if (!a || !b) return;
+    const p = new URLSearchParams();
+    if (data.session_key) p.set("session", String(data.session_key));
+    p.set("a", a.code);
+    p.set("b", b.code);
+    window.history.replaceState(null, "", `?${p.toString()}`);
+  }, [a, b, data.session_key]);
 
   // Сокомандники — разводим цвета (иначе линии сливаются); линию B делаем штриховой.
   const sameTeam = !!a?.team && a.team === b?.team;
@@ -181,23 +203,28 @@ export function CompareView({ data: initial, initialDriver }: { data: CompareOut
 
   return (
     <div className={`flex flex-col gap-5 ${loading ? "opacity-60" : ""}`}>
-      {/* ВЫБОР ГОНКИ */}
-      {(data.sessions ?? []).length > 0 && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[11px] uppercase tracking-wide text-mute">Гонка</span>
-          <select
-            value={data.session_key ?? ""}
-            onChange={(e) => onRace(Number(e.target.value))}
-            className="min-w-[220px] rounded-lg border border-line bg-surface-1 px-3 py-2 text-sm"
-          >
-            {(data.sessions ?? []).map((s) => (
-              <option key={s.key} value={s.key}>
-                {raceLabel(s.label)}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
+      {/* ВЫБОР ГОНКИ + ПОДЕЛИТЬСЯ */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        {(data.sessions ?? []).length > 0 ? (
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] uppercase tracking-wide text-mute">Гонка</span>
+            <select
+              value={data.session_key ?? ""}
+              onChange={(e) => onRace(Number(e.target.value))}
+              className="min-w-[220px] rounded-lg border border-line bg-surface-1 px-3 py-2 text-sm"
+            >
+              {(data.sessions ?? []).map((s) => (
+                <option key={s.key} value={s.key}>
+                  {raceLabel(s.label)}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          <span />
+        )}
+        <ShareButton title={`Сравнение: ${a.code} vs ${b.code} — race.live`} />
+      </div>
 
       {/* ВЫБОР ПИЛОТОВ + СВОДКА */}
       <div className="grid gap-4 sm:grid-cols-2">

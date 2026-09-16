@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { CountUp } from "@/components/CountUp";
 import { FavoriteStar } from "@/components/FavoriteStar";
 import { Flag } from "@/components/Flag";
+import { ShareButton } from "@/components/ShareButton";
 import { TeamLogo } from "@/components/TeamLogo";
 import { getTeam, type TeamProfileOut, type TeamRoundEntryOut } from "@/lib/api";
 import { isDnf, statusCode, statusRu } from "@/lib/format";
@@ -53,7 +54,10 @@ export default async function TeamPage({ params }: { params: { slug: string } })
         <Link href="/standings" className="text-sm text-mute hover:text-bone">
           ← Зачёт
         </Link>
-        <FavoriteStar kind="team" id={slug} withLabel />
+        <div className="flex flex-wrap items-center gap-2">
+          <ShareButton title={t.name} />
+          <FavoriteStar kind="team" id={slug} withLabel />
+        </div>
       </div>
 
       {/* ШАПКА */}

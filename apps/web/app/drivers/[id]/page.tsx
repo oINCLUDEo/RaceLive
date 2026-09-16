@@ -4,6 +4,7 @@ import { CountUp } from "@/components/CountUp";
 import { DriverPhoto } from "@/components/DriverPhoto";
 import { FavoriteStar } from "@/components/FavoriteStar";
 import { Flag } from "@/components/Flag";
+import { ShareButton } from "@/components/ShareButton";
 import { TeamLogo } from "@/components/TeamLogo";
 import { getDriverProfile, type DriverProfileOut } from "@/lib/api";
 import { isDnf, statusCode, statusRu } from "@/lib/format";
@@ -42,7 +43,8 @@ export default async function DriverPage({ params }: { params: { id: string } })
         <Link href="/standings" className="text-sm text-mute hover:text-bone">
           ← Зачёт
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <ShareButton title={d.name_ru ?? d.name_en} />
           <FavoriteStar kind="driver" id={d.driver_id} withLabel />
           <Link
             href={`/compare?driver=${d.code}`}

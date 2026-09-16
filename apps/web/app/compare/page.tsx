@@ -12,11 +12,12 @@ export const metadata = {
 export default async function ComparePage({
   searchParams,
 }: {
-  searchParams: { driver?: string };
+  searchParams: { driver?: string; a?: string; b?: string; session?: string };
 }) {
+  const session = searchParams.session ? Number(searchParams.session) : undefined;
   let data: CompareOut | null = null;
   try {
-    data = await getCompare();
+    data = await getCompare(Number.isFinite(session) ? session : undefined);
   } catch {
     data = null;
   }
@@ -33,7 +34,7 @@ export default async function ComparePage({
       </div>
 
       {data && data.drivers.length >= 2 ? (
-        <CompareView data={data} initialDriver={searchParams.driver} />
+        <CompareView data={data} initialA={searchParams.a ?? searchParams.driver} initialB={searchParams.b} />
       ) : (
         <div className="card-soft p-6 text-sm text-mute">
           Пока нет данных по кругам для сравнения — они появляются во время или после гоночного уик-энда.
