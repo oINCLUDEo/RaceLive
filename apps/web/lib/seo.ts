@@ -3,4 +3,4 @@ export const SITE_URL = (process.env.SITE_URL ?? "https://tensory.ulya.space").r
 export const SITE_NAME = "race.live";
 export const SITE_TAGLINE = "Смотрим Формулу вместе";
 export const SITE_DESCRIPTION =
-  "Расписание, результаты и живой тайминг Формулы-1 на русском: этапы по вашему времени, зачёт пилотов и команд, рейс-контроль и статистика гонок.";
+  "Формула-1 на русском: расписание по вашему времени, результаты гонок, зачёт пилотов и команд, живой тайминг и рейс-контроль.";

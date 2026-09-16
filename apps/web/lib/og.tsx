@@ -20,7 +20,7 @@ export async function ogImage(opts: {
   ]);
   const accent = opts.accent ?? "#E0402F";
 
-  return new ImageResponse(
+  const res = new ImageResponse(
     (
       <div
         style={{
@@ -66,4 +66,15 @@ export async function ogImage(opts: {
       ],
     },
   );
+
+  // Буферизуем и отдаём с Content-Length: часть фетчеров превью (в т.ч. Telegram)
+  // не принимает картинку, отданную стримом без длины.
+  const buf = await res.arrayBuffer();
+  return new Response(buf, {
+    headers: {
+      "Content-Type": "image/png",
+      "Content-Length": String(buf.byteLength),
+      "Cache-Control": "public, max-age=86400",
+    },
+  });
 }

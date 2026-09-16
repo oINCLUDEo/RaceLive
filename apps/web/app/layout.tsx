@@ -36,18 +36,16 @@ export const metadata: Metadata = {
     "живой тайминг", "зачёт пилотов", "кубок конструкторов", "рейс-контроль", "на русском",
   ],
   alternates: { canonical: "/" },
+  // Без title/description здесь — иначе они перебивают пер-страничные og:title/description.
+  // Next сам подставит в OG/Twitter заголовок и описание конкретной страницы.
   openGraph: {
     type: "website",
     siteName: SITE_NAME,
     locale: "ru_RU",
     url: SITE_URL,
-    title: "Смотрим Формулу вместе — race.live",
-    description: SITE_DESCRIPTION,
   },
   twitter: {
     card: "summary_large_image",
-    title: "Смотрим Формулу вместе — race.live",
-    description: SITE_DESCRIPTION,
   },
 };
 
