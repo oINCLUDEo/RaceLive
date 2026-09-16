@@ -5,6 +5,7 @@
 // Если разрешение на системные уведомления уже выдано — продублируем и в ОС (бонус,
 // сами не просим). Работает, пока вкладка открыта.
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 const KEY = "racelive:notify";
 
@@ -120,15 +121,18 @@ export function NotifyBell({ iso, label, compact }: { iso: string | null; label:
         </button>
       )}
 
-      {toast && (
-        <div className="card-soft fixed right-4 top-[76px] z-50 flex w-[300px] max-w-[calc(100vw-2rem)] items-start gap-2.5 px-4 py-3 text-sm shadow-[var(--soft)]">
-          <span className="mt-0.5 shrink-0" style={{ color: "var(--ember)" }}>{Bell}</span>
-          <span className="leading-snug">{toast}</span>
-          <button onClick={() => setToast(null)} className="ml-1 shrink-0 text-mute hover:text-bone" aria-label="Закрыть">
-            ✕
-          </button>
-        </div>
-      )}
+      {toast &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div className="card-soft fixed right-4 top-[76px] z-50 flex w-[300px] max-w-[calc(100vw-2rem)] items-start gap-2.5 px-4 py-3 text-sm shadow-[var(--soft)]">
+            <span className="mt-0.5 shrink-0" style={{ color: "var(--ember)" }}>{Bell}</span>
+            <span className="leading-snug">{toast}</span>
+            <button onClick={() => setToast(null)} className="ml-1 shrink-0 text-mute hover:text-bone" aria-label="Закрыть">
+              ✕
+            </button>
+          </div>,
+          document.body,
+        )}
     </>
   );
 }
