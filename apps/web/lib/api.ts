@@ -53,6 +53,33 @@ export function getMeeting(round: number, season?: number): Promise<MeetingOut> 
   return getJSON<MeetingOut>(`/api/v1/meetings/${round}${q}`);
 }
 
+export interface WeatherDayOut {
+  date: string;
+  label_ru: string;
+  session_ru: string | null;
+  t_max: number | null;
+  t_min: number | null;
+  precip_prob: number | null;
+  wind_max: number | null;
+  condition: string;
+  condition_ru: string;
+  rain: boolean;
+}
+
+export interface WeekendForecastOut {
+  round: number;
+  circuit_ru: string | null;
+  available: boolean;
+  note: string | null;
+  days: WeatherDayOut[];
+}
+
+export function getWeekendForecast(round: number, season?: number): Promise<WeekendForecastOut> {
+  const q = season ? `?season=${season}` : "";
+  // Прогноз меняется — обновляем чаще самой страницы (полчаса).
+  return getJSON<WeekendForecastOut>(`/api/v1/weather/${round}${q}`, 1800);
+}
+
 export function getNextSession(): Promise<NextSessionOut | null> {
   return getJSON<NextSessionOut | null>(`/api/v1/next-session`, 60);
 }

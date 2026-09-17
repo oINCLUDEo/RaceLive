@@ -7,12 +7,15 @@ import { ShareButton } from "@/components/ShareButton";
 import { TeamLogo } from "@/components/TeamLogo";
 import { TimezoneNote } from "@/components/TimezoneNote";
 import { TrackMap } from "@/components/TrackMap";
+import { WeekendForecast } from "@/components/WeekendForecast";
 import {
   getMeeting,
   getQualifyingResults,
   getRaceResults,
+  getWeekendForecast,
   type QualifyingResultOut,
   type RaceResultOut,
+  type WeekendForecastOut,
 } from "@/lib/api";
 import { sessionLabel, statusCode, statusRu } from "@/lib/format";
 import { SITE_URL } from "@/lib/seo";
@@ -51,11 +54,12 @@ export default async function MeetingPage({
   const round = Number(params.round);
   if (!Number.isFinite(round)) notFound();
 
-  // все три запроса параллельно (не последовательно) — быстрее открытие
-  const [m, results, qualifying] = await Promise.all([
+  // все запросы параллельно (не последовательно) — быстрее открытие
+  const [m, results, qualifying, forecast] = await Promise.all([
     getMeeting(round).catch(() => null),
     getRaceResults(round).catch(() => [] as RaceResultOut[]),
     getQualifyingResults(round).catch(() => [] as QualifyingResultOut[]),
+    getWeekendForecast(round).catch(() => null as WeekendForecastOut | null),
   ]);
   if (!m) notFound();
   const now = Date.now();
@@ -172,6 +176,8 @@ export default async function MeetingPage({
           </div>
         </details>
       )}
+
+      {forecast && <WeekendForecast data={forecast} />}
 
       <div className="card-soft overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3 text-xs uppercase tracking-wide text-mute">

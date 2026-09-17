@@ -205,3 +205,28 @@ class LiveOut(BaseModel):
     meeting_name_ru: str | None
     meeting_name_en: str | None
     session: SessionOut | None
+
+
+class WeatherDayOut(BaseModel):
+    """Один день прогноза на уик-энд. Условие уже локализовано (condition_ru)."""
+
+    date: str  # ISO YYYY-MM-DD
+    label_ru: str  # день недели
+    session_ru: str | None  # заголовочная сессия дня, если есть
+    t_max: float | None
+    t_min: float | None
+    precip_prob: int | None  # вероятность осадков, %
+    wind_max: float | None  # м/с
+    condition: str  # slug для иконки: clear|cloudy|rain|snow|storm|fog
+    condition_ru: str
+    rain: bool
+
+
+class WeekendForecastOut(BaseModel):
+    """Прогноз на гоночный уик-энд. Пусто (available=false) — далеко/прошёл/нет данных."""
+
+    round: int
+    circuit_ru: str | None
+    available: bool
+    note: str | None
+    days: list[WeatherDayOut]
