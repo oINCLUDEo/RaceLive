@@ -5,16 +5,14 @@
 // Если разрешение на системные уведомления уже выдано — продублируем и в ОС (бонус,
 // сами не просим). Работает, пока вкладка открыта.
 import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { pushToast } from "@/lib/toast";
 
 const KEY = "racelive:notify";
 
 export function NotifyBell({ iso, label, compact }: { iso: string | null; label: string; compact?: boolean }) {
   const [on, setOn] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
   const [ringing, setRinging] = useState(false);
   const fired = useRef<{ soon?: boolean; start?: boolean }>({});
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     try {
@@ -25,9 +23,8 @@ export function NotifyBell({ iso, label, compact }: { iso: string | null; label:
   }, []);
 
   const showToast = (text: string) => {
-    setToast(text);
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast(null), 9000);
+    // в общий стек тостов (slide+fade, копится несколько)
+    pushToast(text);
     // бонус: если разрешение на системные уведомления уже есть — продублируем в ОС
     try {
       if ("Notification" in window && Notification.permission === "granted") {
@@ -120,19 +117,6 @@ export function NotifyBell({ iso, label, compact }: { iso: string | null; label:
           {BellWrap} Напомнить о старте
         </button>
       )}
-
-      {toast &&
-        typeof document !== "undefined" &&
-        createPortal(
-          <div className="card-soft fixed right-4 top-[76px] z-50 flex w-[300px] max-w-[calc(100vw-2rem)] items-start gap-2.5 px-4 py-3 text-sm shadow-[var(--soft)]">
-            <span className="mt-0.5 shrink-0" style={{ color: "var(--ember)" }}>{Bell}</span>
-            <span className="leading-snug">{toast}</span>
-            <button onClick={() => setToast(null)} className="ml-1 shrink-0 text-mute hover:text-bone" aria-label="Закрыть">
-              ✕
-            </button>
-          </div>,
-          document.body,
-        )}
     </>
   );
 }

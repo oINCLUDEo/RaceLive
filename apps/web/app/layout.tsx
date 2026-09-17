@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geologica, Golos_Text } from "next/font/google";
 import { Link, ViewTransitions } from "next-view-transitions";
 import { RailNav } from "@/components/RailNav";
+import { ToastHost } from "@/components/ToastHost";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
 import "./globals.css";
 
@@ -134,6 +135,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <span className="font-display text-sm">Чат</span>
           <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] uppercase tracking-wide text-mute">скоро</span>
         </div>
+
+        <ToastHost />
       </body>
       </html>
     </ViewTransitions>

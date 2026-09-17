@@ -133,6 +133,8 @@ export default async function HomePage() {
         <HomeData />
       </Suspense>
 
+      <hr className="divider-fade" />
+
       {/* СКОРО — честный роадмап вместо демо-данных */}
       <Reveal>
       <section>

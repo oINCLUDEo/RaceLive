@@ -99,6 +99,7 @@ export default async function DriverPage({ params }: { params: { id: string } })
         <Stat value={bestFinish ? `P${bestFinish}` : "—"} label={`лучший финиш · ${podiums} подиума(ов)`} />
       </section>
 
+      <hr className="divider-fade" />
 
       {/* РЕЗУЛЬТАТЫ СЕЗОНА */}
       {d.results.length > 0 && (
