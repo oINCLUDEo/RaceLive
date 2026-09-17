@@ -62,11 +62,11 @@ export default async function TeamPage({ params }: { params: { slug: string } })
 
       {/* ШАПКА */}
       <section
-        className="relative overflow-hidden rounded-[24px] p-8 shadow-[var(--soft)]"
-        style={{ background: `linear-gradient(110deg, ${color}22, var(--surface-1) 60%)` }}
+        className="hero-glow relative overflow-hidden rounded-[24px] p-8 shadow-[var(--soft)]"
+        style={{ background: `linear-gradient(110deg, ${color}22, var(--surface-1) 60%)`, "--glow": color } as React.CSSProperties}
       >
         <span className="pointer-events-none absolute right-0 top-0 h-full w-[6px]" style={{ background: color }} aria-hidden />
-        <div className="flex flex-wrap items-center gap-5">
+        <div className="relative flex flex-wrap items-center gap-5">
           <TeamLogo slug={slug} size={56} vt={`tlogo-${slug}`} />
           <div>
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-mute">

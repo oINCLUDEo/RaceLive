@@ -48,7 +48,7 @@ export default async function DriverPage({ params }: { params: { id: string } })
           <FavoriteStar kind="driver" id={d.driver_id} withLabel />
           <Link
             href={`/compare?driver=${d.code}`}
-            className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium"
+            className="pressable inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium"
             style={{ borderColor: "var(--accent2-soft)", background: "var(--accent2-soft)", color: "var(--accent2)" }}
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -61,8 +61,8 @@ export default async function DriverPage({ params }: { params: { id: string } })
 
       {/* ШАПКА */}
       <section
-        className="relative overflow-hidden rounded-[24px] p-8 shadow-[var(--soft)]"
-        style={{ background: `linear-gradient(110deg, ${color}22, var(--surface-1) 60%)` }}
+        className="hero-glow relative overflow-hidden rounded-[24px] p-8 shadow-[var(--soft)]"
+        style={{ background: `linear-gradient(110deg, ${color}22, var(--surface-1) 60%)`, "--glow": color } as React.CSSProperties}
       >
         <span
           className="pointer-events-none absolute right-6 top-2 font-display text-[120px] font-bold leading-none opacity-10"

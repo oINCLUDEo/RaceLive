@@ -67,10 +67,10 @@ a { color: inherit; text-decoration: none; }
   background: var(--ember); color: #fff; font-weight: 600; font-size: 15px;
   padding: 13px 26px; border-radius: 999px;
   box-shadow: 0 16px 44px -18px rgba(224, 64, 47, 0.65);
-  transition: filter 180ms cubic-bezier(0.2, 0, 0, 1);
+  transition: filter 180ms cubic-bezier(0.2, 0, 0, 1), transform 180ms cubic-bezier(0.2, 0, 0, 1);
 }
-.cta:hover { filter: brightness(1.07); }
-.cta:active { transform: translateY(1px); }
+.cta:hover { filter: brightness(1.07); transform: translateY(-1px); }
+.cta:active { transform: translateY(1px) scale(0.985); }
 
 /* Микровзаимодействия: кликабельные карточки чуть приподнимаются, реагируют на нажатие. */
 a.card-soft {
@@ -101,10 +101,22 @@ a.card-soft:active {
 .rail-i {
   display: flex; align-items: center; justify-content: center;
   width: 44px; height: 44px; border-radius: 14px; color: var(--mute);
-  transition: background 150ms, color 150ms;
+  transition: background 150ms, color 150ms, transform 150ms cubic-bezier(0.2, 0, 0, 1);
 }
-.rail-i:hover { color: var(--bone); background: var(--surface-1); }
+.rail-i:hover { color: var(--bone); background: var(--surface-1); transform: translateY(-1px); }
+.rail-i:active { transform: translateY(0) scale(0.94); }
 .rail-i.on { background: var(--ember-soft); color: var(--ember); }
+/* Микро-анимация иконки при активации пункта (проигрывается, когда пункт становится
+   активным на навигации — правило начинает совпадать и запускает кейфрейм). */
+@keyframes railPop {
+  0% { transform: scale(0.86); }
+  45% { transform: scale(1.22); }
+  100% { transform: scale(1); }
+}
+.rail-i.on svg { animation: railPop 440ms cubic-bezier(0.2, 0, 0, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .rail-i.on svg { animation: none; }
+}
 
 .team-logo {
   width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0;
@@ -281,4 +293,52 @@ body::before {
 /* Shared-element переходы: лого/фото плавно морфятся между страницами. */
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*) { animation-duration: 0.001ms !important; }
+}
+
+/* --- Shimmer-скелетоны (бегущий блик) --- */
+.skeleton {
+  background: linear-gradient(
+    100deg,
+    var(--surface-1) 30%,
+    color-mix(in srgb, var(--surface-2) 85%, var(--bone) 4%) 50%,
+    var(--surface-1) 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; background: var(--surface-1); }
+}
+
+/* --- Типографика: оптический размер и тонкий кернинг у дисплейного шрифта --- */
+/* tabular-nums живёт в .tabular (числа не «пляшут»); мелкие капс-подписи задают свой
+   tracking утилитами и не затрагиваются отрицательным кернингом ниже. */
+.font-display { font-optical-sizing: auto; letter-spacing: -0.012em; }
+h1.font-display, .font-display.text-3xl, .font-display.text-4xl { letter-spacing: -0.02em; line-height: 1.05; }
+body { text-rendering: optimizeLegibility; }
+
+/* --- Hover-scale / tap на кликабельных (микро) --- */
+.pressable { transition: transform 160ms cubic-bezier(0.2, 0, 0, 1), border-color 160ms, background 160ms; }
+.pressable:hover { transform: translateY(-1px) scale(1.02); }
+.pressable:active { transform: translateY(0) scale(0.98); }
+@media (prefers-reduced-motion: reduce) {
+  .pressable:hover, .pressable:active { transform: none; }
+}
+
+/* --- Радиальные свечения за hero (под цвет сущности через --glow) --- */
+/* Задай элементу position:relative и переменную --glow (цвет команды/этапа); слой
+   рисует мягкие цветные ореолы позади контента. Контент оборачивай в relative-обёртку. */
+.hero-glow::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 90% at 82% 22%, color-mix(in srgb, var(--glow, var(--ember)) 26%, transparent), transparent 60%),
+    radial-gradient(45% 80% at 52% 120%, color-mix(in srgb, var(--glow, var(--ember)) 16%, transparent), transparent 62%);
+  opacity: 0.9;
 }

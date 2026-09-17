@@ -325,14 +325,14 @@ async function HomeData() {
 
 function HomeDataSkeleton() {
   return (
-    <div className="flex animate-pulse flex-col gap-8">
-      <div className="h-44 rounded-[18px] bg-surface-1" />
+    <div className="flex flex-col gap-8">
+      <div className="skeleton h-44 rounded-[18px]" />
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-36 rounded-[18px] bg-surface-1" />
+          <div key={i} className="skeleton h-36 rounded-[18px]" />
         ))}
       </div>
-      <div className="h-64 rounded-[18px] bg-surface-1" />
+      <div className="skeleton h-64 rounded-[18px]" />
     </div>
   );
 }
