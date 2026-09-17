@@ -71,7 +71,7 @@ export default async function DriverPage({ params }: { params: { id: string } })
           {d.number ?? d.code}
         </span>
         <div className="relative flex flex-wrap items-center gap-5">
-          <DriverPhoto id={d.driver_id} name={d.name_ru ?? d.name_en} teamSlug={d.team_slug} photoUrl={d.photo_url} size={78} />
+          <DriverPhoto id={d.driver_id} name={d.name_ru ?? d.name_en} teamSlug={d.team_slug} photoUrl={d.photo_url} size={78} vt={`dphoto-${d.driver_id}`} />
           <div className="min-w-0">
             <div className="flex items-center gap-2 text-sm text-mute">
               {nat && <Flag code={nat.code} w={24} />}

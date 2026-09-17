@@ -5,6 +5,7 @@ import { CountdownBoxes } from "@/components/CountdownBoxes";
 import { Flag } from "@/components/Flag";
 import { HeroCar } from "@/components/HeroCar";
 import { NotifyBell } from "@/components/NotifyBell";
+import { Reveal } from "@/components/Reveal";
 import { SessionTime } from "@/components/SessionTime";
 import { TeamLogo } from "@/components/TeamLogo";
 import { TimingPreview } from "@/components/TimingPreview";
@@ -133,6 +134,7 @@ export default async function HomePage() {
       </Suspense>
 
       {/* СКОРО — честный роадмап вместо демо-данных */}
+      <Reveal>
       <section>
         <div className="mb-4 flex items-baseline gap-3.5">
           <h2 className="font-display text-xl font-semibold">Скоро</h2>
@@ -155,6 +157,7 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+      </Reveal>
     </div>
   );
 }
@@ -185,6 +188,7 @@ async function HomeData() {
     <>
       {/* ПРОШЕДШИЙ ЭТАП — подиум */}
       {lastDone && podium.length > 0 && (
+        <Reveal>
         <section>
           <div className="mb-4 flex items-baseline justify-between gap-3">
             <h2 className="font-display text-xl font-semibold">Прошедший этап</h2>
@@ -223,10 +227,12 @@ async function HomeData() {
             </div>
           </div>
         </section>
+        </Reveal>
       )}
 
       {/* БЛИЖАЙШИЕ ЭТАПЫ (кусок календаря) */}
       {rounds.length > 0 && (
+        <Reveal>
         <section>
           <div className="mb-4 flex items-baseline justify-between gap-3">
             <h2 className="font-display text-xl font-semibold">Ближайшие этапы</h2>
@@ -254,9 +260,11 @@ async function HomeData() {
             ))}
           </div>
         </section>
+        </Reveal>
       )}
 
       {/* ТАЙМИНГ */}
+      <Reveal>
       <section className="grid items-center gap-6 md:grid-cols-[1fr_360px]">
         <div>
           <div className="text-xs uppercase tracking-[0.16em] text-mute">в прямом эфире</div>
@@ -268,9 +276,11 @@ async function HomeData() {
         </div>
         <TimingPreview />
       </section>
+      </Reveal>
 
       {/* ЧЕМПИОНАТ — реальные данные (Jolpica) */}
       {topStandings.length > 0 && (
+        <Reveal>
         <section className="card-soft overflow-hidden">
           <div className="flex items-center justify-between border-b border-line px-5 py-4">
             <span className="font-display text-base font-semibold">Личный зачёт</span>
@@ -285,7 +295,8 @@ async function HomeData() {
                   return (
                     <div
                       key={d.code || d.position}
-                      className={`grid grid-cols-[22px_4px_28px_1fr_auto] items-center gap-3 px-5 py-2.5 ${ri < col.length - 1 ? "border-b border-line" : ""} ${d.position === 1 ? "bg-surface-2" : ""}`}
+                      className={`team-row grid grid-cols-[22px_4px_28px_1fr_auto] items-center gap-3 px-5 py-2.5 ${ri < col.length - 1 ? "border-b border-line" : ""} ${d.position === 1 ? "bg-surface-2" : ""}`}
+                      style={{ "--row": color ?? "var(--bone)" } as React.CSSProperties}
                     >
                       <span className="tabular text-mute">{d.position}</span>
                       <span className="h-6 w-[4px] rounded-full" style={{ background: color ?? "var(--line)" }} />
@@ -306,6 +317,7 @@ async function HomeData() {
             ))}
           </div>
         </section>
+        </Reveal>
       )}
     </>
   );

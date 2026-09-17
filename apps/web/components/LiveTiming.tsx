@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import { ReplaySpeed } from "@/components/ReplaySpeed";
 import { SessionFlag } from "@/components/SessionFlag";
 import { TeamLogo } from "@/components/TeamLogo";
+import { Tip } from "@/components/Tip";
 import { TimingPreview } from "@/components/TimingPreview";
 import { TyreIcon } from "@/components/TyreIcon";
 import { WeatherCard } from "@/components/WeatherCard";
@@ -249,16 +250,16 @@ function Tower({
             </span>
           )}
           {frame.fastest?.code && (
-            <span
+            <Tip
+              text="Быстрейший круг"
               className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1"
               style={{ background: "color-mix(in srgb, var(--purple) 15%, transparent)" }}
-              title="Быстрейший круг"
             >
               <span style={{ color: "var(--purple)" }}>{Icon.stop}</span>
               <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: "var(--purple)" }}>БК</span>
               <span className="font-semibold text-bone">{frame.fastest.code}</span>
               {frame.fastest.time && <span className="tabular text-mute">{frame.fastest.time}</span>}
-            </span>
+            </Tip>
           )}
         </div>
       )}
@@ -266,6 +267,7 @@ function Tower({
       <div className="py-1.5">
         {rows.map((r) => {
           const moved = order.length > 0 && order[r.pos - 1] !== r.code;
+          const gained = changes[r.code] === "up";
           const hasInt = !!r.int && r.int !== "";
           // Главное число — интервал до впереди идущего; мелким снизу — отрыв от лидера.
           const mainGap = r.pos === 1 ? r.gap : hasInt ? r.int : r.gap;
@@ -275,7 +277,7 @@ function Tower({
               layout
               key={r.code}
               transition={{ layout: { duration: 0.24, ease: [0.2, 0, 0, 1] } }}
-              className={`grid grid-cols-[34px_24px_1fr_auto_auto] items-center gap-2.5 px-4 py-2 ${moved ? "row-flash" : ""}`}
+              className={`grid grid-cols-[34px_24px_1fr_auto_auto] items-center gap-2.5 px-4 py-2 ${gained ? "overtake-trail" : moved ? "row-flash" : ""}`}
             >
               <span className="tabular flex items-center gap-0.5 text-mute">
                 <span>{r.pos}</span>
@@ -300,14 +302,18 @@ function Tower({
                 </span>
                 {subGap && <span className="tabular block text-[10px] text-mute">{subGap}</span>}
               </span>
-              <span className="flex w-10 flex-col items-center justify-center" title="Шина, возраст в кругах и число пит-стопов">
+              <Tip
+                as="span"
+                text="Шина, возраст в кругах и число пит-стопов"
+                className="flex w-10 flex-col items-center justify-center"
+              >
                 {r.tyre && <TyreIcon compound={r.tyre} />}
                 {r.tyre_age != null && (
                   <span className="tabular mt-0.5 text-[9px] leading-none text-mute">
                     {r.tyre_age} кр{r.stops ? ` · ${r.stops}п` : ""}
                   </span>
                 )}
-              </span>
+              </Tip>
             </motion.div>
           );
         })}
@@ -320,27 +326,26 @@ function Tower({
 // Маркер статуса пилота: штраф (+Nс).
 function StatusBadge({ color, text, title }: { color: string; text: string; title: string }) {
   return (
-    <span
+    <Tip
+      text={title}
       className="tabular shrink-0 rounded px-1 text-[10px] font-semibold leading-[1.4]"
       style={{ color, background: `color-mix(in srgb, ${color} 16%, transparent)` }}
-      title={title}
     >
       {text}
-    </span>
+    </Tip>
   );
 }
 
 // Расследование/замечен — восклицательный знак в блоке (как в оригинальном худе).
 function InvestBlock({ color, title }: { color: string; title: string }) {
   return (
-    <span
+    <Tip
+      text={title}
       className="inline-flex h-[15px] w-[13px] shrink-0 items-center justify-center rounded-[3px] text-[11px] font-extrabold leading-none"
       style={{ color: "#151316", background: color }}
-      title={title}
-      aria-label={title}
     >
       !
-    </span>
+    </Tip>
   );
 }
 

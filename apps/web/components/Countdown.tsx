@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { RollNumber } from "@/components/RollNumber";
 
 function diff(target: number) {
   const ms = Math.max(0, target - Date.now());
@@ -29,14 +30,21 @@ export function Countdown({ iso }: { iso: string }) {
     return <span className="tabular">идёт сейчас</span>;
   }
 
-  const parts: string[] = [];
-  if (t.d) parts.push(`${t.d} дн`);
-  parts.push(`${t.h} ч`, `${t.m} мин`);
-  if (!t.d) parts.push(`${t.s} с`);
-
   return (
-    <span suppressHydrationWarning className="tabular">
-      {parts.join(" ")}
+    <span suppressHydrationWarning className="tabular inline-flex items-baseline gap-1.5">
+      {t.d > 0 && <Seg n={t.d} u="дн" />}
+      <Seg n={t.h} u="ч" />
+      <Seg n={t.m} u="мин" />
+      {t.d === 0 && <Seg n={t.s} u="с" />}
+    </span>
+  );
+}
+
+function Seg({ n, u }: { n: number; u: string }) {
+  return (
+    <span className="inline-flex items-baseline gap-0.5">
+      <RollNumber value={n} />
+      <span className="text-[0.85em] text-mute">{u}</span>
     </span>
   );
 }

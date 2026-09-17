@@ -12,14 +12,17 @@ export function DriverPhoto({
   teamSlug,
   photoUrl,
   size = 76,
+  vt,
 }: {
   id: string;
   name: string;
   teamSlug?: string | null;
   photoUrl?: string | null;
   size?: number;
+  vt?: string;
 }) {
   const [i, setI] = useState(0);
+  const vtStyle = vt ? { viewTransitionName: vt } : undefined;
   const color = (teamSlug && TEAMS[teamSlug]?.color) || "var(--mute)";
   const initials = name
     .split(/\s+/)
@@ -41,6 +44,7 @@ export function DriverPhoto({
           background: `color-mix(in srgb, ${color} 20%, var(--surface-2))`,
           color: "var(--bone)",
           fontSize: Math.round(size * 0.34),
+          ...vtStyle,
         }}
         aria-label={name}
       >
@@ -57,7 +61,7 @@ export function DriverPhoto({
       width={size}
       height={size}
       className="shrink-0 rounded-2xl object-cover"
-      style={{ width: size, height: size, background: "var(--surface-2)" }}
+      style={{ width: size, height: size, background: "var(--surface-2)", ...vtStyle }}
       onError={() => setI((n) => n + 1)}
     />
   );

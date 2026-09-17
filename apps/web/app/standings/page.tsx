@@ -55,7 +55,8 @@ export default async function StandingsPage() {
               {drivers.map((d, i) => (
                 <div
                   key={d.code || d.position}
-                  className={`grid grid-cols-[26px_4px_28px_1fr_auto] items-center gap-3 px-5 py-2.5 ${i < drivers.length - 1 ? "border-b border-line" : ""} ${d.position === 1 ? "bg-surface-2" : ""}`}
+                  className={`team-row grid grid-cols-[26px_4px_28px_1fr_auto] items-center gap-3 px-5 py-2.5 ${i < drivers.length - 1 ? "border-b border-line" : ""} ${d.position === 1 ? "bg-surface-2" : ""}`}
+                  style={{ "--row": colorOf(d.team_slug) } as React.CSSProperties}
                 >
                   <span className="tabular text-mute">{d.position}</span>
                   <span className="h-6 w-[4px] rounded-full" style={{ background: colorOf(d.team_slug) }} />
@@ -87,11 +88,12 @@ export default async function StandingsPage() {
               {constructors.map((c, i) => (
                 <div
                   key={c.team_slug || c.position}
-                  className={`grid grid-cols-[26px_4px_28px_1fr_auto] items-center gap-3 px-5 py-2.5 ${i < constructors.length - 1 ? "border-b border-line" : ""} ${c.position === 1 ? "bg-surface-2" : ""}`}
+                  className={`team-row grid grid-cols-[26px_4px_28px_1fr_auto] items-center gap-3 px-5 py-2.5 ${i < constructors.length - 1 ? "border-b border-line" : ""} ${c.position === 1 ? "bg-surface-2" : ""}`}
+                  style={{ "--row": colorOf(c.team_slug) } as React.CSSProperties}
                 >
                   <span className="tabular text-mute">{c.position}</span>
                   <span className="h-6 w-[4px] rounded-full" style={{ background: colorOf(c.team_slug) }} />
-                  <TeamLogo slug={c.team_slug ?? ""} size={26} />
+                  <TeamLogo slug={c.team_slug ?? ""} size={26} vt={c.team_slug ? `tlogo-${c.team_slug}` : undefined} />
                   {c.team_slug ? (
                     <span className="flex min-w-0 items-center gap-2">
                       <Link href={`/teams/${c.team_slug}`} className="truncate hover:text-[var(--accent2)]">

@@ -10,9 +10,12 @@ import { TEAMS } from "@/lib/teams";
 // и мельтешение на страницах с 20 логотипами.
 const EXTS = ["webp", "svg"] as const;
 
-export function TeamLogo({ slug, size = 26 }: { slug: string; size?: number }) {
+// vt — имя для View Transitions (shared-element): передавай только там, где логотип
+// уникален на странице, иначе браузер бросит ошибку о дубле имени.
+export function TeamLogo({ slug, size = 26, vt }: { slug: string; size?: number; vt?: string }) {
   const team = TEAMS[slug];
   const [i, setI] = useState(0);
+  const vtStyle = vt ? { viewTransitionName: vt } : undefined;
   // Неизвестная команда — рендерим пустой слот (не null!), иначе ломается грид:
   // соседние ячейки съезжают, а имя обрезается в узкую колонку логотипа.
   if (!team) {
@@ -30,7 +33,7 @@ export function TeamLogo({ slug, size = 26 }: { slug: string; size?: number }) {
       <span
         className="inline-block shrink-0 rounded-lg"
         title={team.name}
-        style={{ width: size, height: size, background: team.color }}
+        style={{ width: size, height: size, background: team.color, ...vtStyle }}
       />
     );
   }
@@ -45,7 +48,7 @@ export function TeamLogo({ slug, size = 26 }: { slug: string; size?: number }) {
       height={size}
       className="team-logo"
       // небольшой равномерный отступ, чтобы лого не липло к краям квадрата
-      style={{ width: size, height: size, padding: Math.round(size * 0.08) }}
+      style={{ width: size, height: size, padding: Math.round(size * 0.08), ...vtStyle }}
       onError={() => setI((n) => n + 1)}
     />
   );

@@ -121,7 +121,8 @@ export default async function MeetingPage({
             return (
               <div
                 key={r.code || r.position}
-                className={`grid grid-cols-[26px_4px_28px_1fr_auto] items-center gap-3 px-5 py-2.5 sm:grid-cols-[26px_4px_28px_1fr_auto_auto] ${i < results.length - 1 ? "border-b border-line" : ""} ${r.position === 1 ? "bg-surface-2" : ""}`}
+                className={`team-row grid grid-cols-[26px_4px_28px_1fr_auto] items-center gap-3 px-5 py-2.5 sm:grid-cols-[26px_4px_28px_1fr_auto_auto] ${i < results.length - 1 ? "border-b border-line" : ""} ${r.position === 1 ? "bg-surface-2" : ""}`}
+                style={{ "--row": color } as React.CSSProperties}
               >
                 <span className="tabular text-mute">{r.position}</span>
                 <span className="h-6 w-[4px] rounded-full" style={{ background: color }} />
@@ -155,7 +156,8 @@ export default async function MeetingPage({
             return (
               <div
                 key={r.code || r.position}
-                className={`grid grid-cols-[26px_4px_28px_1fr_auto] items-center gap-3 px-5 py-2.5 ${i < qualifying.length - 1 ? "border-b border-line" : ""} ${r.position === 1 ? "bg-surface-2" : ""}`}
+                className={`team-row grid grid-cols-[26px_4px_28px_1fr_auto] items-center gap-3 px-5 py-2.5 ${i < qualifying.length - 1 ? "border-b border-line" : ""} ${r.position === 1 ? "bg-surface-2" : ""}`}
+                style={{ "--row": color } as React.CSSProperties}
               >
                 <span className="tabular text-mute">{r.position}</span>
                 <span className="h-6 w-[4px] rounded-full" style={{ background: color }} />
