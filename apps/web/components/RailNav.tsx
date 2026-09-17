@@ -13,6 +13,7 @@ const RAIL = [
   { href: "/standings", label: "Зачёт", icon: "M8 21h8 M12 17v4 M5 4h14v4a7 7 0 01-14 0z" },
   { href: "/compare", label: "Сравнение", icon: "M9 5L5 9l4 4 M15 19l4-4-4-4 M5 9h13 M19 15H6" },
   { href: "/glossary", label: "Словарь", icon: "M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z M4 19.5A2.5 2.5 0 016.5 17H20" },
+  { href: "/changelog", label: "Обновления", icon: "M3 12a9 9 0 1 0 3-6.7 M3 5v4h4 M12 8v4l3 2" },
 ];
 
 export function RailNav() {
