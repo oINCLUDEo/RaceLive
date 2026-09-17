@@ -61,8 +61,8 @@ export default async function DriverPage({ params }: { params: { id: string } })
 
       {/* ШАПКА */}
       <section
-        className="hero-glow relative overflow-hidden rounded-[24px] p-8 shadow-[var(--soft)]"
-        style={{ background: `linear-gradient(110deg, ${color}22, var(--surface-1) 60%)`, "--glow": color } as React.CSSProperties}
+        className="relative overflow-hidden rounded-[24px] p-8 shadow-[var(--soft)]"
+        style={{ background: `linear-gradient(110deg, ${color}22, var(--surface-1) 60%)` }}
       >
         <span
           className="pointer-events-none absolute right-6 top-2 font-display text-[120px] font-bold leading-none opacity-10"

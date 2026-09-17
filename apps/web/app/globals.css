@@ -328,17 +328,3 @@ body { text-rendering: optimizeLegibility; }
 @media (prefers-reduced-motion: reduce) {
   .pressable:hover, .pressable:active { transform: none; }
 }
-
-/* --- Радиальные свечения за hero (под цвет сущности через --glow) --- */
-/* Задай элементу position:relative и переменную --glow (цвет команды/этапа); слой
-   рисует мягкие цветные ореолы позади контента. Контент оборачивай в relative-обёртку. */
-.hero-glow::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(60% 90% at 82% 22%, color-mix(in srgb, var(--glow, var(--ember)) 26%, transparent), transparent 60%),
-    radial-gradient(45% 80% at 52% 120%, color-mix(in srgb, var(--glow, var(--ember)) 16%, transparent), transparent 62%);
-  opacity: 0.9;
-}
