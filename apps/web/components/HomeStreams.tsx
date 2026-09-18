@@ -52,7 +52,13 @@ export function HomeStreams({ streams }: { streams: StreamOut[] }) {
                 <div className="truncate font-medium">{s.caster}</div>
                 <div className="text-xs text-mute">{platformLabel(s.platform)}</div>
               </div>
-              <span className="shrink-0 text-[10px] uppercase tracking-wide text-mute">офлайн</span>
+              {s.live ? (
+                <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide" style={{ color: "var(--ember)" }}>live</span>
+              ) : s.embed_url ? (
+                <span className="shrink-0 text-[10px] uppercase tracking-wide text-mute">запись</span>
+              ) : (
+                <span className="shrink-0 text-[10px] uppercase tracking-wide text-mute">офлайн</span>
+              )}
             </Link>
           ))}
         </div>
