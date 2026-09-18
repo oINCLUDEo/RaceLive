@@ -127,14 +127,23 @@ export function CompareView({
   const cB = sameTeam ? "var(--ember)" : teamColor(b?.team ?? null, "var(--ember)");
 
   const onRace = async (key: number) => {
+    // Сохраняем выбор пилотов при смене гонки — по коду (VER, NOR…), т.к. номера
+    // машин стабильны, но привязываемся к личности пилота, а не к позиции в списке.
+    const keepA = a?.code;
+    const keepB = b?.code;
     setLoading(true);
     try {
       const r = await fetch(`/api/compare?session=${key}`);
       const d: CompareOut = await r.json();
       if (d.drivers?.length) {
         setData(d);
-        setA(d.drivers[0].num);
-        setB(d.drivers[1]?.num ?? d.drivers[0].num);
+        const na = d.drivers.find((x) => x.code === keepA)?.num ?? d.drivers[0].num;
+        const nb =
+          d.drivers.find((x) => x.code === keepB && x.num !== na)?.num ??
+          d.drivers.find((x) => x.num !== na)?.num ??
+          na;
+        setA(na);
+        setB(nb);
       }
     } catch {
       /* оставим текущее */

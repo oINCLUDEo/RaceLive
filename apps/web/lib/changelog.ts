@@ -26,6 +26,14 @@ export const KIND_LABEL: Record<ChangeKind, string> = {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-09-19",
+    title: "Сравнение помнит пилотов",
+    kind: "fix",
+    items: [
+      "При смене трассы в сравнении выбранные пилоты больше не слетают — сохраняются, если участвовали в той гонке.",
+    ],
+  },
+  {
+    date: "2026-09-19",
     title: "Свежая главная",
     kind: "improve",
     items: [
