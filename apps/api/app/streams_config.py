@@ -1,40 +1,37 @@
 """Курируемый список стримов кастеров (Фаза 6).
 
 Видео НЕ хостим (твёрдое правило, ADR-007): встраиваем официальный iframe-плеер
-площадки (VK Video / Rutube) с согласия кастеров. Реальные ссылки подставляет
-пользователь — как логотипы команд и фото пилотов. Разрешены только хосты из
-ALLOWED_EMBED_HOSTS (проверяется в сервисе), чтобы конфиг не встроил чужой origin.
+площадки (VK Видео / Rutube) с согласия кастеров. Только хосты из ALLOWED_EMBED_HOSTS.
 
-Как добавить кастера: скопируй запись, впиши `caster`, `platform` (vk|rutube),
-`embed_url` (src из «Поделиться → Экспортировать» плеера площадки) и `channel_url`.
-Флаг `live` — стартовое значение; в уик-энд флипается тумблером POST /streams/{id}/live.
+Запись задаёт источник одним из двух способов:
+  • "auto": {...} — авто-подхват эфира по каналу/сообществу (резолвер в фоне):
+        Rutube → {"channel": "<id из URL rutube.ru/channel/<id>/>"} (без ключа)
+        VK     → {"screen_name": "<короткое имя>"} (нужен VK_SERVICE_TOKEN)
+  • "embed_url": "<src плеера>" — ручной режим (конкретная трансляция).
 
-Формат embed_url:
-  VK:     https://vk.com/video_ext.php?oid=<owner>&id=<video>&hd=2
-  Rutube: https://rutube.ru/play/embed/<video_id>
+Флаг «в эфире»: в auto — из резолвера; в ручном — стартовый "live" + тумблер
+POST /streams/{id}/live (за X-Admin-Token).
 """
 
 ALLOWED_EMBED_HOSTS = ("vk.com", "vkvideo.ru", "rutube.ru")
 
 STREAMS: list[dict] = [
     {
-        "id": "example-vk",
-        "caster": "Пример · кастер на VK",
-        "platform": "vk",
-        "embed_url": "https://vk.com/video_ext.php?oid=-22822305&id=456242793&hd=2",
-        "channel_url": "https://vk.com/video",
+        "id": "stanislavskiy",
+        "caster": "Станиславский",
+        "platform": "rutube",
+        "channel_url": "https://rutube.ru/channel/35504962/",
         "round": None,
-        "live": False,
-        "note": "Замените на реальную трансляцию кастера",
+        "note": None,
+        "auto": {"channel": "35504962"},
     },
     {
-        "id": "example-rutube",
-        "caster": "Пример · кастер на Rutube",
-        "platform": "rutube",
-        "embed_url": "https://rutube.ru/play/embed/b3a9b57f3a4b3f2c1d0e9f8a7b6c5d4e",
-        "channel_url": "https://rutube.ru/",
+        "id": "f1memes",
+        "caster": "F1 Memes",
+        "platform": "vk",
+        "channel_url": "https://vk.com/f1memestv",
         "round": None,
-        "live": False,
-        "note": "Замените на реальную трансляцию кастера",
+        "note": "Авто-эфир VK включится, когда задан VK_SERVICE_TOKEN",
+        "auto": {"screen_name": "f1memestv"},
     },
 ]

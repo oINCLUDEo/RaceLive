@@ -84,7 +84,8 @@ export interface StreamOut {
   id: string;
   caster: string;
   platform: string; // vk | rutube
-  embed_url: string;
+  embed_url: string; // пусто, если авто-эфир офлайн
+  title: string | null;
   channel_url: string | null;
   round: number | null;
   live: boolean;

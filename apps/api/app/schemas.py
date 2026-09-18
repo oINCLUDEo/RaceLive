@@ -238,7 +238,8 @@ class StreamOut(BaseModel):
     id: str
     caster: str
     platform: str  # vk | rutube
-    embed_url: str
+    embed_url: str  # пусто, если авто-эфир офлайн
+    title: str | None  # заголовок текущей трансляции (в auto-режиме)
     channel_url: str | None
     round: int | None
     live: bool

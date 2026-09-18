@@ -26,7 +26,23 @@ export function StreamsView({ streams }: { streams: StreamOut[] }) {
     <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
       {/* ПЛЕЕР */}
       <div className="flex min-w-0 flex-col gap-3">
-        <StreamPlayer src={current.embed_url} title={current.caster} />
+        {current.embed_url ? (
+          <StreamPlayer src={current.embed_url} title={current.title ?? current.caster} />
+        ) : (
+          <div
+            className="flex flex-col items-center justify-center gap-2 rounded-[var(--r-card)] border border-line bg-surface-1 text-center text-mute"
+            style={{ aspectRatio: "16 / 9" }}
+          >
+            <span className="h-2 w-2 rounded-full" style={{ background: "var(--disabled)" }} aria-hidden />
+            <span className="text-sm">Кастер сейчас не в эфире</span>
+            {current.channel_url && (
+              <a href={current.channel_url} target="_blank" rel="noopener noreferrer nofollow" className="text-xs text-bone underline underline-offset-2">
+                Открыть канал
+              </a>
+            )}
+          </div>
+        )}
+        {current.title && <div className="truncate text-sm text-mute">{current.title}</div>}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2.5">
             {current.live && <LiveBadge />}

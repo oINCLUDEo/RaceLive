@@ -14,6 +14,7 @@ from .routers import circuits, compare, drivers, health, live, results, schedule
 from .services import results as results_svc
 from .services import schedule as sched_svc
 from .services import standings as stand_svc
+from .services import streams as streams_svc
 
 # Как часто обновлять горячие кэши. Меньше самого короткого TTL (зачёт — 1 ч),
 # чтобы пользователь практически никогда не попадал на холодный запрос к провайдеру.
@@ -48,17 +49,33 @@ async def _cache_warmer() -> None:
         await asyncio.sleep(WARM_INTERVAL_SEC)
 
 
+# Как часто обновлять эфир auto-стримов (кастеры на Rutube/VK).
+STREAMS_RESOLVE_SEC = 60
+
+
+async def _streams_resolver() -> None:
+    """Фоном подхватывает прямой эфир кастеров с площадок (Rutube без ключа, VK — с токеном)."""
+    while True:
+        with contextlib.suppress(Exception):
+            await streams_svc.refresh_auto()
+        await asyncio.sleep(STREAMS_RESOLVE_SEC)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # MVP: создаём таблицы на старте. С Фазы 3 — Alembic-миграции (см. журнал решений).
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     task = asyncio.create_task(_cache_warmer())  # в фоне, не блокирует старт
+    streams_task = asyncio.create_task(_streams_resolver())  # эфир кастеров
     live_task = realtime.start_live_source()  # реплей OpenF1 или демо-тайминг
     yield
     task.cancel()
+    streams_task.cancel()
     with contextlib.suppress(Exception):
         await task
+    with contextlib.suppress(Exception):
+        await streams_task
     await realtime.stop_task(live_task)
     await engine.dispose()
 
