@@ -25,7 +25,7 @@ export function HomeStreams({ streams }: { streams: StreamOut[] }) {
             </span>
           )}
         </div>
-        <Link href="/streams" className="text-sm text-mute hover:text-bone">
+        <Link href="/live#streams" className="text-sm text-mute hover:text-bone">
           все стримы →
         </Link>
       </div>
@@ -44,7 +44,7 @@ export function HomeStreams({ streams }: { streams: StreamOut[] }) {
           {streams.slice(0, 3).map((s) => (
             <Link
               key={s.id}
-              href="/streams"
+              href="/live#streams"
               className="pressable card-soft flex items-center gap-3 p-4"
             >
               <PlatformIcon platform={s.platform} size={30} />

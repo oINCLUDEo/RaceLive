@@ -117,9 +117,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <Link href="/compare" className="hover:text-bone">
                     Сравнение пилотов
                   </Link>
-                  <Link href="/streams" className="hover:text-bone">
-                    Стримы
-                  </Link>
                   <Link href="/changelog" className="hover:text-bone">
                     Обновления
                   </Link>

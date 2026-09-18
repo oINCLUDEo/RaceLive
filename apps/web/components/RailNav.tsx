@@ -9,7 +9,6 @@ const RAIL = [
   { href: "/", label: "Главная", icon: "M3 11l9-8 9 8 M5 10v10h14V10" },
   { href: "/schedule", label: "Расписание", icon: "M3 5h18 M3 12h18 M3 19h18" },
   { href: "/live", label: "Эфир", icon: "M2 6h14v12H2z M16 10l6-3v10l-6-3" },
-  { href: "/streams", label: "Стримы", icon: "M4.9 19.1a10 10 0 010-14.2 M8.5 15.5a5 5 0 010-7 M15.5 8.5a5 5 0 010 7 M19.1 4.9a10 10 0 010 14.2 M12 11.5a.5.5 0 010 1 .5.5 0 010-1z" },
   { href: "/tracks", label: "Трассы", icon: "M9 20l-6-3V4l6 3 6-3 6 3v13l-6-3-6 3z M9 7v13 M15 4v13" },
   { href: "/standings", label: "Зачёт", icon: "M8 21h8 M12 17v4 M5 4h14v4a7 7 0 01-14 0z" },
   { href: "/compare", label: "Сравнение", icon: "M9 5L5 9l4 4 M15 19l4-4-4-4 M5 9h13 M19 15H6" },

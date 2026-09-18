@@ -18,7 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const url = (p: string) => `${SITE_URL}${p}`;
 
   const staticRoutes: MetadataRoute.Sitemap = [
-    "", "/schedule", "/standings", "/tracks", "/live", "/glossary", "/compare", "/changelog", "/streams",
+    "", "/schedule", "/standings", "/tracks", "/live", "/glossary", "/compare", "/changelog",
   ].map((p) => ({ url: url(p), lastModified: now }));
 
   const [schedule, drivers, cons, circuits] = await Promise.all([

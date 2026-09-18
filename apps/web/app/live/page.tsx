@@ -3,7 +3,8 @@ import { Countdown } from "@/components/Countdown";
 import { LiveTiming } from "@/components/LiveTiming";
 import { NotifyBell } from "@/components/NotifyBell";
 import { SessionTime } from "@/components/SessionTime";
-import { getLive, type LiveOut } from "@/lib/api";
+import { StreamsView } from "@/components/StreamsView";
+import { getLive, getStreams, type LiveOut, type StreamOut } from "@/lib/api";
 import { sessionLabel } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -15,12 +16,10 @@ export const metadata = {
 };
 
 export default async function LivePage() {
-  let s: LiveOut | null = null;
-  try {
-    s = await getLive();
-  } catch {
-    s = null;
-  }
+  const [s, streams] = await Promise.all([
+    getLive().catch(() => null as LiveOut | null),
+    getStreams().catch(() => [] as StreamOut[]),
+  ]);
   const sess = s?.session ?? null;
   const wsUrl = process.env.NEXT_PUBLIC_CENTRIFUGO_URL;
 
@@ -70,6 +69,17 @@ export default async function LivePage() {
           </div>
         )}
       </section>
+
+      {/* СТРИМ КАСТЕРА — смотрим гонку и следим за таймингом на одной странице */}
+      {streams.length > 0 && (
+        <section id="streams" className="scroll-mt-6">
+          <div className="mb-3 flex items-baseline justify-between gap-3">
+            <h2 className="font-display text-lg font-semibold">Смотреть с кастером</h2>
+            <span className="text-[11px] uppercase tracking-wide text-mute">трансляции сообщества</span>
+          </div>
+          <StreamsView streams={streams} />
+        </section>
+      )}
 
       {/* ТАЙМИНГ + РЕЙС-КОНТРОЛЬ (живьём через Centrifugo, с фолбэком на демо) */}
       <section>

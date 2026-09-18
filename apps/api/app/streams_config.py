@@ -40,7 +40,7 @@ STREAMS: list[dict] = [
         "platform": "vk",
         "channel_url": "https://vk.com/f1memestv",
         "round": None,
-        "note": "Авто-эфир VK включится, когда задан VK_SERVICE_TOKEN",
+        "note": None,
         "auto": {"screen_name": "f1memestv"},
     },
 ]
