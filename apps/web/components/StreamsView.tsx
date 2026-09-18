@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PlatformIcon } from "@/components/PlatformIcon";
 import { StreamPlayer } from "@/components/StreamPlayer";
 import type { StreamOut } from "@/lib/api";
 
@@ -46,6 +47,7 @@ export function StreamsView({ streams }: { streams: StreamOut[] }) {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2.5">
             {current.live && <LiveBadge />}
+            <PlatformIcon platform={current.platform} size={26} />
             <span className="truncate font-display text-lg font-semibold">{current.caster}</span>
             <span className="shrink-0 rounded-full bg-surface-2 px-2 py-0.5 text-[10px] uppercase tracking-wide text-mute">
               {platformLabel(current.platform)}
@@ -79,11 +81,7 @@ export function StreamsView({ streams }: { streams: StreamOut[] }) {
               onClick={() => setSel(s.id)}
               className={`pressable flex items-center gap-3 rounded-[var(--r-card)] border px-4 py-3 text-left ${on ? "border-line-strong bg-surface-2" : "border-line bg-surface-1 hover:bg-surface-2"}`}
             >
-              <span
-                className="h-1.5 w-1.5 shrink-0 rounded-full"
-                style={{ background: s.live ? "var(--ember)" : "var(--disabled)" }}
-                aria-hidden
-              />
+              <PlatformIcon platform={s.platform} size={30} />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-medium">{s.caster}</span>
                 <span className="text-[11px] text-mute">{platformLabel(s.platform)}</span>

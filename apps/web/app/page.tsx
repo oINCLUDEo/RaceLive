@@ -3,9 +3,11 @@ import { Suspense } from "react";
 import { Countdown } from "@/components/Countdown";
 import { CountdownBoxes } from "@/components/CountdownBoxes";
 import { Flag } from "@/components/Flag";
-import { HeroCar } from "@/components/HeroCar";
+import { HeroArt } from "@/components/HeroArt";
+import { HomeStreams } from "@/components/HomeStreams";
 import { NotifyBell } from "@/components/NotifyBell";
 import { Reveal } from "@/components/Reveal";
+import { SoonArt } from "@/components/SoonArt";
 import { SessionTime } from "@/components/SessionTime";
 import { TeamLogo } from "@/components/TeamLogo";
 import { TimingPreview } from "@/components/TimingPreview";
@@ -15,10 +17,12 @@ import {
   getNextSession,
   getRaceResults,
   getSchedule,
+  getStreams,
   type DriverStandingOut,
   type MeetingOut,
   type NextSessionOut,
   type RaceResultOut,
+  type StreamOut,
 } from "@/lib/api";
 import { sessionLabel } from "@/lib/format";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
@@ -39,22 +43,19 @@ export const dynamic = "force-dynamic";
 
 const SOON = [
   {
-    title: "Живой тайминг",
-    phase: "Фаза 3",
-    desc: "Позиции, интервалы, шины, флаги и рейс-контроль на русском — в реальном времени.",
-    icon: "M3 17l5-6 4 4 5-8 4 6",
+    title: "Авторизация и профили",
+    phase: "Фаза A",
+    desc: "Вход по magic-link или Yandex ID, избранное и настройки между устройствами.",
   },
   {
-    title: "Чат и сообщество",
+    title: "Прогнозы на гонку",
+    phase: "Фаза B",
+    desc: "Угадывай подиум и поул, соревнуйся с друзьями в таблице предсказаний.",
+  },
+  {
+    title: "Чат во время гонки",
     phase: "Фаза 5",
-    desc: "Чат во время гонки, профили, уровни и топы болельщиков между этапами.",
-    icon: "M21 15a2 2 0 01-2 2H8l-5 4V5a2 2 0 012-2h14a2 2 0 012 2z",
-  },
-  {
-    title: "Стримы кастеров",
-    phase: "Фаза 6",
-    desc: "Трансляции комьюнити с чатом и регулятором смещения звука.",
-    icon: "M4 6h14v12H4z M18 10l4-2v8l-4-2",
+    desc: "Смотрим и обсуждаем вместе — живой чат, реакции и профили болельщиков.",
   },
 ];
 
@@ -66,7 +67,7 @@ export default async function HomePage() {
   return (
     <div className="flex flex-col gap-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(WEBSITE_LD) }} />
-      {/* HERO — болид статично встроен в сцену */}
+      {/* HERO — лёгкая SVG-графика вместо 3D-болида */}
       <section
         className="relative flex min-h-[560px] flex-col justify-between overflow-hidden rounded-[24px] shadow-[var(--soft)]"
         style={{ background: "linear-gradient(180deg,#180d10 0%, #130a0c 62%)" }}
@@ -75,7 +76,7 @@ export default async function HomePage() {
           className="pointer-events-none absolute inset-x-0 bottom-0 h-[60%]"
           style={{ background: "radial-gradient(55% 100% at 50% 112%, rgba(224,64,47,0.4), rgba(224,64,47,0.1) 44%, transparent 72%)" }}
         />
-        <HeroCar />
+        <HeroArt />
         <div
           className="pointer-events-none absolute inset-0"
           style={{ background: "linear-gradient(100deg, rgba(19,10,12,0.94) 0%, rgba(19,10,12,0.68) 34%, rgba(19,10,12,0.22) 58%, transparent 82%)" }}
@@ -143,12 +144,10 @@ export default async function HomePage() {
           <span className="text-sm text-mute">что готовим дальше</span>
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
-          {SOON.map((s) => (
+          {SOON.map((s, i) => (
             <div key={s.title} className="card-soft p-5">
               <div className="flex items-center justify-between">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--bone)" strokeWidth="1.6">
-                  <path d={s.icon} />
-                </svg>
+                <SoonArt i={i} />
                 <span className="rounded-full bg-[var(--accent2-soft)] px-2.5 py-1 text-[11px] font-medium" style={{ color: "var(--accent2)" }}>
                   {s.phase}
                 </span>
@@ -166,9 +165,10 @@ export default async function HomePage() {
 
 // Данные календаря/зачёта/подиума — грузятся потоком отдельно от героя.
 async function HomeData() {
-  const [schedule, standings] = await Promise.all([
+  const [schedule, standings, streams] = await Promise.all([
     getSchedule().catch(() => [] as MeetingOut[]),
     getDriverStandings().catch(() => [] as DriverStandingOut[]),
+    getStreams().catch(() => [] as StreamOut[]),
   ]);
   const topStandings = standings.slice(0, 10);
   const leaderPoints = standings[0]?.points ?? 0;
@@ -262,6 +262,13 @@ async function HomeData() {
             ))}
           </div>
         </section>
+        </Reveal>
+      )}
+
+      {/* СТРИМЫ КАСТЕРОВ */}
+      {streams.length > 0 && (
+        <Reveal>
+          <HomeStreams streams={streams} />
         </Reveal>
       )}
 
