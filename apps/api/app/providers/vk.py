@@ -10,6 +10,7 @@ VK не отдаёт живой стрим паблика без токена. �
 from __future__ import annotations
 
 import asyncio
+import logging
 
 import httpx
 
@@ -18,6 +19,8 @@ from ..ratelimit import TokenBucket
 
 BASE_URL = "https://api.vk.com/method"
 API_VERSION = "5.199"
+
+log = logging.getLogger("race.vk")
 
 
 class VKClient:
@@ -37,7 +40,11 @@ class VKClient:
             resp.raise_for_status()
             data = resp.json()
         if "error" in data:
-            raise RuntimeError(f"VK error: {data['error'].get('error_msg')}")
+            err = data["error"]
+            # Видно в `docker compose logs api`: точный код/текст помогает понять,
+            # какого токена не хватает (напр. video.get часто требует токен сообщества).
+            log.warning("VK %s → код %s: %s", method, err.get("error_code"), err.get("error_msg"))
+            raise RuntimeError(f"VK {method}: {err.get('error_msg')}")
         return data.get("response") or {}
 
     async def resolve_community(self, screen_name: str) -> dict | None:
@@ -57,4 +64,5 @@ class VKClient:
         live = next((v for v in items if v.get("live") == 1 or v.get("live_status") == "started"), None)
         pick = live or items[0]
         embed = f"https://vk.com/video_ext.php?oid={pick.get('owner_id')}&id={pick.get('id')}&hd=2"
+        log.info("VK %s: подхвачено видео %s (live=%s)", screen_name, pick.get("id"), bool(live))
         return {"embed_url": embed, "live": bool(live), "title": pick.get("title")}
