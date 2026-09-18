@@ -26,6 +26,15 @@ STREAMS: list[dict] = [
         "auto": {"channel": "35504962"},
     },
     {
+        "id": "vershina-avtosporta",
+        "caster": "Вершина Автоспорта",
+        "platform": "rutube",
+        "channel_url": "https://rutube.ru/channel/34418531/",
+        "round": None,
+        "note": None,
+        "auto": {"channel": "34418531"},
+    },
+    {
         "id": "f1memes",
         "caster": "F1 Memes",
         "platform": "vk",
