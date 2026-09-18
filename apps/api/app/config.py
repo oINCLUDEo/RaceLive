@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     openf1_session_key: int = 0  # 0 = последняя прошедшая гонка; иначе session_key OpenF1
     openf1_replay_speed: float = 60.0  # во сколько раз ускорять гоночное время
 
+    # Стримы кастеров (Фаза 6): секрет для тумблера «в эфире» (POST .../live).
+    # Пусто → тумблер выключен (эндпойнт отвечает 403). Задай, чтобы флипать live.
+    admin_token: str = ""
+
     @property
     def sqlalchemy_url(self) -> str:
         if self.database_url:

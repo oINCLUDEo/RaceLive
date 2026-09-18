@@ -230,3 +230,16 @@ class WeekendForecastOut(BaseModel):
     available: bool
     note: str | None
     days: list[WeatherDayOut]
+
+
+class StreamOut(BaseModel):
+    """Стрим кастера. Видео не наше — это src официального embed-плеера площадки."""
+
+    id: str
+    caster: str
+    platform: str  # vk | rutube
+    embed_url: str
+    channel_url: str | None
+    round: int | None
+    live: bool
+    note: str | None

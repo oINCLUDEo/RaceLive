@@ -80,6 +80,22 @@ export function getWeekendForecast(round: number, season?: number): Promise<Week
   return getJSON<WeekendForecastOut>(`/api/v1/weather/${round}${q}`, 1800);
 }
 
+export interface StreamOut {
+  id: string;
+  caster: string;
+  platform: string; // vk | rutube
+  embed_url: string;
+  channel_url: string | null;
+  round: number | null;
+  live: boolean;
+  note: string | null;
+}
+
+export function getStreams(): Promise<StreamOut[]> {
+  // Статус «в эфире» меняется в уик-энд — держим свежим (30 c).
+  return getJSON<StreamOut[]>(`/api/v1/streams`, 30);
+}
+
 export function getNextSession(): Promise<NextSessionOut | null> {
   return getJSON<NextSessionOut | null>(`/api/v1/next-session`, 60);
 }

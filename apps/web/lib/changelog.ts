@@ -25,6 +25,15 @@ export const KIND_LABEL: Record<ChangeKind, string> = {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-09-18",
+    title: "Стримы кастеров",
+    kind: "new",
+    items: [
+      "Новый раздел «Стримы»: смотрите гонку с комментатором сообщества прямо на сайте.",
+      "Плеер VK Видео и Rutube встроен в стиле race.live, с выбором кастера и отметкой «в эфире».",
+    ],
+  },
+  {
     date: "2026-09-17",
     title: "Прогноз погоды на уик-энд",
     kind: "new",
