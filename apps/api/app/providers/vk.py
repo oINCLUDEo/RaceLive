@@ -64,5 +64,7 @@ class VKClient:
         live = next((v for v in items if v.get("live") == 1 or v.get("live_status") == "started"), None)
         pick = live or items[0]
         embed = f"https://vk.com/video_ext.php?oid={pick.get('owner_id')}&id={pick.get('id')}&hd=2"
+        images = pick.get("image") or []
+        thumb = (images[-1].get("url") if images else None) or pick.get("photo_800") or pick.get("photo_320")
         log.info("VK %s: подхвачено видео %s (live=%s)", screen_name, pick.get("id"), bool(live))
-        return {"embed_url": embed, "live": bool(live), "title": pick.get("title")}
+        return {"embed_url": embed, "live": bool(live), "title": pick.get("title"), "thumb": thumb}

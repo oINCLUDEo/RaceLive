@@ -32,7 +32,7 @@ export function HomeStreams({ streams }: { streams: StreamOut[] }) {
 
       {live ? (
         <div className="flex flex-col gap-3">
-          <StreamPlayer src={live.embed_url} title={live.title ?? live.caster} />
+          <StreamPlayer src={live.embed_url} title={live.title ?? live.caster} poster={live.thumb} live={live.live} />
           <div className="flex flex-wrap items-center gap-2.5">
             <PlatformIcon platform={live.platform} />
             <span className="font-display font-semibold">{live.caster}</span>

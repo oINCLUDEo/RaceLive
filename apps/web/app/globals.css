@@ -180,6 +180,17 @@ a.card-soft:active {
 }
 .bell-ring { display: inline-flex; transform-origin: 50% 15%; animation: bellRing 0.85s ease; }
 
+/* Всплывающая реакция у стрима. */
+@keyframes reactFloat {
+  0% { transform: translateY(0) scale(0.8); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translateY(-72px) scale(1.15); opacity: 0; }
+}
+.react-float { animation: reactFloat 1.5s ease-out forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .react-float { animation-duration: 0.001ms; }
+}
+
 /* --- Тонкая зернистость на тёмных фонах --- */
 /* Плёночное зерно тонким слоем поверх всего (fixed, pointer-events:none). Blend
    overlay + очень низкая прозрачность: фактура ложится на тёмные поля, текст и

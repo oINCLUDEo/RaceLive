@@ -240,6 +240,7 @@ class StreamOut(BaseModel):
     platform: str  # vk | rutube
     embed_url: str  # пусто, если авто-эфир офлайн
     title: str | None  # заголовок текущей трансляции (в auto-режиме)
+    thumb: str | None  # обложка (для «ленивого» плеера)
     channel_url: str | None
     round: int | None
     live: bool

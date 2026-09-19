@@ -99,10 +99,12 @@ async def list_streams() -> list[dict]:
             embed = res.get("embed_url", "")
             live = bool(res.get("live", False))
             title = res.get("title")
+            thumb = res.get("thumb")
         else:
             embed = s.get("embed_url", "")
             live = overrides.get(s["id"], bool(s.get("live", False)))
             title = None
+            thumb = s.get("thumb")
         if embed and not _host_ok(embed):
             embed = ""  # чужой/битый хост наружу не отдаём
         out.append(
@@ -112,6 +114,7 @@ async def list_streams() -> list[dict]:
                 "platform": s["platform"],
                 "embed_url": embed,
                 "title": title,
+                "thumb": thumb,
                 "channel_url": s.get("channel_url"),
                 "round": s.get("round"),
                 "live": live and bool(embed),

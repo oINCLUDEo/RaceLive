@@ -3,7 +3,7 @@ import { Countdown } from "@/components/Countdown";
 import { LiveTiming } from "@/components/LiveTiming";
 import { NotifyBell } from "@/components/NotifyBell";
 import { SessionTime } from "@/components/SessionTime";
-import { StreamsView } from "@/components/StreamsView";
+import { StreamStage } from "@/components/StreamStage";
 import { getLive, getStreams, type LiveOut, type StreamOut } from "@/lib/api";
 import { sessionLabel } from "@/lib/format";
 
@@ -70,26 +70,21 @@ export default async function LivePage() {
         )}
       </section>
 
-      {/* СТРИМ КАСТЕРА — смотрим гонку и следим за таймингом на одной странице */}
-      {streams.length > 0 && (
-        <section id="streams" className="scroll-mt-6">
-          <div className="mb-3 flex items-baseline justify-between gap-3">
-            <h2 className="font-display text-lg font-semibold">Смотреть с кастером</h2>
-            <span className="text-[11px] uppercase tracking-wide text-mute">трансляции сообщества</span>
-          </div>
-          <StreamsView streams={streams} />
-        </section>
-      )}
-
-      {/* ТАЙМИНГ + РЕЙС-КОНТРОЛЬ (живьём через Centrifugo, с фолбэком на демо) */}
-      <section>
+      {/* СТРИМ + ТАЙМИНГ на одной странице (бок о бок на широких экранах) */}
+      <section id="streams" className="scroll-mt-6">
         <div className="mb-3 flex items-baseline justify-between gap-3">
-          <h2 className="font-display text-lg font-semibold">Таблица тайминга</h2>
+          <h2 className="font-display text-lg font-semibold">
+            {streams.length > 0 ? "Смотреть с кастером и следить за таймингом" : "Таблица тайминга"}
+          </h2>
           <span className="text-[11px] uppercase tracking-wide text-mute">
             позиции · интервалы · шины · рейс-контроль
           </span>
         </div>
-        <LiveTiming wsUrl={wsUrl} />
+        {streams.length > 0 ? (
+          <LiveTiming wsUrl={wsUrl} variant="side" streamSlot={<StreamStage streams={streams} />} />
+        ) : (
+          <LiveTiming wsUrl={wsUrl} />
+        )}
       </section>
 
       {/* ЧЕСТНО О СТАТУСЕ ФАЗЫ 3 */}

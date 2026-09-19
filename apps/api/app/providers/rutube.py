@@ -54,4 +54,9 @@ class RutubeClient:
         embed = pick.get("embed_url") or (f"https://rutube.ru/play/embed/{pick['id']}" if pick.get("id") else "")
         if not embed:
             return None
-        return {"embed_url": embed, "live": bool(on_air), "title": pick.get("title")}
+        return {
+            "embed_url": embed,
+            "live": bool(on_air),
+            "title": pick.get("title"),
+            "thumb": pick.get("thumbnail_url") or pick.get("picture_url"),
+        }

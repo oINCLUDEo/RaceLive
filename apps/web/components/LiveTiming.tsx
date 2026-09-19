@@ -93,7 +93,15 @@ function rcColor(m: RcMessage): string {
   return "var(--mute)";
 }
 
-export function LiveTiming({ wsUrl }: { wsUrl?: string }) {
+export function LiveTiming({
+  wsUrl,
+  variant = "full",
+  streamSlot,
+}: {
+  wsUrl?: string;
+  variant?: "full" | "side";
+  streamSlot?: React.ReactNode;
+}) {
   const [frame, setFrame] = useState<Frame | null>(null);
   const [changes, setChanges] = useState<Record<string, "up" | "down">>({});
   const prevOrder = useRef<string[]>([]);
@@ -155,6 +163,7 @@ export function LiveTiming({ wsUrl }: { wsUrl?: string }) {
   }, [wsUrl]);
 
   const rc = frame?.rc ?? [];
+  const timing = frame ? <Tower frame={frame} prevOrder={prevOrder} changes={changes} /> : <TimingPreview />;
 
   return (
     <div className="flex flex-col gap-4">
@@ -168,38 +177,21 @@ export function LiveTiming({ wsUrl }: { wsUrl?: string }) {
       {/* ПОГОДА НА ТРАССЕ (вверху) */}
       {frame?.weather && <WeatherCard w={frame.weather} />}
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,440px)_1fr]">
-        {/* ТАБЛИЦА ПОЗИЦИЙ */}
-        {frame ? <Tower frame={frame} prevOrder={prevOrder} changes={changes} /> : <TimingPreview />}
-
-      {/* ЛЕНТА РЕЙС-КОНТРОЛЯ (прокручивается — можно отмотать всю гонку) */}
-      <div className="card-soft flex max-h-[560px] flex-col overflow-hidden self-start">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3 text-xs text-mute">
-          <span>Рейс-контроль{rc.length > 0 && <span className="tabular text-bone"> · {rc.length}</span>}</span>
-          <span className="text-[10px] uppercase tracking-wide">на русском</span>
-        </div>
-        {rc.length === 0 ? (
-          <div className="px-4 py-6 text-sm text-mute">
-            Здесь появятся сообщения рейс-контроля — флаги, сейфти-кар, штрафы и расследования, переведённые на русский.
+      {variant === "side" ? (
+        // Бок о бок: слева стрим кастера, справа таблица позиций; рейс-контроль лентой снизу.
+        <>
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,440px)]">
+            <div className="min-w-0">{streamSlot}</div>
+            {timing}
           </div>
-        ) : (
-          <ul className="no-scrollbar overflow-y-auto">
-            {rc.map((m, i) => (
-              <li key={`${m.lap}-${i}-${m.message}`} className={`flex gap-3 px-4 py-3 ${i < rc.length - 1 ? "border-b border-line" : ""}`}>
-                <span className="mt-1 h-3 w-[3px] shrink-0 rounded-full" style={{ background: rcColor(m) }} aria-hidden />
-                <div className="min-w-0">
-                  <div className="text-sm leading-snug">{m.message_ru}</div>
-                  <div className="mt-0.5 flex items-center gap-2 text-[11px] text-mute">
-                    {m.lap != null && <span className="tabular">Круг {m.lap}</span>}
-                    <span className="truncate opacity-70">{m.message}</span>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-      </div>
+          <RaceFeed rc={rc} />
+        </>
+      ) : (
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,440px)_1fr]">
+          {timing}
+          <RaceFeed rc={rc} />
+        </div>
+      )}
     </div>
   );
 }
@@ -319,6 +311,38 @@ function Tower({
         })}
       </div>
       <TrackOrder rows={rows} onRender={(o) => (prevOrder.current = o)} />
+    </div>
+  );
+}
+
+// Лента рейс-контроля (переиспользуется в обеих раскладках).
+function RaceFeed({ rc }: { rc: RcMessage[] }) {
+  return (
+    <div className="card-soft flex max-h-[560px] flex-col overflow-hidden self-start">
+      <div className="flex items-center justify-between border-b border-line px-4 py-3 text-xs text-mute">
+        <span>Рейс-контроль{rc.length > 0 && <span className="tabular text-bone"> · {rc.length}</span>}</span>
+        <span className="text-[10px] uppercase tracking-wide">на русском</span>
+      </div>
+      {rc.length === 0 ? (
+        <div className="px-4 py-6 text-sm text-mute">
+          Здесь появятся сообщения рейс-контроля — флаги, сейфти-кар, штрафы и расследования, переведённые на русский.
+        </div>
+      ) : (
+        <ul className="no-scrollbar overflow-y-auto">
+          {rc.map((m, i) => (
+            <li key={`${m.lap}-${i}-${m.message}`} className={`flex gap-3 px-4 py-3 ${i < rc.length - 1 ? "border-b border-line" : ""}`}>
+              <span className="mt-1 h-3 w-[3px] shrink-0 rounded-full" style={{ background: rcColor(m) }} aria-hidden />
+              <div className="min-w-0">
+                <div className="text-sm leading-snug">{m.message_ru}</div>
+                <div className="mt-0.5 flex items-center gap-2 text-[11px] text-mute">
+                  {m.lap != null && <span className="tabular">Круг {m.lap}</span>}
+                  <span className="truncate opacity-70">{m.message}</span>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
