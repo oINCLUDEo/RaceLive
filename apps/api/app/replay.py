@@ -12,11 +12,12 @@ import asyncio
 import bisect
 import contextlib
 import logging
+import time
 from datetime import datetime, timezone
 from typing import Awaitable, Callable
 
-from . import race_control
-from .providers.openf1 import OpenF1Client
+from . import cache, race_control
+from .providers.openf1 import OpenF1Client, OpenF1Locked
 
 log = logging.getLogger("uvicorn.error")
 
@@ -24,8 +25,30 @@ log = logging.getLogger("uvicorn.error")
 ALLOWED_SPEEDS = [0.5, 1, 2, 5, 15, 60]
 current_speed = 60.0
 
-# Управление перемоткой: race_start — время старта гонки; seek — запрос перемотки.
-_replay_ctl: dict = {"race_start": None, "seek": None}
+# Управление перемоткой: race_start — время старта гонки; seek — запрос перемотки;
+# note — пояснение для зрителей поверх реплея (напр. «идёт сессия, показываем повтор»).
+_replay_ctl: dict = {"race_start": None, "seek": None, "note": None}
+
+# Кэш сырых данных реплея в Redis: во время живой сессии OpenF1 закрыт для анонимов,
+# и рестарт api без кэша оставил бы тайминг пустым.
+_RAW_TTL = 21 * 24 * 3600
+
+_SESSION_RU = {
+    "practice 1": "Практика 1",
+    "practice 2": "Практика 2",
+    "practice 3": "Практика 3",
+    "qualifying": "Квалификация",
+    "sprint qualifying": "Спринт-квалификация",
+    "sprint shootout": "Спринт-квалификация",
+    "sprint": "Спринт",
+    "race": "Гонка",
+}
+
+
+def _label(sess: dict) -> str:
+    name = _SESSION_RU.get((sess.get("session_name") or "").lower(), sess.get("session_name") or "Сессия")
+    place = sess.get("circuit_short_name") or sess.get("country_name") or ""
+    return f"{name} · {place}".strip(" ·")
 
 
 def set_speed(value: float) -> float:
@@ -201,6 +224,17 @@ class Timeline:
         for series in (*self.pos.values(), *self.gap.values(), *self.itv.values(), *self.lap.values()):
             series.sort(key=lambda x: x[0])
 
+        # Практика/квала: интервалов нет — отставание считаем по лучшему кругу.
+        # lapdur[num] = [(момент завершения круга, длительность)].
+        self.has_intervals = any(self.gap.values())
+        self.lapdur: dict[int, list[tuple[float, float]]] = {}
+        for r in laps:
+            t0 = _ts(r.get("date_start"))
+            dur = r.get("lap_duration")
+            num = r.get("driver_number")
+            if t0 is not None and isinstance(dur, (int, float)) and num is not None:
+                self.lapdur.setdefault(num, []).append((t0 + float(dur), float(dur)))
+
         # Быстрейший круг: когда меняется обладатель лучшего времени круга (t → driver_number).
         fl_events = sorted(
             (
@@ -269,13 +303,33 @@ class Timeline:
         fl_num = fl[0] if fl else None
         msgs = [r.get("message") or "" for tt, r in self.rc if tt <= t]
         status = race_control.driver_statuses(msgs)
+
+        # Практика/квала: лидеру — его лучший круг, остальным — отставание от него.
+        best: dict[int, float] = {}
+        if not self.has_intervals:
+            for num, series in self.lapdur.items():
+                done = [d for te, d in series if te <= t]
+                if done:
+                    best[num] = min(done)
+        ref = min(best.values()) if best else None
+
+        def gap_text(e: dict) -> tuple[str, str]:
+            if self.has_intervals:
+                if e["pos"] == 1:
+                    return "ЛИДЕР", ""
+                return _fmt_gap(e["gap"]), _fmt_gap(e["int"])
+            b = best.get(e["num"])
+            if b is None or ref is None:
+                return "", ""
+            return (_fmt_laptime(b) or "") if b == ref else f"+{b - ref:.3f}", ""
+
         rows = [
             {
                 "pos": e["pos"],
                 "code": e["code"],
                 "team": e["team"],
-                "gap": "ЛИДЕР" if e["pos"] == 1 else _fmt_gap(e["gap"]),
-                "int": "" if e["pos"] == 1 else _fmt_gap(e["int"]),
+                "gap": gap_text(e)[0],
+                "int": gap_text(e)[1],
                 "tyre": e["tyre"],
                 "tyre_age": e["tyre_age"],
                 "pit": e["pit"],
@@ -312,17 +366,50 @@ class Timeline:
 
 
 async def _latest_race_key(client: OpenF1Client) -> int:
-    """session_key последней уже прошедшей гонки (текущий сезон, иначе прошлый)."""
+    """session_key последней уже прошедшей гонки (текущий сезон, иначе прошлый).
+    Если OpenF1 закрыт (идёт живая сессия) — берём последний ключ из кэша."""
     now = datetime.now(timezone.utc)
     for year in (now.year, now.year - 1):
         try:
             rows = await client.race_sessions(year)
+        except OpenF1Locked:
+            break
         except Exception:
             rows = []
         past = [(t, r) for r in rows if (t := _ts(r.get("date_start"))) and t <= now.timestamp()]
         if past:
             return max(past, key=lambda x: x[0])[1].get("session_key") or 0
-    return 0
+    return int(await cache.get_json("replay:last_key") or 0)
+
+
+async def _load_session(client: OpenF1Client, session_key: int) -> dict | None:
+    """Все данные сессии для реплея: из OpenF1 (и в кэш), при недоступности — из кэша."""
+    key = f"replay:raw:{session_key}"
+    try:
+        sess = await client.session(session_key)
+        if not sess:
+            return None
+        raw = {
+            "session": sess,
+            "drivers": await client.drivers(session_key),
+            "position": await client.position(session_key),
+            "intervals": await client.intervals(session_key),
+            "laps": await client.laps(session_key),
+            "stints": await client.stints(session_key),
+            "rc": await client.race_control(session_key),
+            "weather": await client.weather(session_key),
+            "pits": await client.pit(session_key),
+        }
+        await cache.set_json(key, raw, _RAW_TTL)
+        await cache.set_json("replay:last_key", session_key, _RAW_TTL)
+        return raw
+    except Exception as exc:
+        cached = await cache.get_json(key)
+        if cached:
+            log.info("OpenF1 replay: сессия %s из кэша (%s)", session_key, type(exc).__name__)
+            return cached
+        log.warning("OpenF1 replay: не удалось загрузить сессию %s: %s", session_key, exc)
+        return None
 
 
 async def run_replay(
@@ -330,9 +417,10 @@ async def run_replay(
     speed: float,
     publish: Callable[[str, dict], Awaitable[None]],
     channel: str,
+    client: OpenF1Client | None = None,
 ) -> None:
-    """Тянет сессию OpenF1 и бесконечно проигрывает её кадрами в channel."""
-    client = OpenF1Client()
+    """Тянет сессию OpenF1 (или кэш) и бесконечно проигрывает её кадрами в channel."""
+    client = client or OpenF1Client()
 
     # session_key <= 0 → автоматически берём последнюю прошедшую гонку сезона
     if session_key <= 0:
@@ -341,30 +429,15 @@ async def run_replay(
             log.warning("OpenF1 replay: не нашёл последнюю прошедшую гонку")
             return
 
-    try:
-        sess = await client.session(session_key)
-    except Exception as exc:
-        log.warning("OpenF1 replay: сессия %s недоступна: %s", session_key, exc)
+    raw = await _load_session(client, session_key)
+    if not raw:
         return
-    if not sess:
-        log.warning("OpenF1 replay: сессия %s не найдена", session_key)
-        return
-    label = f"Гонка · {sess.get('circuit_short_name') or sess.get('country_name') or ''}".strip(" ·")
-
-    try:
-        drivers = await client.drivers(session_key)
-        position = await client.position(session_key)
-        intervals = await client.intervals(session_key)
-        laps = await client.laps(session_key)
-        stints = await client.stints(session_key)
-        rc = await client.race_control(session_key)
-        weather = await client.weather(session_key)
-        pits = await client.pit(session_key)
-    except Exception as exc:
-        log.warning("OpenF1 replay: не удалось загрузить данные сессии %s: %s", session_key, exc)
-        return
-
-    tl = Timeline(drivers, position, intervals, laps, stints, rc, label, weather, pits)
+    sess = raw["session"]
+    label = _label(sess)
+    tl = Timeline(
+        raw["drivers"], raw["position"], raw["intervals"], raw["laps"], raw["stints"],
+        raw["rc"], label, raw["weather"], raw["pits"],
+    )
     if tl.t_end <= tl.t_start:
         log.warning("OpenF1 replay: пустой таймлайн для сессии %s", session_key)
         return
@@ -384,8 +457,79 @@ async def run_replay(
             if _replay_ctl.get("seek") is not None:
                 t = _replay_ctl["seek"]
                 _replay_ctl["seek"] = None
+            frame = tl.frame_at(t)
+            if _replay_ctl.get("note"):
+                frame["note"] = _replay_ctl["note"]
             with contextlib.suppress(Exception):
-                await publish(channel, tl.frame_at(t))
+                await publish(channel, frame)
             t += real_step * current_speed
             await asyncio.sleep(real_step)
         await asyncio.sleep(3.0)  # пауза перед повтором реплея
+
+
+# --- Живой тайминг (платный OpenF1) ---------------------------------------------------
+
+LIVE_TICK_SEC = 4.0  # быстрый цикл: позиции + интервалы
+LIVE_SLOW_EVERY = 4  # раз в 4 цикла (~16 c): РК, погода, питы, круги, стинты
+# Бюджет: 2 запроса/4 c (30/мин) + 5 запросов/16 c (~19/мин) ≈ 49/мин < лимита 60/мин.
+
+
+def _max_ts(rows: list[dict], field: str = "date") -> float | None:
+    ts = [t for r in rows if (t := _ts(r.get(field))) is not None]
+    return max(ts) if ts else None
+
+
+def _since(rows: list[dict], field: str = "date") -> str | None:
+    """Максимальная метка времени среди строк — в формате фильтра OpenF1 (UTC без смещения)."""
+    best = _max_ts(rows, field)
+    if best is None:
+        return None
+    return datetime.fromtimestamp(best, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")
+
+
+async def run_live(
+    client: OpenF1Client,
+    publish: Callable[[str, dict], Awaitable[None]],
+    channel: str,
+) -> None:
+    """Публикует настоящий тайминг идущей сессии (session_key=latest), пока она не кончится.
+    Данные дотягиваются инкрементально (`date>…`), кадр собирается тем же Timeline."""
+    sess = await client.session("latest")
+    if not sess:
+        log.warning("OpenF1 live: нет текущей сессии")
+        return
+    key = sess["session_key"]
+    label = _label(sess)
+    end_ts = _ts(sess.get("date_end")) or (time.time() + 3 * 3600)
+    drivers = await client.drivers(key)
+    log.info("OpenF1 live: %s (session_key=%s)", label, key)
+
+    data: dict[str, list[dict]] = {k: [] for k in ("position", "intervals", "laps", "stints", "race_control", "weather", "pit")}
+    tick = 0
+    while time.time() < end_ts + 15 * 60:
+        try:
+            for ep in ("position", "intervals"):
+                data[ep] += await client._get_since(ep, key, _since(data[ep]))
+            if tick % LIVE_SLOW_EVERY == 0:
+                for ep in ("race_control", "weather", "pit"):
+                    data[ep] += await client._get_since(ep, key, _since(data[ep]))
+                data["laps"] = await client.laps(key)
+                data["stints"] = await client.stints(key)
+        except Exception as exc:
+            log.warning("OpenF1 live: сбой опроса: %s", exc)
+
+        if data["position"]:
+            tl = Timeline(
+                drivers, data["position"], data["intervals"], data["laps"], data["stints"],
+                data["race_control"], label, data["weather"], data["pit"],
+            )
+            latest = max(
+                (_max_ts(data["position"]) or 0.0, _max_ts(data["intervals"]) or 0.0, _max_ts(data["laps"], "date_start") or 0.0)
+            )
+            frame = tl.frame_at(max(time.time(), latest))
+            frame["badge"] = "эфир"
+            with contextlib.suppress(Exception):
+                await publish(channel, frame)
+        tick += 1
+        await asyncio.sleep(LIVE_TICK_SEC)
+    log.info("OpenF1 live: сессия %s закончилась", label)

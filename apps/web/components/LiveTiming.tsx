@@ -44,6 +44,7 @@ type Frame = {
   rc?: RcMessage[];
   demo?: boolean;
   badge?: string;
+  note?: string;
   flag?: string;
   fastest?: { code: string | null; time: string | null } | null;
   weather?: {
@@ -171,6 +172,17 @@ export function LiveTiming({
       {frame?.badge === "реплей" && (
         <div className="flex justify-end">
           <ReplaySpeed />
+        </div>
+      )}
+
+      {/* ПОЯСНЕНИЕ ОТ БЭКЕНДА (напр. идёт сессия, а показываем повтор) */}
+      {frame?.note && (
+        <div
+          className="flex items-start gap-2.5 rounded-[var(--r-card)] border px-4 py-3 text-sm"
+          style={{ borderColor: "var(--accent2-soft)", background: "var(--accent2-soft)" }}
+        >
+          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "var(--accent2)" }} aria-hidden />
+          <span className="text-bone">{frame.note}</span>
         </div>
       )}
 

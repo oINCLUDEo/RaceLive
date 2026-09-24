@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     live_source: str = ""
     openf1_session_key: int = 0  # 0 = последняя прошедшая гонка; иначе session_key OpenF1
     openf1_replay_speed: float = 60.0  # во сколько раз ускорять гоночное время
+    # Платный аккаунт OpenF1 — живые данные во время сессий (LIVE_SOURCE=auto).
+    # Без него во время сессии OpenF1 закрыт для анонимов → показываем реплей из кэша.
+    openf1_username: str = ""
+    openf1_password: str = ""
 
     # Стримы кастеров (Фаза 6): секрет для тумблера «в эфире» (POST .../live).
     # Пусто → тумблер выключен (эндпойнт отвечает 403). Задай, чтобы флипать live.

@@ -61,4 +61,6 @@ class RutubeClient:
             "live": bool(on_air),
             "title": pick.get("title"),
             "thumb": pick.get("thumbnail_url") or pick.get("picture_url"),
+            # Rutube не отдаёт «смотрят сейчас» — только суммарные открытия (hits).
+            "views": pick.get("hits"),
         }

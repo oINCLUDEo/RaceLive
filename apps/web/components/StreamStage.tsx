@@ -11,6 +11,7 @@ import type { StreamOut } from "@/lib/api";
 import { useReminder } from "@/lib/reminders";
 
 const platformLabel = (p: string) => (p === "vk" ? "VK Видео" : p === "rutube" ? "Rutube" : p);
+const compact = (n: number) => new Intl.NumberFormat("ru-RU", { notation: "compact", maximumFractionDigits: 1 }).format(n);
 
 function StatusChip({ live, hasRec }: { live: boolean; hasRec: boolean }) {
   if (live)
@@ -93,7 +94,18 @@ export function StreamStage({ streams }: { streams: StreamOut[] }) {
         </div>
       )}
 
-      {current.title && <div className="truncate text-sm text-mute">{current.title}</div>}
+      {(current.title || current.viewers || current.views) && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-mute">
+          {current.title && <span className="min-w-0 truncate">{current.title}</span>}
+          {current.viewers ? (
+            <span className="tabular shrink-0" style={{ color: "var(--ember)" }}>
+              {compact(current.viewers)} смотрят на {platformLabel(current.platform)}
+            </span>
+          ) : current.views ? (
+            <span className="tabular shrink-0">{compact(current.views)} просмотров</span>
+          ) : null}
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2.5">
@@ -117,7 +129,7 @@ export function StreamStage({ streams }: { streams: StreamOut[] }) {
         </div>
       </div>
 
-      <Reactions />
+      <Reactions streamId={current.id} />
 
       {/* ЧИПЫ КАСТЕРОВ */}
       <div className="flex flex-wrap gap-2">

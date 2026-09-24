@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import logging
 import random
 from collections import deque
 
@@ -21,6 +22,8 @@ from . import race_control
 from .config import get_settings
 
 TIMING_CHANNEL = "timing:live"
+
+log = logging.getLogger("uvicorn.error")
 
 
 async def publish(channel: str, data: dict) -> None:
@@ -132,11 +135,70 @@ async def demo_publisher() -> None:
         await asyncio.sleep(3.0)  # пауза перед новой демо-гонкой
 
 
+LIVE_NOTE_NO_KEY = (
+    "Сейчас идёт сессия. Живой тайминг скоро появится — пока показываем повтор последней гонки."
+)
+
+
+async def _session_live_now() -> bool:
+    """Идёт ли сессия прямо сейчас — по нашему расписанию (бесплатно, без OpenF1)."""
+    from datetime import datetime, timezone
+
+    from .db import SessionLocal
+    from .providers import get_provider
+    from .services import schedule as sched_svc
+
+    try:
+        async with SessionLocal() as db:
+            found = await sched_svc.get_live_session(db, get_provider(), datetime.now(timezone.utc).year)
+            return found is not None
+    except Exception:
+        return False
+
+
+async def auto_source() -> None:
+    """LIVE_SOURCE=auto: идёт сессия и есть ключ OpenF1 → настоящий тайминг; иначе — реплей
+    последней гонки (во время сессии без ключа — с пояснением для зрителей)."""
+    from . import replay
+    from .providers.openf1 import OpenF1Client
+
+    s = get_settings()
+    client = OpenF1Client()
+    replay_task: asyncio.Task | None = None
+    try:
+        while True:
+            live = await _session_live_now()
+            if live and client.has_auth:
+                if replay_task:
+                    await stop_task(replay_task)
+                    replay_task = None
+                replay._replay_ctl["note"] = None
+                try:
+                    await replay.run_live(client, publish, TIMING_CHANNEL)
+                except Exception as exc:
+                    log.warning("auto: живой тайминг упал: %s", exc)
+                await asyncio.sleep(60)  # не дёргаем OpenF1 сразу после конца сессии
+                continue
+
+            replay._replay_ctl["note"] = LIVE_NOTE_NO_KEY if live else None
+            if replay_task is None or replay_task.done():
+                replay_task = asyncio.create_task(
+                    replay.run_replay(
+                        s.openf1_session_key, s.openf1_replay_speed, publish, TIMING_CHANNEL, client=client
+                    )
+                )
+            await asyncio.sleep(60)
+    finally:
+        await stop_task(replay_task)
+
+
 def start_live_source() -> asyncio.Task | None:
-    """Запускает источник тайминга: реплей OpenF1 или демо. Без Centrifugo — ничего."""
+    """Запускает источник тайминга: auto (эфир/реплей), реплей OpenF1 или демо."""
     s = get_settings()
     if not (s.centrifugo_api_url and s.centrifugo_api_key):
         return None
+    if s.live_source == "auto":
+        return asyncio.create_task(auto_source())
     if s.live_source == "openf1_replay":
         from . import replay  # локальный импорт: тянет providers.openf1 только при нужде
 

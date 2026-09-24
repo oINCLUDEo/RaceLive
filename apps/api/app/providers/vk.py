@@ -69,4 +69,11 @@ class VKClient:
         images = pick.get("image") or []
         thumb = (images[-1].get("url") if images else None) or pick.get("photo_800") or pick.get("photo_320")
         log.info("VK %s: подхвачено видео %s (live=%s)", screen_name, pick.get("id"), bool(live))
-        return {"embed_url": embed, "live": bool(live), "title": pick.get("title"), "thumb": thumb}
+        return {
+            "embed_url": embed,
+            "live": bool(live),
+            "title": pick.get("title"),
+            "thumb": thumb,
+            "viewers": pick.get("spectators") if live else None,  # зрители прямого эфира VK
+            "views": pick.get("views"),
+        }

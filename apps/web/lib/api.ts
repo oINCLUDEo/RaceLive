@@ -87,6 +87,8 @@ export interface StreamOut {
   embed_url: string; // пусто, если авто-эфир офлайн
   title: string | null;
   thumb: string | null;
+  viewers?: number | null; // зрители эфира на площадке сейчас (VK)
+  views?: number | null; // суммарные открытия трансляции на площадке
   channel_url: string | null;
   round: number | null;
   live: boolean;

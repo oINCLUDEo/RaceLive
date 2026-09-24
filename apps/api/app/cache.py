@@ -26,6 +26,23 @@ def _client() -> aioredis.Redis:
     return _redis
 
 
+async def get_json(key: str) -> Any:
+    """Прочитать JSON из Redis (None, если нет ключа или Redis недоступен)."""
+    try:
+        raw = await _client().get(key)
+        return json.loads(raw) if raw is not None else None
+    except Exception:
+        return None
+
+
+async def set_json(key: str, value: Any, ttl: int) -> None:
+    """Записать JSON в Redis (тихо, если Redis недоступен)."""
+    try:
+        await _client().set(key, json.dumps(value, ensure_ascii=False), ex=ttl)
+    except Exception:
+        pass
+
+
 async def cached(
     key: str, ttl: int, producer: Callable[[], Awaitable[Any]]
 ) -> Any:

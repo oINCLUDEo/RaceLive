@@ -241,6 +241,8 @@ class StreamOut(BaseModel):
     embed_url: str  # пусто, если авто-эфир офлайн
     title: str | None  # заголовок текущей трансляции (в auto-режиме)
     thumb: str | None  # обложка (для «ленивого» плеера)
+    viewers: int | None = None  # зрители эфира на площадке сейчас (VK отдаёт, Rutube — нет)
+    views: int | None = None  # суммарные просмотры/открытия трансляции на площадке
     channel_url: str | None
     round: int | None
     live: bool

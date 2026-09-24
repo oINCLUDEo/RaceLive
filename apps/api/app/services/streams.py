@@ -60,6 +60,22 @@ async def set_live(stream_id: str, live: bool) -> bool:
     return True
 
 
+def stream_exists(stream_id: str) -> bool:
+    return any(s["id"] == stream_id for s in STREAMS)
+
+
+async def allow_reaction(client_ip: str, limit: int = 12, window: int = 10) -> bool:
+    """Анти-спам реакций: не больше `limit` за `window` секунд с одного IP."""
+    try:
+        key = f"react:rl:{client_ip or 'anon'}"
+        n = await _r().incr(key)
+        if n == 1:
+            await _r().expire(key, window)
+        return n <= limit
+    except Exception:
+        return True  # Redis недоступен — не ломаем реакции
+
+
 async def _resolved(stream_id: str) -> dict | None:
     try:
         raw = await _r().get(_RESOLVED_PREFIX + stream_id)
@@ -100,11 +116,14 @@ async def list_streams() -> list[dict]:
             live = bool(res.get("live", False))
             title = res.get("title")
             thumb = res.get("thumb")
+            viewers = res.get("viewers")
+            views = res.get("views")
         else:
             embed = s.get("embed_url", "")
             live = overrides.get(s["id"], bool(s.get("live", False)))
             title = None
             thumb = s.get("thumb")
+            viewers = views = None
         if embed and not _host_ok(embed):
             embed = ""  # чужой/битый хост наружу не отдаём
         out.append(
@@ -115,6 +134,8 @@ async def list_streams() -> list[dict]:
                 "embed_url": embed,
                 "title": title,
                 "thumb": thumb,
+                "viewers": viewers if live else None,
+                "views": views,
                 "channel_url": s.get("channel_url"),
                 "round": s.get("round"),
                 "live": live and bool(embed),
