@@ -39,6 +39,8 @@ services:
     command: centrifugo -c /centrifugo/config.json
     environment:
       CENTRIFUGO_API_KEY: ${CENTRIFUGO_API_KEY:-dev_centrifugo_api_key}
+      # Разрешённые origin'ы берём из домена в .env — config.json при смене домена не трогаем.
+      CENTRIFUGO_ALLOWED_ORIGINS: "https://${SITE_DOMAIN:-localhost} http://localhost:3000"
     volumes:
       - ./infra/centrifugo/config.json:/centrifugo/config.json:ro
     # Только localhost: браузер ходит через Caddy (wss://<домен>/connection/...).
