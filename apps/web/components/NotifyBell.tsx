@@ -22,13 +22,13 @@ export function NotifyBell({ iso, label, compact }: { iso: string | null; label:
     }
   }, []);
 
-  const showToast = (text: string) => {
-    // в общий стек тостов (slide+fade, копится несколько)
-    pushToast(text);
+  const showToast = (title: string, text: string, kind: "reminder" | "live" = "reminder") => {
+    // в общий стек уведомлений (карточка по центру + звуковой сигнал)
+    pushToast({ title, text, kind, href: kind === "live" ? "/live" : undefined });
     // бонус: если разрешение на системные уведомления уже есть — продублируем в ОС
     try {
       if ("Notification" in window && Notification.permission === "granted") {
-        new Notification("race.live", { body: text, icon: "/icon.svg" });
+        new Notification(title, { body: text, icon: "/icon.svg" });
       }
     } catch {
       /* noop */
@@ -44,10 +44,10 @@ export function NotifyBell({ iso, label, compact }: { iso: string | null; label:
       const ms = start - Date.now();
       if (ms <= 0 && ms > -3 * 3600_000 && !fired.current.start) {
         fired.current.start = true;
-        showToast(`${label} — старт!`);
+        showToast("Старт!", `${label} — уже началось`, "live");
       } else if (ms > 0 && ms <= 10 * 60_000 && !fired.current.soon) {
         fired.current.soon = true;
-        showToast(`Скоро старт: ${label} — через ${Math.ceil(ms / 60_000)} мин`);
+        showToast(`Через ${Math.ceil(ms / 60_000)} мин старт`, label);
       }
     };
     tick();
@@ -74,7 +74,7 @@ export function NotifyBell({ iso, label, compact }: { iso: string | null; label:
     } catch {
       /* noop */
     }
-    showToast(`Напомним о старте: ${label}`);
+    showToast("Напомним о старте", label);
   };
 
   const disable = () => {

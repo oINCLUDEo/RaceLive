@@ -89,6 +89,7 @@ export interface StreamOut {
   thumb: string | null;
   viewers?: number | null; // зрители эфира на площадке сейчас (VK)
   views?: number | null; // суммарные открытия трансляции на площадке
+  likes?: number; // лайки зрителей race.live за уик-энд
   channel_url: string | null;
   round: number | null;
   live: boolean;

@@ -243,6 +243,7 @@ class StreamOut(BaseModel):
     thumb: str | None  # обложка (для «ленивого» плеера)
     viewers: int | None = None  # зрители эфира на площадке сейчас (VK отдаёт, Rutube — нет)
     views: int | None = None  # суммарные просмотры/открытия трансляции на площадке
+    likes: int = 0  # лайки зрителей race.live (за уик-энд)
     channel_url: str | None
     round: int | None
     live: bool

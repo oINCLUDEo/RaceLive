@@ -1,7 +1,18 @@
-// Простой глобальный стек тостов (без внешних зависимостей). Компоненты вызывают
-// pushToast(text) откуда угодно; <ToastHost/> в layout подписан и рисует стек.
+// Глобальный стек уведомлений (без внешних зависимостей). Компоненты вызывают
+// pushToast(...) откуда угодно; <ToastHost/> в layout подписан и рисует стек.
 
-export type Toast = { id: number; text: string };
+export type ToastKind = "live" | "reminder" | "info";
+
+export type ToastInput = {
+  title?: string;
+  text: string;
+  kind?: ToastKind;
+  image?: string | null; // картинка слева (напр. постер эфира)
+  href?: string; // кнопка «Смотреть»
+  sound?: boolean; // звуковой сигнал (по умолчанию — для live/reminder)
+};
+
+export type Toast = ToastInput & { id: number; kind: ToastKind; ttl: number };
 
 type Listener = (toasts: Toast[]) => void;
 
@@ -13,9 +24,10 @@ function emit() {
   for (const l of listeners) l(toasts);
 }
 
-export function pushToast(text: string, ttl = 9000): number {
+export function pushToast(input: string | ToastInput, ttl = 9000): number {
+  const base: ToastInput = typeof input === "string" ? { text: input } : input;
   const id = ++seq;
-  toasts = [...toasts, { id, text }].slice(-4); // не больше 4 на экране
+  toasts = [...toasts, { ...base, kind: base.kind ?? "info", id, ttl }].slice(-3);
   emit();
   if (ttl > 0 && typeof window !== "undefined") {
     window.setTimeout(() => dismissToast(id), ttl);

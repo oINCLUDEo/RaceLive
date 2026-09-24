@@ -190,7 +190,49 @@ a.card-soft:active {
   .kenburns { animation: none; }
 }
 
-/* Всплывающая реакция у стрима. */
+/* Карточка кастера в эфире: светящаяся «дышащая» рамка. */
+@keyframes casterGlow {
+  0%, 100% { box-shadow: 0 0 0 1.5px rgba(224, 64, 47, 0.85), 0 18px 50px -18px rgba(224, 64, 47, 0.55); }
+  50% { box-shadow: 0 0 0 1.5px rgba(245, 131, 79, 1), 0 18px 60px -14px rgba(224, 64, 47, 0.8); }
+}
+.caster-live { animation: casterGlow 2.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .caster-live { animation: none; box-shadow: 0 0 0 1.5px rgba(224, 64, 47, 0.85); }
+}
+
+/* Полоса времени в уведомлении: сжимается за время жизни тоста. */
+@keyframes toastTimer { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+.toast-timer { animation: toastTimer var(--ttl, 9000ms) linear forwards; opacity: 0.7; }
+
+/* Реакции у стрима: всплытие с покачиванием, «взрыв» сердечек у лайка, поп кнопки. */
+@keyframes reactRise {
+  0% { transform: translate(0, 0) scale(0.5); opacity: 0; }
+  12% { transform: translate(calc(var(--sway) * 0.3), -16px) scale(1.18); opacity: 1; }
+  55% { transform: translate(var(--sway), -95px) scale(1); opacity: 1; }
+  100% { transform: translate(calc(var(--sway) * -0.5), -175px) scale(0.85); opacity: 0; }
+}
+.react-rise {
+  animation: reactRise 1.9s cubic-bezier(0.2, 0.6, 0.3, 1) forwards;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.45));
+  will-change: transform, opacity;
+}
+@keyframes reactBurst {
+  0% { transform: translate(0, 0) scale(0.4); opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(0.95); opacity: 0; }
+}
+.react-burst { animation: reactBurst 0.8s cubic-bezier(0.1, 0.7, 0.3, 1) forwards; }
+@keyframes likePop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.16); }
+  70% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+.like-pop { animation: likePop 0.42s ease; }
+@media (prefers-reduced-motion: reduce) {
+  .react-rise, .react-burst, .like-pop { animation-duration: 0.001ms; }
+}
+
+/* Всплывающая реакция у стрима (старый вариант). */
 @keyframes reactFloat {
   0% { transform: translateY(0) scale(0.8); opacity: 0; }
   15% { opacity: 1; }

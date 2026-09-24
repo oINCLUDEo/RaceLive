@@ -129,7 +129,7 @@ export function StreamStage({ streams }: { streams: StreamOut[] }) {
         </div>
       </div>
 
-      <Reactions streamId={current.id} />
+      <Reactions streamId={current.id} initialLikes={current.likes ?? 0} />
 
       {/* ЧИПЫ КАСТЕРОВ */}
       <div className="flex flex-wrap gap-2">

@@ -64,6 +64,27 @@ def stream_exists(stream_id: str) -> bool:
     return any(s["id"] == stream_id for s in STREAMS)
 
 
+_LIKES_TTL = 3 * 24 * 3600
+
+
+async def add_like(stream_id: str) -> int:
+    """+1 к лайкам стрима (счётчик живёт 3 дня — «за уик-энд»)."""
+    try:
+        key = f"react:likes:{stream_id}"
+        n = await _r().incr(key)
+        await _r().expire(key, _LIKES_TTL)
+        return int(n)
+    except Exception:
+        return 0
+
+
+async def _likes(stream_id: str) -> int:
+    try:
+        return int(await _r().get(f"react:likes:{stream_id}") or 0)
+    except Exception:
+        return 0
+
+
 async def allow_reaction(client_ip: str, limit: int = 12, window: int = 10) -> bool:
     """Анти-спам реакций: не больше `limit` за `window` секунд с одного IP."""
     try:
@@ -136,6 +157,7 @@ async def list_streams() -> list[dict]:
                 "thumb": thumb,
                 "viewers": viewers if live else None,
                 "views": views,
+                "likes": await _likes(s["id"]),
                 "channel_url": s.get("channel_url"),
                 "round": s.get("round"),
                 "live": live and bool(embed),

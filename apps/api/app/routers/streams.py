@@ -8,8 +8,8 @@ from ..config import get_settings
 from ..schemas import StreamOut
 from ..services import streams as svc
 
-# Разрешённые реакции (строки 1:1 с фронтом).
-REACTIONS = {"🔥", "❤️", "👏", "🏎️", "😮"}
+# Разрешённые реакции (id 1:1 с фронтом; картинки — свои SVG на клиенте).
+REACTIONS = {"like", "fire", "flag", "overtake", "bolt"}
 
 router = APIRouter(prefix="/api/v1", tags=["streams"])
 
@@ -34,8 +34,11 @@ async def react(stream_id: str, body: ReactIn, request: Request) -> dict:
     ip = (request.headers.get("x-forwarded-for") or (request.client.host if request.client else "")).split(",")[0].strip()
     if not await svc.allow_reaction(ip):
         raise HTTPException(status_code=429, detail="Слишком часто")
-    await realtime.publish(f"reactions:{stream_id}", {"e": body.e, "n": (body.n or "")[:24]})
-    return {"ok": True}
+    payload: dict = {"e": body.e, "n": (body.n or "")[:24]}
+    if body.e == "like":
+        payload["c"] = await svc.add_like(stream_id)  # общий счётчик лайков — всем
+    await realtime.publish(f"reactions:{stream_id}", payload)
+    return {"ok": True, "c": payload.get("c")}
 
 
 class LiveIn(BaseModel):

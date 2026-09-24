@@ -61,7 +61,9 @@ class VKClient:
         items = vids.get("items") or []
         if not items:
             return None
-        live = next((v for v in items if v.get("live") == 1 or v.get("live_status") == "started"), None)
+        # В VK `live: 1` значит «видео — трансляция» (в т.ч. давно закончившаяся запись),
+        # а идёт ли она СЕЙЧАС — только `live_status == "started"`.
+        live = next((v for v in items if v.get("live_status") in ("started", "online")), None)
         pick = live or items[0]
         # VK отдаёт готовый URL плеера с hash — без него video_ext.php даёт «видео
         # недоступно». Собираем вручную только как запасной вариант.

@@ -23,7 +23,13 @@ export function StreamLiveWatcher({ initial }: { initial: StreamOut[] }) {
         for (const s of list) {
           const was = prevLive.current[s.id] ?? false;
           if (s.live && !was && rem.has(s.id)) {
-            pushToast(`${s.caster} — в эфире!`);
+            pushToast({
+              kind: "live",
+              title: `${s.caster} в эфире!`,
+              text: s.title ?? "Трансляция началась — залетай",
+              image: s.thumb,
+              href: "/live#streams",
+            });
           }
           prevLive.current[s.id] = s.live;
         }
