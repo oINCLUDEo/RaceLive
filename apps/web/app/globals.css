@@ -180,6 +180,16 @@ a.card-soft:active {
 }
 .bell-ring { display: inline-flex; transform-origin: 50% 15%; animation: bellRing 0.85s ease; }
 
+/* Подложка героя из эфира: медленный «кен-бёрнс» (наезд/отъезд). */
+@keyframes kenburns {
+  from { transform: scale(1.02) translate(0, 0); }
+  to { transform: scale(1.1) translate(-1.5%, -1%); }
+}
+.kenburns { animation: kenburns 24s ease-in-out infinite alternate; transform-origin: 60% 40%; }
+@media (prefers-reduced-motion: reduce) {
+  .kenburns { animation: none; }
+}
+
 /* Всплывающая реакция у стрима. */
 @keyframes reactFloat {
   0% { transform: translateY(0) scale(0.8); opacity: 0; }

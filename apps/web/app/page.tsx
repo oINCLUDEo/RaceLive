@@ -4,6 +4,7 @@ import { Countdown } from "@/components/Countdown";
 import { CountdownBoxes } from "@/components/CountdownBoxes";
 import { Flag } from "@/components/Flag";
 import { HeroArt } from "@/components/HeroArt";
+import { HeroLiveCard } from "@/components/HeroLiveCard";
 import { HomeStreams } from "@/components/HomeStreams";
 import { NotifyBell } from "@/components/NotifyBell";
 import { Reveal } from "@/components/Reveal";
@@ -62,21 +63,31 @@ const SOON = [
 export default async function HomePage() {
   // Только ближайшая сессия для героя (лёгкий запрос) — герой рисуется сразу,
   // тяжёлые секции (календарь, зачёт, подиум) подгружаются потоком ниже.
-  const next = await getNextSession().catch(() => null as NextSessionOut | null);
+  const [next, streams] = await Promise.all([
+    getNextSession().catch(() => null as NextSessionOut | null),
+    getStreams().catch(() => [] as StreamOut[]),
+  ]);
+  // Кастер в эфире → его стрим становится подложкой героя + карточка «Смотреть эфир».
+  const liveStream = streams.find((s) => s.live && s.embed_url) ?? null;
 
   return (
     <div className="flex flex-col gap-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(WEBSITE_LD) }} />
-      {/* HERO — лёгкая SVG-графика вместо 3D-болида */}
+      {/* HERO — подложка: эфир кастера (если идёт) или живая графика телеметрии */}
       <section
         className="relative flex min-h-[560px] flex-col justify-between overflow-hidden rounded-[24px] shadow-[var(--soft)]"
         style={{ background: "linear-gradient(180deg,#180d10 0%, #130a0c 62%)" }}
       >
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-[60%]"
-          style={{ background: "radial-gradient(55% 100% at 50% 112%, rgba(224,64,47,0.4), rgba(224,64,47,0.1) 44%, transparent 72%)" }}
-        />
-        <HeroArt />
+        {liveStream?.thumb ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={liveStream.thumb} alt="" className="kenburns pointer-events-none absolute inset-0 h-full w-full object-cover opacity-55" />
+        ) : (
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-[60%]"
+            style={{ background: "radial-gradient(55% 100% at 50% 112%, rgba(224,64,47,0.4), rgba(224,64,47,0.1) 44%, transparent 72%)" }}
+          />
+        )}
+        {!liveStream?.thumb && <HeroArt />}
         <div
           className="pointer-events-none absolute inset-0"
           style={{ background: "linear-gradient(100deg, rgba(19,10,12,0.94) 0%, rgba(19,10,12,0.68) 34%, rgba(19,10,12,0.22) 58%, transparent 82%)" }}
@@ -85,7 +96,11 @@ export default async function HomePage() {
         <div className="relative p-8 md:p-10">
           <span className="inline-flex w-fit items-center gap-2 rounded-full border border-line bg-black/40 px-3.5 py-1.5 text-xs backdrop-blur">
             <span className="live-dot" aria-hidden />
-            {next ? `Сейчас в эфире · ${next.meeting_name_ru ?? next.meeting_name_en}` : "Сейчас в эфире"}
+            {liveStream
+              ? `Сейчас в эфире · ${liveStream.caster}`
+              : next
+                ? `Скоро · ${next.meeting_name_ru ?? next.meeting_name_en}`
+                : "race.live"}
           </span>
           <h1 className="mt-4 max-w-[16ch] font-display text-3xl font-semibold leading-[1.05] md:text-4xl">
             Смотрим Формулу вместе
@@ -126,6 +141,7 @@ export default async function HomePage() {
               </Link>
             )}
           </div>
+          {liveStream && <HeroLiveCard stream={liveStream} />}
         </div>
       </section>
 
