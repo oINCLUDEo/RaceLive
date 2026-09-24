@@ -11,7 +11,6 @@ import { Reveal } from "@/components/Reveal";
 import { SoonArt } from "@/components/SoonArt";
 import { SessionTime } from "@/components/SessionTime";
 import { TeamLogo } from "@/components/TeamLogo";
-import { TimingPreview } from "@/components/TimingPreview";
 import { TrackMap } from "@/components/TrackMap";
 import {
   getDriverStandings,
@@ -292,21 +291,6 @@ async function HomeData() {
           <HomeStreams streams={streams} />
         </Reveal>
       )}
-
-      {/* ТАЙМИНГ */}
-      <Reveal>
-      <section className="grid items-center gap-6 md:grid-cols-[1fr_360px]">
-        <div>
-          <div className="text-xs uppercase tracking-[0.16em] text-mute">в прямом эфире</div>
-          <h2 className="mt-2 font-display text-2xl font-semibold">Живой тайминг на русском</h2>
-          <p className="mt-3 max-w-prose text-mute">
-            Позиции, интервалы, шины и флаги — обновляются в реальном времени, с логотипами
-            команд и подсветкой лучшего круга. Рейс-контроль переведён на русский.
-          </p>
-        </div>
-        <TimingPreview />
-      </section>
-      </Reveal>
 
       {/* ЧЕМПИОНАТ — реальные данные (Jolpica) */}
       {topStandings.length > 0 && (

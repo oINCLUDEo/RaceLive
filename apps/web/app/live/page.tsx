@@ -1,38 +1,63 @@
 import { Link } from "next-view-transitions";
 import { Countdown } from "@/components/Countdown";
-import { LiveTiming } from "@/components/LiveTiming";
 import { NotifyBell } from "@/components/NotifyBell";
 import { SessionTime } from "@/components/SessionTime";
 import { StreamStage } from "@/components/StreamStage";
-import { getLive, getStreams, type LiveOut, type StreamOut } from "@/lib/api";
+import { WeekendForecast } from "@/components/WeekendForecast";
+import { WeekendSessions } from "@/components/WeekendSessions";
+import {
+  getLive,
+  getMeeting,
+  getStreams,
+  getWeekendForecast,
+  type LiveOut,
+  type MeetingOut,
+  type StreamOut,
+  type WeekendForecastOut,
+} from "@/lib/api";
 import { sessionLabel } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Эфир",
-  description: "Живой тайминг гонки в реальном времени на русском: позиции, интервалы, шины, рейс-контроль.",
+  description: "Смотрите гонку с кастерами сообщества: трансляции, реакции, расписание уик-энда и прогноз погоды.",
   alternates: { canonical: "/live" },
 };
 
+// «Эфир»: только то, что совпадает с реальностью на экране — трансляции кастеров,
+// расписание уик-энда и погода. Таблица тайминга скрыта: без платного потока OpenF1
+// она показывает повтор прошлой гонки и не синхронизирована со стримом
+// (компонент LiveTiming сохранён — вернём, когда данные станут живыми).
 export default async function LivePage() {
   const [s, streams] = await Promise.all([
     getLive().catch(() => null as LiveOut | null),
     getStreams().catch(() => [] as StreamOut[]),
   ]);
+  const round = s?.round ?? null;
+  const [meeting, forecast] =
+    round != null
+      ? await Promise.all([
+          getMeeting(round).catch(() => null as MeetingOut | null),
+          getWeekendForecast(round).catch(() => null as WeekendForecastOut | null),
+        ])
+      : [null, null];
   const sess = s?.session ?? null;
-  const wsUrl = process.env.NEXT_PUBLIC_CENTRIFUGO_URL;
+  const liveStream = streams.find((x) => x.live) ?? null;
+  const hasForecast = !!forecast?.available && forecast.days.length > 0;
 
   return (
     <div className="flex flex-col gap-6">
       {/* СТАТУС */}
-      <section
-        className="glow-panel flex flex-wrap items-center justify-between gap-4 rounded-[24px] p-8 shadow-[var(--soft)]"
-      >
+      <section className="glow-panel flex flex-wrap items-center justify-between gap-4 rounded-[24px] p-8 shadow-[var(--soft)]">
         <div>
-          {s?.live ? (
+          {liveStream ? (
             <span className="inline-flex items-center gap-2 rounded-full bg-[var(--ember)] px-3 py-1 text-xs font-semibold text-white">
-              <span className="h-2 w-2 rounded-full bg-white" /> В ЭФИРЕ
+              <span className="h-2 w-2 animate-pulse rounded-full bg-white" /> В ЭФИРЕ · {liveStream.caster}
+            </span>
+          ) : s?.live ? (
+            <span className="inline-flex items-center gap-2 rounded-full bg-[var(--ember)] px-3 py-1 text-xs font-semibold text-white">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-white" /> Сессия идёт
             </span>
           ) : (
             <span className="inline-flex items-center gap-2 rounded-full border border-line bg-black/30 px-3 py-1 text-xs text-mute">
@@ -40,7 +65,7 @@ export default async function LivePage() {
             </span>
           )}
           <h1 className="mt-3 font-display text-3xl font-semibold">
-            {s && s.round != null ? (s.meeting_name_ru ?? s.meeting_name_en) : "Живой тайминг"}
+            {s && s.round != null ? (s.meeting_name_ru ?? s.meeting_name_en) : "Эфир"}
           </h1>
           {sess && (
             <p className="mt-1 text-mute">
@@ -51,6 +76,7 @@ export default async function LivePage() {
                   <SessionTime iso={sess.starts_at} withZone />
                 </>
               )}
+              {s?.live && !liveStream && " · кастеры скоро подключатся"}
             </p>
           )}
         </div>
@@ -63,14 +89,11 @@ export default async function LivePage() {
               iso={sess.starts_at}
               label={`${s?.meeting_name_ru ?? s?.meeting_name_en ?? "Сессия"} · ${sessionLabel(sess.type, sess.name_ru, sess.name_en)}`}
             />
-            {s?.round != null && (
-              <Link href={`/schedule/${s.round}`} className="cta">К этапу</Link>
-            )}
           </div>
         )}
       </section>
 
-      {/* СТРИМ КАСТЕРА — большим планом сверху */}
+      {/* СТРИМ КАСТЕРА — эфир или последняя запись */}
       {streams.length > 0 && (
         <section id="streams" className="scroll-mt-6">
           <div className="mb-3 flex items-baseline justify-between gap-3">
@@ -81,27 +104,21 @@ export default async function LivePage() {
         </section>
       )}
 
-      {/* ТАЙМИНГ + РЕЙС-КОНТРОЛЬ — под стримом */}
-      <section>
-        <div className="mb-3 flex items-baseline justify-between gap-3">
-          <h2 className="font-display text-lg font-semibold">Таблица тайминга</h2>
-          <span className="text-[11px] uppercase tracking-wide text-mute">
-            позиции · интервалы · шины · рейс-контроль
-          </span>
-        </div>
-        <LiveTiming wsUrl={wsUrl} />
-      </section>
-
-      {/* ЧЕСТНО О СТАТУСЕ ФАЗЫ 3 */}
-      <section className="card-soft p-5 text-sm leading-relaxed text-mute">
-        <span className="font-display text-bone">Что здесь работает.</span> Таблица позиций
-        и лента рейс-контроля обновляются в реальном времени через Centrifugo (WebSocket) —
-        realtime-слой Фазы 3 уже подключён. Сообщения рейс-контроля переводятся на русский
-        на бэкенде — это ядро продукта. Сейчас в канал идёт демо-поток (помечен как «демо»),
-        пока подключается коммерческий поток данных OpenF1 с настоящими позициями,
-        интервалами, шинами и флагами. Определение «идёт ли сессия сейчас» уже работает по
-        расписанию.
-      </section>
+      {/* УИК-ЭНД: расписание сессий + погода (реальные данные, совпадают с эфиром) */}
+      {meeting && (
+        <section>
+          <div className="mb-3 flex items-baseline justify-between gap-3">
+            <h2 className="font-display text-lg font-semibold">Уик-энд</h2>
+            <Link href={`/schedule/${meeting.round}`} className="text-sm text-mute hover:text-bone">
+              подробнее об этапе →
+            </Link>
+          </div>
+          <div className={`grid gap-5 ${hasForecast ? "lg:grid-cols-[minmax(0,420px)_1fr]" : ""}`}>
+            <WeekendSessions meeting={meeting} />
+            {hasForecast && forecast && <WeekendForecast data={forecast} />}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
