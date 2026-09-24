@@ -49,7 +49,9 @@ class RutubeClient:
         results = data.get("results") or []
         if not results:
             return None
-        on_air = next((v for v in results if v.get("is_on_air")), None)
+        # «В эфире» — только реально идущая трансляция (livestream И на воздухе);
+        # запись прошедшего стрима (is_livestream, но не on_air) — это «Запись», не live.
+        on_air = next((v for v in results if v.get("is_on_air") and v.get("is_livestream")), None)
         pick = on_air or next((v for v in results if v.get("is_livestream")), None) or results[0]
         embed = pick.get("embed_url") or (f"https://rutube.ru/play/embed/{pick['id']}" if pick.get("id") else "")
         if not embed:

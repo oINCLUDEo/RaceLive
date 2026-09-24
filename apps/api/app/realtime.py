@@ -68,65 +68,68 @@ async def demo_publisher() -> None:
     замыкающего держится в разумных ~20 c, а не растёт до бесконечности.
     """
     total_laps = 51
-    state = [{"code": c, "team": t, "tyre": random.choice(_TYRES)} for c, t, _ in _DEMO_GRID]
-    n = len(state)
+    n = len(_DEMO_GRID)
     # номинальный интервал до впереди идущего по позициям (P1 = 0)
     nominal = [0.0, 1.2, 1.6, 2.3, 2.9, 3.4, 4.1, 5.0][:n]
-    intervals = list(nominal)
-    rc: deque[dict] = deque(maxlen=50)  # лента рейс-контроля, новые сверху (можно отматывать)
-    lap = 1
     while True:
-        # изредка добавляем сообщение рейс-контроля (эмуляция ленты OpenF1)
-        if random.random() < 0.22:
-            rc.appendleft(race_control.feed_item(race_control.random_event(), lap))
-        # интервалы «дышат» вокруг номинала: возврат к среднему + шум
-        for i in range(1, n):
-            intervals[i] += (nominal[i] - intervals[i]) * 0.25 + random.uniform(-0.4, 0.5)
-            intervals[i] = max(0.0, intervals[i])
-        # обгон: если интервал схлопнулся — меняемся местами с впереди идущим
-        for i in range(1, n):
-            if intervals[i] < 0.2 and random.random() < 0.5:
-                state[i - 1], state[i] = state[i], state[i - 1]
-                intervals[i] = random.uniform(0.4, 0.9)
-        # накопленный отрыв от лидера
-        cum = 0.0
-        gaps = []
-        for i in range(n):
-            cum += intervals[i]
-            gaps.append(cum)
-        # быстрейший круг — иногда подсвечиваем кого-то из середины/хвоста
-        best_idx = random.randint(1, n - 1) if random.random() < 0.25 else -1
-        rc_msgs = [m["message"] for m in reversed(rc)]
-        status = race_control.driver_statuses(rc_msgs)
-        rows = [
-            {
-                "pos": i + 1,
-                "code": state[i]["code"],
-                "team": state[i]["team"],
-                "gap": "ЛИДЕР" if i == 0 else _fmt_gap(gaps[i]),
-                "int": "" if i == 0 else _fmt_gap(intervals[i]),
-                "tyre": state[i]["tyre"],
-                "best": i == best_idx,
-                "pen": status.get(state[i]["code"], {}).get("pen"),
-                "inv": status.get(state[i]["code"], {}).get("inv"),
-            }
-            for i in range(n)
-        ]
-        await publish(
-            TIMING_CHANNEL,
-            {
-                "session": "Гонка · Баку",
-                "lap": lap,
-                "total_laps": total_laps,
-                "rows": rows,
-                "rc": list(rc),
-                "flag": race_control.session_flag(rc_msgs),
-                "demo": True,
-                "badge": "демо-поток",
-            },
-        )
-        lap = lap % total_laps + 1
-        await asyncio.sleep(1.6)
+        # Каждый проход — новая «гонка»: сбрасываем сетку, интервалы и ленту
+        # рейс-контроля. Иначе при зацикливании расследования/штрафы и события
+        # тянулись бы из прошлого круга и не сбрасывались.
+        state = [{"code": c, "team": t, "tyre": random.choice(_TYRES)} for c, t, _ in _DEMO_GRID]
+        intervals = list(nominal)
+        rc: deque[dict] = deque(maxlen=50)  # лента рейс-контроля, новые сверху
+        for lap in range(1, total_laps + 1):
+            # изредка добавляем сообщение рейс-контроля (эмуляция ленты OpenF1)
+            if random.random() < 0.22:
+                rc.appendleft(race_control.feed_item(race_control.random_event(), lap))
+            # интервалы «дышат» вокруг номинала: возврат к среднему + шум
+            for i in range(1, n):
+                intervals[i] += (nominal[i] - intervals[i]) * 0.25 + random.uniform(-0.4, 0.5)
+                intervals[i] = max(0.0, intervals[i])
+            # обгон: если интервал схлопнулся — меняемся местами с впереди идущим
+            for i in range(1, n):
+                if intervals[i] < 0.2 and random.random() < 0.5:
+                    state[i - 1], state[i] = state[i], state[i - 1]
+                    intervals[i] = random.uniform(0.4, 0.9)
+            # накопленный отрыв от лидера
+            cum = 0.0
+            gaps = []
+            for i in range(n):
+                cum += intervals[i]
+                gaps.append(cum)
+            # быстрейший круг — иногда подсвечиваем кого-то из середины/хвоста
+            best_idx = random.randint(1, n - 1) if random.random() < 0.25 else -1
+            rc_msgs = [m["message"] for m in reversed(rc)]
+            status = race_control.driver_statuses(rc_msgs)
+            rows = [
+                {
+                    "pos": i + 1,
+                    "code": state[i]["code"],
+                    "team": state[i]["team"],
+                    "gap": "ЛИДЕР" if i == 0 else _fmt_gap(gaps[i]),
+                    "int": "" if i == 0 else _fmt_gap(intervals[i]),
+                    "tyre": state[i]["tyre"],
+                    "best": i == best_idx,
+                    "pen": status.get(state[i]["code"], {}).get("pen"),
+                    "inv": status.get(state[i]["code"], {}).get("inv"),
+                }
+                for i in range(n)
+            ]
+            await publish(
+                TIMING_CHANNEL,
+                {
+                    "session": "Гонка · Баку",
+                    "lap": lap,
+                    "total_laps": total_laps,
+                    "rows": rows,
+                    "rc": list(rc),
+                    "flag": race_control.session_flag(rc_msgs),
+                    "demo": True,
+                    "badge": "демо-поток",
+                },
+            )
+            await asyncio.sleep(1.6)
+        await asyncio.sleep(3.0)  # пауза перед новой демо-гонкой
 
 
 def start_live_source() -> asyncio.Task | None:

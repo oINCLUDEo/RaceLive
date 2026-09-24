@@ -70,21 +70,26 @@ export default async function LivePage() {
         )}
       </section>
 
-      {/* СТРИМ + ТАЙМИНГ на одной странице (бок о бок на широких экранах) */}
-      <section id="streams" className="scroll-mt-6">
+      {/* СТРИМ КАСТЕРА — большим планом сверху */}
+      {streams.length > 0 && (
+        <section id="streams" className="scroll-mt-6">
+          <div className="mb-3 flex items-baseline justify-between gap-3">
+            <h2 className="font-display text-lg font-semibold">Смотреть с кастером</h2>
+            <span className="text-[11px] uppercase tracking-wide text-mute">трансляции сообщества</span>
+          </div>
+          <StreamStage streams={streams} />
+        </section>
+      )}
+
+      {/* ТАЙМИНГ + РЕЙС-КОНТРОЛЬ — под стримом */}
+      <section>
         <div className="mb-3 flex items-baseline justify-between gap-3">
-          <h2 className="font-display text-lg font-semibold">
-            {streams.length > 0 ? "Смотреть с кастером и следить за таймингом" : "Таблица тайминга"}
-          </h2>
+          <h2 className="font-display text-lg font-semibold">Таблица тайминга</h2>
           <span className="text-[11px] uppercase tracking-wide text-mute">
             позиции · интервалы · шины · рейс-контроль
           </span>
         </div>
-        {streams.length > 0 ? (
-          <LiveTiming wsUrl={wsUrl} variant="side" streamSlot={<StreamStage streams={streams} />} />
-        ) : (
-          <LiveTiming wsUrl={wsUrl} />
-        )}
+        <LiveTiming wsUrl={wsUrl} />
       </section>
 
       {/* ЧЕСТНО О СТАТУСЕ ФАЗЫ 3 */}
