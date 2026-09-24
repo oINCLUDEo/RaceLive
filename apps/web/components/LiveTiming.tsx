@@ -14,8 +14,8 @@ import { TimingPreview } from "@/components/TimingPreview";
 import { TyreIcon } from "@/components/TyreIcon";
 import { WeatherCard } from "@/components/WeatherCard";
 
-type Tyre = "S" | "M" | "H" | "I" | "W";
-type Row = {
+export type Tyre = "S" | "M" | "H" | "I" | "W";
+export type Row = {
   pos: number;
   code: string;
   team: string;
@@ -29,14 +29,14 @@ type Row = {
   pit?: boolean;
   stops?: number;
 };
-type RcMessage = {
+export type RcMessage = {
   lap: number;
   cat: string;
   flag: string | null;
   message: string;
   message_ru: string;
 };
-type Frame = {
+export type Frame = {
   session?: string;
   lap?: number;
   total_laps?: number;
@@ -208,7 +208,7 @@ export function LiveTiming({
   );
 }
 
-function Tower({
+export function Tower({
   frame,
   prevOrder,
   changes,
@@ -328,7 +328,7 @@ function Tower({
 }
 
 // Лента рейс-контроля (переиспользуется в обеих раскладках).
-function RaceFeed({ rc }: { rc: RcMessage[] }) {
+export function RaceFeed({ rc }: { rc: RcMessage[] }) {
   return (
     <div className="card-soft flex max-h-[560px] flex-col overflow-hidden self-start">
       <div className="flex items-center justify-between border-b border-line px-4 py-3 text-xs text-mute">

@@ -90,7 +90,12 @@ export default async function HomePage() {
           />
         )}
         {!liveStream?.thumb && (
-          <HeroTrack circuit={meeting?.circuit?.key} label={meeting?.circuit?.name_ru ?? meeting?.circuit?.name_en} />
+          <HeroTrack
+            circuit={meeting?.circuit?.key}
+            label={meeting?.circuit?.name_ru ?? meeting?.circuit?.name_en}
+            round={meeting?.round}
+            country={meeting?.circuit?.country_code}
+          />
         )}
         <div
           className="pointer-events-none absolute inset-0"
