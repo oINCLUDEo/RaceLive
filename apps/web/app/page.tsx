@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { Countdown } from "@/components/Countdown";
 import { CountdownBoxes } from "@/components/CountdownBoxes";
 import { Flag } from "@/components/Flag";
-import { HeroArt } from "@/components/HeroArt";
+import { HeroTrack } from "@/components/HeroTrack";
 import { HeroLiveCard } from "@/components/HeroLiveCard";
 import { HomeStreams } from "@/components/HomeStreams";
 import { NotifyBell } from "@/components/NotifyBell";
@@ -15,6 +15,7 @@ import { TimingPreview } from "@/components/TimingPreview";
 import { TrackMap } from "@/components/TrackMap";
 import {
   getDriverStandings,
+  getMeeting,
   getNextSession,
   getRaceResults,
   getSchedule,
@@ -69,11 +70,13 @@ export default async function HomePage() {
   ]);
   // Кастер в эфире → его стрим становится подложкой героя + карточка «Смотреть эфир».
   const liveStream = streams.find((s) => s.live && s.embed_url) ?? null;
+  // Трасса ближайшего этапа — для графики в шапке (когда эфира нет).
+  const meeting = next ? await getMeeting(next.round).catch(() => null) : null;
 
   return (
     <div className="flex flex-col gap-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(WEBSITE_LD) }} />
-      {/* HERO — подложка: эфир кастера (если идёт) или живая графика телеметрии */}
+      {/* HERO — подложка: эфир кастера (если идёт) или трасса ближайшего этапа с «болидом» */}
       <section
         className="relative flex min-h-[560px] flex-col justify-between overflow-hidden rounded-[24px] shadow-[var(--soft)]"
         style={{ background: "linear-gradient(180deg,#180d10 0%, #130a0c 62%)" }}
@@ -87,7 +90,9 @@ export default async function HomePage() {
             style={{ background: "radial-gradient(55% 100% at 50% 112%, rgba(224,64,47,0.4), rgba(224,64,47,0.1) 44%, transparent 72%)" }}
           />
         )}
-        {!liveStream?.thumb && <HeroArt />}
+        {!liveStream?.thumb && (
+          <HeroTrack circuit={meeting?.circuit?.key} label={meeting?.circuit?.name_ru ?? meeting?.circuit?.name_en} />
+        )}
         <div
           className="pointer-events-none absolute inset-0"
           style={{ background: "linear-gradient(100deg, rgba(19,10,12,0.94) 0%, rgba(19,10,12,0.68) 34%, rgba(19,10,12,0.22) 58%, transparent 82%)" }}
