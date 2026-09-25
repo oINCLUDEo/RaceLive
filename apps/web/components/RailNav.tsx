@@ -5,7 +5,7 @@
 import { Link } from "next-view-transitions";
 import { usePathname } from "next/navigation";
 
-const RAIL = [
+export const RAIL = [
   { href: "/", label: "Главная", icon: "M3 11l9-8 9 8 M5 10v10h14V10" },
   { href: "/schedule", label: "Расписание", icon: "M3 5h18 M3 12h18 M3 19h18" },
   { href: "/live", label: "Эфир", icon: "M2 6h14v12H2z M16 10l6-3v10l-6-3" },

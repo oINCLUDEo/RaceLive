@@ -63,10 +63,16 @@ const SOON = [
 export default async function HomePage() {
   // Только ближайшая сессия для героя (лёгкий запрос) — герой рисуется сразу,
   // тяжёлые секции (календарь, зачёт, подиум) подгружаются потоком ниже.
-  const [next, streams] = await Promise.all([
+  const [next, streams, leaders] = await Promise.all([
     getNextSession().catch(() => null as NextSessionOut | null),
     getStreams().catch(() => [] as StreamOut[]),
+    getDriverStandings().catch(() => [] as DriverStandingOut[]),
   ]);
+  // Лидеры чемпионата — маркеры на карте трассы в шапке (как в трансляции).
+  const trackDrivers = leaders.slice(0, 3).map((d) => ({
+    code: d.code,
+    color: (d.team_slug && TEAMS[d.team_slug]?.color) || "#EDE6E4",
+  }));
   // Кастер в эфире → его стрим становится подложкой героя + карточка «Смотреть эфир».
   const liveStream = streams.find((s) => s.live && s.embed_url) ?? null;
   // Трасса ближайшего этапа — для графики в шапке (когда эфира нет).
@@ -77,7 +83,7 @@ export default async function HomePage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(WEBSITE_LD) }} />
       {/* HERO — подложка: эфир кастера (если идёт) или трасса ближайшего этапа с «болидом» */}
       <section
-        className="relative flex min-h-[560px] flex-col justify-between overflow-hidden rounded-[24px] shadow-[var(--soft)]"
+        className="relative flex min-h-[440px] flex-col justify-between overflow-hidden rounded-[24px] md:min-h-[560px] shadow-[var(--soft)]"
         style={{ background: "linear-gradient(180deg,#180d10 0%, #130a0c 62%)" }}
       >
         {liveStream?.thumb ? (
@@ -95,6 +101,7 @@ export default async function HomePage() {
             label={meeting?.circuit?.name_ru ?? meeting?.circuit?.name_en}
             round={meeting?.round}
             country={meeting?.circuit?.country_code}
+            drivers={trackDrivers}
           />
         )}
         <div

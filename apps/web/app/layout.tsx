@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geologica, Golos_Text } from "next/font/google";
 import { Link, ViewTransitions } from "next-view-transitions";
+import { MobileNav } from "@/components/MobileNav";
 import { RailNav } from "@/components/RailNav";
 import { ToastHost } from "@/components/ToastHost";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
@@ -23,6 +24,14 @@ const sans = Golos_Text({
   variable: "--font-sans",
   display: "swap",
 });
+
+// viewport-fit=cover — чтобы нижняя панель на телефоне обходила «домашнюю полоску».
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#121013",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -72,9 +81,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </aside>
 
           {/* MAIN */}
-          <div className="flex min-w-0 flex-1 flex-col">
+          <div className="flex min-w-0 flex-1 flex-col pb-[calc(72px+env(safe-area-inset-bottom,0px))] md:pb-0">
             {/* TOP BAR */}
-            <header className="flex items-center gap-4 border-b border-line px-5 py-4 md:px-8">
+            <header className="flex items-center gap-4 border-b border-line px-4 py-3 md:px-8 md:py-4">
               <Link href="/" className="font-display text-xl font-semibold lowercase tracking-tight">
                 race<span className="text-mute">.live</span>
               </Link>
@@ -103,11 +112,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </div>
             </header>
 
-            <div className="mx-auto w-full max-w-[1200px] flex-1 px-4 py-7 md:px-8">{children}</div>
+            <div className="mx-auto w-full max-w-[1200px] flex-1 px-4 py-5 md:px-8 md:py-7">{children}</div>
 
             <footer className="border-t border-line">
               <div className="mx-auto flex w-full max-w-[1200px] flex-wrap items-center justify-between gap-3 px-4 py-6 text-xs text-mute md:px-8">
-                <span className="flex items-center gap-4">
+                <span className="flex flex-wrap items-center gap-x-4 gap-y-2">
                   <span className="font-display lowercase text-bone">
                     race<span className="text-mute">.live</span>
                   </span>
@@ -128,7 +137,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         {/* MINI-CHAT FAB */}
-        <div className="fixed bottom-5 right-5 z-30 flex items-center gap-2.5 rounded-full border border-line bg-surface-1 px-4 py-2.5 shadow-[0_24px_60px_-34px_rgba(0,0,0,0.8)]">
+        <div className="fixed bottom-5 right-5 z-30 hidden items-center gap-2.5 rounded-full md:flex border border-line bg-surface-1 px-4 py-2.5 shadow-[0_24px_60px_-34px_rgba(0,0,0,0.8)]">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" strokeWidth="1.8">
             <path d="M21 15a2 2 0 01-2 2H8l-5 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
           </svg>
@@ -136,6 +145,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] uppercase tracking-wide text-mute">скоро</span>
         </div>
 
+        <MobileNav />
         <ToastHost />
       </body>
       </html>

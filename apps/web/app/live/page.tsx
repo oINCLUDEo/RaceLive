@@ -3,7 +3,7 @@ import { Countdown } from "@/components/Countdown";
 import { NotifyBell } from "@/components/NotifyBell";
 import { SessionTime } from "@/components/SessionTime";
 import { StreamStage } from "@/components/StreamStage";
-import { WatchPanels } from "@/components/WatchPanels";
+import { WatchArea } from "@/components/WatchPanels";
 import { WeekendForecast } from "@/components/WeekendForecast";
 import { WeekendSessions } from "@/components/WeekendSessions";
 import {
@@ -28,7 +28,7 @@ export const metadata = {
 
 // «Эфир»: стрим кастера крупно + панели данных на выбор зрителя (позиции, рейс-контроль,
 // погода) с задержкой «под стрим»; ниже — расписание уик-энда и прогноз погоды.
-// Без живых данных (только повтор прошлой гонки) панели по умолчанию выключены.
+// Без живых данных колонки панелей нет вовсе — стрим на всю ширину.
 export default async function LivePage() {
   const [s, streams] = await Promise.all([
     getLive().catch(() => null as LiveOut | null),
@@ -93,26 +93,21 @@ export default async function LivePage() {
         )}
       </section>
 
-      {/* СТРИМ + ПАНЕЛИ ДАННЫХ (позиции, рейс-контроль, погода — на выбор зрителя) */}
+      {/* СТРИМ (+ панели данных гонки — только при живых данных) */}
       <section id="streams" className="scroll-mt-6">
         <div className="mb-3 flex items-baseline justify-between gap-3">
           <h2 className="font-display text-lg font-semibold">Смотреть с кастером</h2>
           <span className="text-[11px] uppercase tracking-wide text-mute">трансляции сообщества</span>
         </div>
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
-          <div className="min-w-0">
-            {streams.length > 0 ? (
-              <StreamStage streams={streams} />
-            ) : (
-              <div className="card-soft flex aspect-video items-center justify-center p-6 text-center text-sm text-mute">
-                Кастеры пока не подключены — загляните ближе к старту сессии.
-              </div>
-            )}
-          </div>
-          <aside className="min-w-0">
-            <WatchPanels />
-          </aside>
-        </div>
+        <WatchArea>
+          {streams.length > 0 ? (
+            <StreamStage streams={streams} />
+          ) : (
+            <div className="card-soft flex aspect-video items-center justify-center p-6 text-center text-sm text-mute">
+              Кастеры пока не подключены — загляните ближе к старту сессии.
+            </div>
+          )}
+        </WatchArea>
       </section>
 
       {/* УИК-ЭНД: расписание сессий + погода (реальные данные, совпадают с эфиром) */}

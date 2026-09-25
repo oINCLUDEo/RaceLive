@@ -1,41 +1,44 @@
 "use client";
 
-// Графика героя: контур трассы ближайшего этапа (как ТВ-графика — в перспективе), по нему
-// едет болид. Движение по «физике»: профиль скорости как у гоночной линии — предельная
-// скорость в повороте ~ √(радиус), разгон и (более резкое) торможение ограничены, два
-// прохода по кругу (вперёд/назад). Болид — силуэт, повёрнутый по направлению движения,
-// с коротким затухающим хвостом. Контур — public/tracks/<circuit>.svg (один path).
+// Графика героя: контур трассы ближайшего этапа в ТВ-перспективе и маркеры пилотов,
+// как на карте трассы в трансляции F1 — кружки в цветах команд с трёхбуквенными кодами
+// (лидеры чемпионата). Едут по «гоночной линии»: предел скорости в повороте ~√радиуса,
+// разгон и более резкое торможение; одинаковый профиль → постоянный разрыв во времени,
+// поэтому на прямых они растягиваются, в поворотах сжимаются, как в жизни.
 // requestAnimationFrame без ре-рендеров; пауза вне экрана/в фоне; reduced motion — статика.
 import { useEffect, useRef, useState } from "react";
 import { Flag } from "@/components/Flag";
 
 type Shape = { d: string; vb: string };
+export type TrackDriver = { code: string; color: string };
 
-const LAP_SEC = 12; // «круг» ~12 секунд
-const N = 720; // точек профиля
-const V_TOP = 1; // нормированная максималка
-const A_LAT = 0.028; // боковое ускорение → предел в повороте
-const A_ACC = 0.016; // разгон
-const A_BRK = 0.05; // торможение (сильнее разгона)
-const ACCENT = "#7DE3F4"; // холодный акцент: контраст к красному фону
+const LAP_SEC = 14;
+const N = 720;
+const V_TOP = 1;
+const A_LAT = 0.028;
+const A_ACC = 0.016;
+const A_BRK = 0.05;
+const GAPS_SEC = [0, 0.9, 1.7]; // отставание 2-го и 3-го от лидера (в секундах анимации)
 
 export function HeroTrack({
   circuit,
   label,
   round,
   country,
+  drivers,
 }: {
   circuit: string | null | undefined;
   label?: string | null;
   round?: number | null;
   country?: string | null;
+  drivers?: TrackDriver[];
 }) {
   const [shape, setShape] = useState<Shape | null>(null);
   const tilt = useRef<HTMLDivElement>(null);
   const base = useRef<SVGPathElement>(null);
-  const trails = useRef<(SVGPathElement | null)[]>([]);
-  const car = useRef<SVGGElement>(null);
+  const marks = useRef<(SVGGElement | null)[]>([]);
   const start = useRef<SVGLineElement>(null);
+  const cars = (drivers?.length ? drivers : [{ code: "", color: "#EDE6E4" }]).slice(0, 3);
 
   useEffect(() => {
     if (!circuit) return;
@@ -60,7 +63,6 @@ export function HeroTrack({
     if (!total) return;
     const ds = total / N;
 
-    // кривизна по широкой хорде (гасит шум ломаной)
     const pts = Array.from({ length: N }, (_, i) => path.getPointAtLength(i * ds));
     const W = 4;
     const curv = pts.map((b, i) => {
@@ -70,7 +72,6 @@ export function HeroTrack({
       if (d > Math.PI) d = 2 * Math.PI - d;
       return d / (2 * W * ds);
     });
-    // профиль скорости: предел поворота → проходы разгона вперёд и торможения назад
     const v = curv.map((k) => (k > 1e-4 ? Math.min(V_TOP, Math.sqrt(A_LAT / k)) : V_TOP));
     for (let pass = 0; pass < 2; pass++) {
       for (let i = 0; i < N; i++) {
@@ -82,40 +83,49 @@ export function HeroTrack({
         v[i] = Math.min(v[i], Math.sqrt(n * n + 2 * A_BRK * ds));
       }
     }
-    const lapNorm = v.reduce((acc, x) => acc + ds / x, 0);
-    const scale = lapNorm / LAP_SEC; // единиц пути в секунду при v=1
+    const scale = v.reduce((acc, x) => acc + ds / x, 0) / LAP_SEC;
+    const speedAt = (s: number) => {
+      const i = Math.floor(s / ds) % N;
+      const f = s / ds - Math.floor(s / ds);
+      return v[i] + (v[(i + 1) % N] - v[i]) * f;
+    };
+    const advance = (s: number, sec: number) => {
+      let t = sec;
+      let x = s;
+      while (t > 0) {
+        const dt = Math.min(0.02, t);
+        x = (x + speedAt(x) * scale * dt) % total;
+        t -= dt;
+      }
+      return x;
+    };
 
-    // хвост: три наложенных отрезка разной длины и прозрачности → мягкое затухание
-    const tails = [total * 0.045, total * 0.028, total * 0.014];
-    tails.forEach((len, i) => trails.current[i]?.setAttribute("stroke-dasharray", `${len.toFixed(2)} ${(total - len).toFixed(2)}`));
-
+    // старт/финиш
     const p0 = path.getPointAtLength(0);
     const p1 = path.getPointAtLength(Math.min(1, total));
     const ang = Math.atan2(p1.y - p0.y, p1.x - p0.x) + Math.PI / 2;
-    const half = 3.2;
+    const half = 2;
     start.current?.setAttribute("x1", (p0.x + Math.cos(ang) * half).toFixed(2));
     start.current?.setAttribute("y1", (p0.y + Math.sin(ang) * half).toFixed(2));
     start.current?.setAttribute("x2", (p0.x - Math.cos(ang) * half).toFixed(2));
     start.current?.setAttribute("y2", (p0.y - Math.sin(ang) * half).toFixed(2));
 
+    // разводим машины по времени: лидер впереди на GAPS_SEC
+    const s0 = total * 0.02;
+    const maxGap = GAPS_SEC[cars.length - 1] ?? 0;
+    const pos = cars.map((_, k) => advance(s0, maxGap - (GAPS_SEC[k] ?? 0)));
+
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let s = total * 0.03;
-    let heading = 0;
     let last = performance.now();
     let raf = 0;
     let running = false;
     let rx = 0, ry = 0, tx = 0, ty = 0;
 
     const draw = () => {
-      const p = path.getPointAtLength(s);
-      const q = path.getPointAtLength((s + 1.2) % total);
-      const target = (Math.atan2(q.y - p.y, q.x - p.x) * 180) / Math.PI;
-      let dh = target - heading;
-      while (dh > 180) dh -= 360;
-      while (dh < -180) dh += 360;
-      heading += dh * 0.35; // плавный доворот корпуса
-      car.current?.setAttribute("transform", `translate(${p.x.toFixed(2)} ${p.y.toFixed(2)}) rotate(${heading.toFixed(1)})`);
-      tails.forEach((len, i) => trails.current[i]?.setAttribute("stroke-dashoffset", (len - s).toFixed(2)));
+      pos.forEach((s, k) => {
+        const p = path.getPointAtLength(s);
+        marks.current[k]?.setAttribute("transform", `translate(${p.x.toFixed(2)} ${p.y.toFixed(2)})`);
+      });
       rx += (tx - rx) * 0.06;
       ry += (ty - ry) * 0.06;
       if (tilt.current) tilt.current.style.transform = `perspective(1100px) rotateX(${(26 + ry).toFixed(2)}deg) rotateZ(${(-10 + rx).toFixed(2)}deg)`;
@@ -123,11 +133,7 @@ export function HeroTrack({
     const loop = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      const i = Math.floor(s / ds) % N;
-      const j = (i + 1) % N;
-      const f = s / ds - Math.floor(s / ds);
-      const vi = v[i] + (v[j] - v[i]) * f; // плавная интерполяция скорости
-      s = (s + vi * scale * dt) % total;
+      for (let k = 0; k < pos.length; k++) pos[k] = (pos[k] + speedAt(pos[k]) * scale * dt) % total;
       draw();
       raf = requestAnimationFrame(loop);
     };
@@ -142,10 +148,6 @@ export function HeroTrack({
       cancelAnimationFrame(raf);
     };
 
-    // стартовый курс без доворота
-    const q0 = path.getPointAtLength(s + 1.2);
-    const pS = path.getPointAtLength(s);
-    heading = (Math.atan2(q0.y - pS.y, q0.x - pS.x) * 180) / Math.PI;
     draw();
     if (reduce) return;
 
@@ -165,6 +167,8 @@ export function HeroTrack({
       window.removeEventListener("pointermove", onMove);
       document.removeEventListener("visibilitychange", onVis);
     };
+    // cars задаются сервером один раз; перезапуск нужен только при смене трассы
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shape]);
 
   if (!shape) return null;
@@ -178,54 +182,42 @@ export function HeroTrack({
           style={{ transform: "perspective(1100px) rotateX(26deg) rotateZ(-10deg)", transformStyle: "preserve-3d" }}
         >
           <svg viewBox={shape.vb} className="h-auto w-full overflow-visible">
-            <defs>
-              <filter id="ht-soft" x="-30%" y="-30%" width="160%" height="160%">
-                <feGaussianBlur stdDeviation="0.9" />
-              </filter>
-              <filter id="ht-halo" x="-300%" y="-300%" width="700%" height="700%">
-                <feGaussianBlur stdDeviation="1.8" />
-              </filter>
-            </defs>
+            {/* тень, кромка, асфальт, осевая — тонко, чтобы близкие участки не слипались */}
+            <path d={shape.d} fill="none" stroke="rgba(0,0,0,0.55)" strokeWidth="3.4" strokeLinejoin="round" strokeLinecap="round" transform="translate(0.9 1.6)" />
+            <path d={shape.d} fill="none" stroke="rgba(237,230,228,0.26)" strokeWidth="2.9" strokeLinejoin="round" strokeLinecap="round" />
+            <path ref={base} d={shape.d} fill="none" stroke="#211b22" strokeWidth="2.4" strokeLinejoin="round" strokeLinecap="round" />
+            <path d={shape.d} fill="none" stroke="rgba(237,230,228,0.16)" strokeWidth="0.22" strokeDasharray="1.1 1.1" />
 
-            {/* тень, асфальт, кромки, осевая */}
-            <path d={shape.d} fill="none" stroke="rgba(0,0,0,0.6)" strokeWidth="6" strokeLinejoin="round" strokeLinecap="round" transform="translate(1.2 2.2)" />
-            <path d={shape.d} fill="none" stroke="rgba(237,230,228,0.22)" strokeWidth="5" strokeLinejoin="round" strokeLinecap="round" />
-            <path ref={base} d={shape.d} fill="none" stroke="#231d24" strokeWidth="4.3" strokeLinejoin="round" strokeLinecap="round" />
-            <path d={shape.d} fill="none" stroke="rgba(237,230,228,0.14)" strokeWidth="0.35" strokeDasharray="1.6 1.6" />
+            <line ref={start} stroke="#F4EFEC" strokeWidth="0.9" strokeDasharray="0.6 0.6" />
 
-            {/* старт/финиш */}
-            <line ref={start} stroke="#F4EFEC" strokeWidth="1.2" strokeDasharray="0.9 0.9" />
-
-            {/* короткий затухающий хвост */}
-            {[0.22, 0.4, 0.75].map((o, i) => (
-              <path
-                key={i}
-                ref={(el) => {
-                  trails.current[i] = el;
-                }}
-                d={shape.d}
-                fill="none"
-                stroke={ACCENT}
-                strokeWidth={1.2 + i * 0.3}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                opacity={o}
-                filter="url(#ht-soft)"
-              />
-            ))}
-
-            {/* болид: силуэт носом по ходу движения */}
-            <g ref={car}>
-              <ellipse rx="3.4" ry="2" fill={ACCENT} opacity="0.55" filter="url(#ht-halo)" />
-              <path d="M2.6 0 L0.9 -0.55 L-1.6 -0.75 L-2.2 -1.35 L-2.6 -1.35 L-2.6 1.35 L-2.2 1.35 L-1.6 0.75 L0.9 0.55 Z" fill="#F4FBFD" />
-              <rect x="-2.75" y="-1.5" width="0.5" height="3" rx="0.15" fill="#F4FBFD" />
-              <rect x="2.2" y="-1.05" width="0.45" height="2.1" rx="0.15" fill="#F4FBFD" />
-            </g>
+            {/* маркеры пилотов, как на карте трассы в трансляции */}
+            {cars
+              .map((c, k) => ({ c, k }))
+              .reverse()
+              .map(({ c, k }) => (
+                <g
+                  key={k}
+                  ref={(el) => {
+                    marks.current[k] = el;
+                  }}
+                >
+                  <circle r="2.6" fill={c.color} opacity="0.35" />
+                  <circle r="1.55" fill={c.color} stroke="#fff" strokeWidth="0.45" />
+                  {c.code && (
+                    <g transform="translate(2.4 -4.6)">
+                      <rect width={c.code.length * 1.75 + 2.6} height="3.4" rx="0.9" fill="rgba(12,9,12,0.86)" />
+                      <rect width="0.7" height="3.4" rx="0.3" fill={c.color} />
+                      <text x="1.5" y="2.55" fontSize="2.4" fontWeight="700" fill="#F4EFEC" style={{ fontFamily: "var(--font-display), system-ui, sans-serif", letterSpacing: "0.05em" }}>
+                        {c.code}
+                      </text>
+                    </g>
+                  )}
+                </g>
+              ))}
           </svg>
         </div>
       </div>
 
-      {/* подпись этапа — заметной плашкой в углу */}
       {label && (
         <div className="pointer-events-none absolute bottom-6 right-6 hidden items-center gap-3 rounded-2xl border border-line bg-[rgba(18,11,13,0.62)] px-4 py-3 backdrop-blur-md md:flex md:bottom-8 md:right-8">
           <Flag code={country ?? null} w={28} />
