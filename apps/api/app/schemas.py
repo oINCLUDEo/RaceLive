@@ -232,6 +232,19 @@ class WeekendForecastOut(BaseModel):
     days: list[WeatherDayOut]
 
 
+class StreamSourceOut(BaseModel):
+    """Одна площадка кастера (кастер может стримить сразу на Rutube и VK)."""
+
+    platform: str  # vk | rutube
+    embed_url: str
+    title: str | None = None
+    thumb: str | None = None
+    viewers: int | None = None
+    views: int | None = None
+    channel_url: str | None = None
+    live: bool = False
+
+
 class StreamOut(BaseModel):
     """Стрим кастера. Видео не наше — это src официального embed-плеера площадки."""
 
@@ -248,3 +261,4 @@ class StreamOut(BaseModel):
     round: int | None
     live: bool
     note: str | None
+    sources: list[StreamSourceOut] = []  # все площадки; поля выше — от основной

@@ -2,12 +2,13 @@
 
 // Компактный стрим-блок для раскладки «бок о бок» на «Эфире»: ленивый плеер,
 // подпись (эфир/запись), напоминание об эфире, реакции и чипы кастеров.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PlatformIcon } from "@/components/PlatformIcon";
 import { Reactions } from "@/components/Reactions";
 import { StreamLiveWatcher } from "@/components/StreamLiveWatcher";
 import { StreamPlayer } from "@/components/StreamPlayer";
-import type { StreamOut } from "@/lib/api";
+import type { StreamOut, StreamSource } from "@/lib/api";
+import { looksAbroad } from "@/lib/geo";
 import { useReminder } from "@/lib/reminders";
 
 const platformLabel = (p: string) => (p === "vk" ? "VK Видео" : p === "rutube" ? "Rutube" : p);
@@ -50,6 +51,22 @@ function ReminderBell({ id, live }: { id: string; live: boolean }) {
   );
 }
 
+const PREF_KEY = "racelive:platform";
+
+const sourcesOf = (s: StreamOut): StreamSource[] => (s.sources?.length ? s.sources : [s]);
+
+// Какую площадку кастера показать: выбранную зрителем (если там есть что смотреть и
+// она не уступает по «эфиру»), иначе живую; из-за рубежа — не Rutube, если есть выбор.
+function pickSource(s: StreamOut, pref: string | null, abroad: boolean): StreamSource {
+  const all = sourcesOf(s);
+  const anyLive = all.some((x) => x.live);
+  const byPref = pref ? all.find((x) => x.platform === pref && x.embed_url && (x.live || !anyLive)) : undefined;
+  if (byPref) return byPref;
+  const pool = anyLive ? all.filter((x) => x.live) : all.filter((x) => x.embed_url);
+  if (!pool.length) return all[0];
+  return (abroad && pool.find((x) => x.platform !== "rutube")) || pool[0];
+}
+
 export function StreamStage({ streams }: { streams: StreamOut[] }) {
   const [sel, setSel] = useState<string>(
     () =>
@@ -58,8 +75,28 @@ export function StreamStage({ streams }: { streams: StreamOut[] }) {
       streams[0]?.id ??
       "",
   );
+  const [pref, setPref] = useState<string | null>(null);
+  const [abroad, setAbroad] = useState(false);
+  useEffect(() => {
+    setAbroad(looksAbroad());
+    try {
+      setPref(localStorage.getItem(PREF_KEY));
+    } catch {}
+  }, []);
+  const choose = (platform: string) => {
+    setPref(platform);
+    try {
+      localStorage.setItem(PREF_KEY, platform);
+    } catch {}
+  };
+
   const current = streams.find((s) => s.id === sel) ?? streams[0];
   if (!current) return null;
+  const sources = sourcesOf(current);
+  const src = pickSource(current, pref, abroad);
+  // Поля выбранной площадки поверх записи кастера (id, имя, лайки — общие).
+  const v = { ...current, ...src };
+  const alt = sources.find((x) => x !== src && x.embed_url && x.platform !== "rutube");
 
   const liveCount = streams.filter((s) => s.live).length;
   const anyRec = streams.some((s) => s.embed_url);
@@ -80,46 +117,85 @@ export function StreamStage({ streams }: { streams: StreamOut[] }) {
         )}
       </div>
 
-      {current.embed_url ? (
-        <StreamPlayer src={current.embed_url} title={current.title ?? current.caster} poster={current.thumb} live={current.live} />
+      {v.embed_url ? (
+        <StreamPlayer key={v.embed_url} src={v.embed_url} title={v.title ?? v.caster} poster={v.thumb} live={v.live} />
       ) : (
         <div className="flex flex-col items-center justify-center gap-2 rounded-[var(--r-card)] border border-line bg-surface-1 text-center text-mute" style={{ aspectRatio: "16 / 9" }}>
           <span className="h-2 w-2 rounded-full" style={{ background: "var(--disabled)" }} aria-hidden />
           <span className="text-sm">Кастер сейчас не в эфире</span>
-          {current.channel_url && (
-            <a href={current.channel_url} target="_blank" rel="noopener noreferrer nofollow" className="text-xs text-bone underline underline-offset-2">
+          {v.channel_url && (
+            <a href={v.channel_url} target="_blank" rel="noopener noreferrer nofollow" className="text-xs text-bone underline underline-offset-2">
               Открыть канал
             </a>
           )}
         </div>
       )}
 
-      {(current.title || current.viewers || current.views) && (
+      {(sources.length > 1 || (v.platform === "rutube" && abroad)) && (
+        <div className="flex flex-col gap-2 rounded-[var(--r-card)] border border-line bg-surface-1 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+          {sources.length > 1 && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-mute">Площадка</span>
+              <div className="inline-flex rounded-full border border-line bg-surface-2 p-0.5" role="tablist" aria-label="Площадка трансляции">
+                {sources.map((x) => {
+                  const on = x === src;
+                  const off = !x.embed_url;
+                  return (
+                    <button
+                      key={x.platform}
+                      role="tab"
+                      aria-selected={on}
+                      disabled={off}
+                      onClick={() => choose(x.platform)}
+                      title={off ? "На этой площадке сейчас нечего смотреть" : undefined}
+                      className={`pressable inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs ${on ? "bg-[var(--bone)] text-[var(--surface-0)]" : "text-bone hover:bg-surface-1"} ${off ? "cursor-not-allowed opacity-40" : ""}`}
+                    >
+                      {platformLabel(x.platform)}
+                      {x.live && <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--ember)" }} aria-label="в эфире" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {v.platform === "rutube" &&
+            (alt ? (
+              <button onClick={() => choose(alt.platform)} className="text-left text-xs text-mute hover:text-bone">
+                Rutube просит выключить VPN или не открывается за границей?{" "}
+                <span className="text-bone underline underline-offset-2">Смотреть на {platformLabel(alt.platform)}</span>
+              </button>
+            ) : abroad ? (
+              <span className="text-xs text-mute">Rutube может не открываться за пределами России или с включённым VPN.</span>
+            ) : null)}
+        </div>
+      )}
+
+      {(v.title || v.viewers || v.views) && (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-mute">
-          {current.title && <span className="min-w-0 truncate">{current.title}</span>}
-          {current.viewers ? (
+          {v.title && <span className="min-w-0 truncate">{v.title}</span>}
+          {v.viewers ? (
             <span className="tabular shrink-0" style={{ color: "var(--ember)" }}>
-              {compact(current.viewers)} смотрят на {platformLabel(current.platform)}
+              {compact(v.viewers)} смотрят на {platformLabel(v.platform)}
             </span>
-          ) : current.views ? (
-            <span className="tabular shrink-0">{compact(current.views)} просмотров</span>
+          ) : v.views ? (
+            <span className="tabular shrink-0">{compact(v.views)} просмотров</span>
           ) : null}
         </div>
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2.5">
-          <StatusChip live={current.live} hasRec={!!current.embed_url} />
-          <PlatformIcon platform={current.platform} size={26} />
-          <span className="truncate font-display text-lg font-semibold">{current.caster}</span>
+          <StatusChip live={v.live} hasRec={!!v.embed_url} />
+          <PlatformIcon platform={v.platform} size={26} />
+          <span className="truncate font-display text-lg font-semibold">{v.caster}</span>
           <span className="shrink-0 rounded-full bg-surface-2 px-2 py-0.5 text-[10px] uppercase tracking-wide text-mute">
-            {platformLabel(current.platform)}
+            {platformLabel(v.platform)}
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <ReminderBell id={current.id} live={current.live} />
-          {current.channel_url && (
-            <a href={current.channel_url} target="_blank" rel="noopener noreferrer nofollow" className="pressable inline-flex items-center gap-1.5 rounded-full border border-line px-3.5 py-1.5 text-xs text-bone hover:bg-surface-2">
+          <ReminderBell id={current.id} live={v.live} />
+          {v.channel_url && (
+            <a href={v.channel_url} target="_blank" rel="noopener noreferrer nofollow" className="pressable inline-flex items-center gap-1.5 rounded-full border border-line px-3.5 py-1.5 text-xs text-bone hover:bg-surface-2">
               Канал
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M7 17L17 7M9 7h8v8" />
