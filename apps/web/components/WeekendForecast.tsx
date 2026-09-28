@@ -104,7 +104,7 @@ export function WeekendForecast({ data }: { data: WeekendForecastOut }) {
       </div>
       <div
         className="grid gap-px bg-line"
-        style={{ gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))" }}
+        style={{ gridTemplateColumns: "repeat(auto-fit, minmax(108px, 1fr))" }}
       >
         {data.days.slice(0, 6).map((d) => (
           <DayCard key={d.date} d={d} />

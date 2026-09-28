@@ -5,10 +5,12 @@ import { Flag } from "@/components/Flag";
 import { SessionTime } from "@/components/SessionTime";
 import { ShareButton } from "@/components/ShareButton";
 import { TeamLogo } from "@/components/TeamLogo";
+import { Tabs } from "@/components/Tabs";
 import { TimezoneNote } from "@/components/TimezoneNote";
 import { TrackMap } from "@/components/TrackMap";
 import { WeekendForecast } from "@/components/WeekendForecast";
 import {
+  type MeetingOut,
   getMeeting,
   getQualifyingResults,
   getRaceResults,
@@ -97,7 +99,7 @@ export default async function MeetingPage({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-mute">
               <Flag code={m.circuit?.country_code ?? null} w={26} />
-              этап {m.round}
+              Этап {m.round}
             </div>
             <h1 className="mt-2 font-display text-3xl font-semibold">
               {m.name_ru ?? m.name_en}
@@ -115,99 +117,153 @@ export default async function MeetingPage({
         </div>
       </div>
 
-      {results.length > 0 && (
-        <div className="card-soft overflow-hidden">
-          <div className="border-b border-line px-5 py-3 text-xs uppercase tracking-wide text-mute">
-            Итоги гонки
-          </div>
-          {results.map((r, i) => {
-            const color = (r.team_slug ? TEAMS[r.team_slug]?.color : undefined) ?? "var(--line)";
-            return (
-              <div
-                key={r.code || r.position}
-                className={`team-row grid grid-cols-[26px_4px_28px_1fr_auto] items-center gap-3 px-5 py-2.5 sm:grid-cols-[26px_4px_28px_1fr_auto_auto] ${i < results.length - 1 ? "border-b border-line" : ""} ${r.position === 1 ? "bg-surface-2" : ""}`}
-                style={{ "--row": color } as React.CSSProperties}
-              >
-                <span className="tabular text-mute">{r.position}</span>
-                <span className="h-6 w-[4px] rounded-full" style={{ background: color }} />
-                <TeamLogo slug={r.team_slug ?? ""} size={26} />
-                <Link href={`/drivers/${r.driver_id}`} className="truncate hover:text-[var(--accent2)]">
-                  {r.name_ru ?? r.name_en}
-                </Link>
-                <span
-                  className="tabular hidden text-right text-sm text-mute sm:block"
-                  title={r.time ? undefined : statusRu(r.status)}
-                >
-                  {r.time ?? statusCode(r.status)}
-                </span>
-                <span className="tabular text-right font-display font-semibold">{r.points}</span>
-              </div>
-            );
-          })}
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px] xl:items-start">
+        {/* ОСНОВНОЕ: результаты (гонка/квалификация) или, до гонки, сессии уик-энда */}
+        <div className="flex min-w-0 flex-col gap-5">
+          {results.length > 0 || qualifying.length > 0 ? (
+            <Tabs
+              tabs={[
+                ...(results.length > 0 ? [{ id: "race", label: "Гонка", content: <RaceTable rows={results} /> }] : []),
+                ...(qualifying.length > 0 ? [{ id: "quali", label: "Квалификация", content: <QualiTable rows={qualifying} /> }] : []),
+              ]}
+              right={results.length > 0 ? <span className="text-xs text-mute">▲▼ — позиции со старта</span> : undefined}
+            />
+          ) : (
+            <Sessions m={m} now={now} />
+          )}
         </div>
-      )}
 
-      {qualifying.length > 0 && (
-        <details className="card-soft group overflow-hidden">
-          <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-3 text-xs uppercase tracking-wide text-mute">
-            <span>Квалификация</span>
-            <span className="text-[10px] transition-transform group-open:rotate-180">▾</span>
-          </summary>
-          <div className="border-t border-line">
-          {qualifying.map((r, i) => {
-            const color = (r.team_slug ? TEAMS[r.team_slug]?.color : undefined) ?? "var(--line)";
-            const best = r.q3 ?? r.q2 ?? r.q1;
-            return (
-              <div
-                key={r.code || r.position}
-                className={`team-row grid grid-cols-[26px_4px_28px_1fr_auto] items-center gap-3 px-5 py-2.5 ${i < qualifying.length - 1 ? "border-b border-line" : ""} ${r.position === 1 ? "bg-surface-2" : ""}`}
-                style={{ "--row": color } as React.CSSProperties}
-              >
-                <span className="tabular text-mute">{r.position}</span>
-                <span className="h-6 w-[4px] rounded-full" style={{ background: color }} />
-                <TeamLogo slug={r.team_slug ?? ""} size={26} />
-                <Link href={`/drivers/${r.driver_id}`} className="truncate hover:text-[var(--accent2)]">
-                  {r.name_ru ?? r.name_en}
-                </Link>
-                <span className="tabular text-right text-sm">{best ?? "—"}</span>
-              </div>
-            );
-          })}
-          </div>
-        </details>
-      )}
-
-      {forecast && <WeekendForecast data={forecast} />}
-
-      <div className="card-soft overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3 text-xs uppercase tracking-wide text-mute">
-          <span>Сессии</span>
-          <TimezoneNote className="normal-case tracking-normal" />
+        {/* СБОКУ: сессии (если есть результаты) и погода */}
+        <div className="flex min-w-0 flex-col gap-5 xl:sticky xl:top-4">
+          {(results.length > 0 || qualifying.length > 0) && <Sessions m={m} now={now} compact />}
+          {forecast && <WeekendForecast data={forecast} />}
         </div>
-        {m.sessions.map((s, idx) => {
-          const upcoming = s.starts_at && new Date(s.starts_at).getTime() > now;
-          return (
-            <div
-              key={idx}
-              className={`flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-3.5 ${idx < m.sessions.length - 1 ? "border-b border-line" : ""}`}
-            >
-              <span className="min-w-[160px] flex-1 font-medium">
-                {sessionLabel(s.type, s.name_ru, s.name_en)}
-              </span>
-              <span className="tabular text-sm text-mute">
-                <SessionTime iso={s.starts_at} withZone />
-              </span>
-              {upcoming && s.starts_at && (
-                <span className="tabular min-w-[120px] text-right text-sm text-bone">
-                  через <Countdown iso={s.starts_at} />
-                </span>
-              )}
-            </div>
-          );
-        })}
       </div>
 
       <p className="text-xs text-mute">Источник данных: Jolpica / Ergast.</p>
+    </div>
+  );
+}
+
+const colorOf = (slug: string | null) => (slug ? TEAMS[slug]?.color : undefined) ?? "var(--line)";
+
+// Итоги гонки: позиция, изменение со старта (данные — в цвете), время/статус, очки.
+function RaceTable({ rows }: { rows: RaceResultOut[] }) {
+  return (
+    <div>
+      {rows.map((r, i) => {
+        const color = colorOf(r.team_slug);
+        const delta = r.grid > 0 ? r.grid - r.position : null;
+        const result = r.time ?? statusCode(r.status);
+        return (
+          <div
+            key={r.code || r.position}
+            className={`team-row grid grid-cols-[26px_4px_28px_minmax(0,1fr)_36px_32px] items-center gap-3 px-4 py-2.5 sm:grid-cols-[26px_4px_28px_minmax(0,1fr)_40px_120px_36px] sm:px-5 ${i < rows.length - 1 ? "border-b border-line" : ""} ${r.position === 1 ? "bg-surface-2" : ""}`}
+            style={{ "--row": color } as React.CSSProperties}
+          >
+            <span className="tabular text-mute">{r.position}</span>
+            <span className="h-6 w-[4px] rounded-full" style={{ background: color }} />
+            <TeamLogo slug={r.team_slug ?? ""} size={26} />
+            <span className="min-w-0">
+              <Link href={`/drivers/${r.driver_id}`} className="block truncate hover:text-[var(--accent2)]">
+                {r.name_ru ?? r.name_en}
+              </Link>
+              {/* на телефоне время/статус — под именем */}
+              <span className="tabular block truncate text-xs text-mute sm:hidden" title={r.time ? undefined : statusRu(r.status)}>
+                {result} · {r.team_name}
+              </span>
+              <span className="hidden truncate text-xs text-mute sm:block">{r.team_name}</span>
+            </span>
+            <span
+              className="tabular text-right text-xs"
+              style={{ color: delta == null || delta === 0 ? "var(--mute)" : delta > 0 ? "var(--green)" : "var(--red)" }}
+              title={r.grid > 0 ? `Старт: ${r.grid}` : "Старт с пит-лейна"}
+            >
+              {delta == null ? "пит" : delta === 0 ? "=" : delta > 0 ? `▲${delta}` : `▼${-delta}`}
+            </span>
+            <span className="tabular hidden text-right text-sm text-mute sm:block" title={r.time ? undefined : statusRu(r.status)}>
+              {result}
+            </span>
+            <span className="tabular text-right font-display font-semibold">{r.points || <span className="text-mute">—</span>}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Квалификация: Q1/Q2/Q3 на широком экране, лучший круг — на телефоне.
+function QualiTable({ rows }: { rows: QualifyingResultOut[] }) {
+  return (
+    <div>
+      <div className="hidden grid-cols-[26px_4px_28px_minmax(0,1fr)_84px_84px_84px] gap-3 border-b border-line px-5 py-2 text-[10px] uppercase tracking-[0.14em] text-mute md:grid">
+        <span>#</span>
+        <span />
+        <span />
+        <span />
+        <span className="text-right">Q1</span>
+        <span className="text-right">Q2</span>
+        <span className="text-right">Q3</span>
+      </div>
+      {rows.map((r, i) => {
+        const color = colorOf(r.team_slug);
+        const best = r.q3 ?? r.q2 ?? r.q1;
+        return (
+          <div
+            key={r.code || r.position}
+            className={`team-row grid grid-cols-[26px_4px_28px_minmax(0,1fr)_auto] items-center gap-3 px-4 py-2.5 sm:px-5 md:grid-cols-[26px_4px_28px_minmax(0,1fr)_84px_84px_84px] ${i < rows.length - 1 ? "border-b border-line" : ""} ${r.position === 1 ? "bg-surface-2" : ""}`}
+            style={{ "--row": color } as React.CSSProperties}
+          >
+            <span className="tabular text-mute">{r.position}</span>
+            <span className="h-6 w-[4px] rounded-full" style={{ background: color }} />
+            <TeamLogo slug={r.team_slug ?? ""} size={26} />
+            <span className="min-w-0">
+              <Link href={`/drivers/${r.driver_id}`} className="block truncate hover:text-[var(--accent2)]">
+                {r.name_ru ?? r.name_en}
+              </Link>
+              <span className="block truncate text-xs text-mute">{r.team_name}</span>
+            </span>
+            <span className="tabular text-right text-sm md:hidden">{best ?? "—"}</span>
+            {[r.q1, r.q2, r.q3].map((q, k) => (
+              <span key={k} className={`tabular hidden text-right text-sm md:block ${q && q === best ? "text-bone" : "text-mute"}`}>
+                {q ?? "—"}
+              </span>
+            ))}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function Sessions({ m, now, compact = false }: { m: MeetingOut; now: number; compact?: boolean }) {
+  return (
+    <div className="card-soft overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3 text-xs uppercase tracking-wide text-mute">
+        <span>Сессии</span>
+        <TimezoneNote className="normal-case tracking-normal" />
+      </div>
+      {m.sessions.map((s, idx) => {
+        const upcoming = s.starts_at && new Date(s.starts_at).getTime() > now;
+        return (
+          <div
+            key={idx}
+            className={`flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-3 ${idx < m.sessions.length - 1 ? "border-b border-line" : ""} ${upcoming ? "" : "text-mute"}`}
+          >
+            <span className={`min-w-[140px] flex-1 ${s.type === "race" ? "font-display font-semibold" : "font-medium"}`}>
+              {sessionLabel(s.type, s.name_ru, s.name_en)}
+            </span>
+            <span className="tabular text-sm text-mute">
+              <SessionTime iso={s.starts_at} withZone={!compact} />
+            </span>
+            {upcoming && s.starts_at && !compact && (
+              <span className="tabular min-w-[120px] text-right text-sm text-bone">
+                через <Countdown iso={s.starts_at} />
+              </span>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
