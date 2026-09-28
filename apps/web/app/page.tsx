@@ -16,12 +16,14 @@ import {
   getDriverStandings,
   getMeeting,
   getNextSession,
+  getQualifyingResults,
   getRaceResults,
   getSchedule,
   getStreams,
   type DriverStandingOut,
   type MeetingOut,
   type NextSessionOut,
+  type QualifyingResultOut,
   type RaceResultOut,
   type StreamOut,
 } from "@/lib/api";
@@ -68,15 +70,29 @@ export default async function HomePage() {
     getStreams().catch(() => [] as StreamOut[]),
     getDriverStandings().catch(() => [] as DriverStandingOut[]),
   ]);
-  // Лидеры чемпионата — маркеры на карте трассы в шапке (как в трансляции).
-  const trackDrivers = leaders.slice(0, 3).map((d) => ({
-    code: d.code,
-    color: (d.team_slug && TEAMS[d.team_slug]?.color) || "#EDE6E4",
-  }));
   // Кастер в эфире → его стрим становится подложкой героя + карточка «Смотреть эфир».
   const liveStream = streams.find((s) => s.live && s.embed_url) ?? null;
   // Трасса ближайшего этапа — для графики в шапке (когда эфира нет).
   const meeting = next ? await getMeeting(next.round).catch(() => null) : null;
+  // Маркеры на карте трассы — в реальном порядке последней сессии: квалификация этого
+  // этапа (если уже прошла) → подиум прошлой гонки → лидеры чемпионата. С подписью.
+  const toMarks = (rows: { code: string; team_slug: string | null }[]) =>
+    rows.slice(0, 3).map((d) => ({ code: d.code, color: (d.team_slug && TEAMS[d.team_slug]?.color) || "#EDE6E4" }));
+  let trackDrivers = toMarks(leaders);
+  let trackOrder = "Лидеры чемпионата";
+  if (next && !liveStream?.thumb) {
+    const quali = await getQualifyingResults(next.round).catch(() => [] as QualifyingResultOut[]);
+    if (quali.length >= 3) {
+      trackDrivers = toMarks(quali);
+      trackOrder = "Старт по квалификации";
+    } else if (next.round > 1) {
+      const prev = await getRaceResults(next.round - 1).catch(() => [] as RaceResultOut[]);
+      if (prev.length >= 3) {
+        trackDrivers = toMarks(prev);
+        trackOrder = "Подиум прошлой гонки";
+      }
+    }
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -102,6 +118,7 @@ export default async function HomePage() {
             round={meeting?.round}
             country={meeting?.circuit?.country_code}
             drivers={trackDrivers}
+            order={trackOrder}
           />
         )}
         <div

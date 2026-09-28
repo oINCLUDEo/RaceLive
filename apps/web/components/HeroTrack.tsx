@@ -26,12 +26,15 @@ export function HeroTrack({
   round,
   country,
   drivers,
+  order,
 }: {
   circuit: string | null | undefined;
   label?: string | null;
   round?: number | null;
   country?: string | null;
   drivers?: TrackDriver[];
+  /** что за порядок у маркеров: «Старт по квалификации», «Подиум прошлой гонки»… */
+  order?: string;
 }) {
   const [shape, setShape] = useState<Shape | null>(null);
   const tilt = useRef<HTMLDivElement>(null);
@@ -226,6 +229,17 @@ export function HeroTrack({
               Трасса этапа{round != null ? ` ${round}` : ""}
             </div>
             <div className="font-display text-base font-semibold text-bone">{label}</div>
+            {order && cars[0]?.code && (
+              <div className="mt-1.5 flex items-center gap-2 text-[11px] text-mute">
+                <span>{order}:</span>
+                {cars.map((c, k) => (
+                  <span key={k} className="inline-flex items-center gap-1 font-display font-semibold text-bone">
+                    <span className="h-2 w-[3px] rounded-full" style={{ background: c.color }} />
+                    {k + 1}. {c.code}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
