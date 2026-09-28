@@ -158,8 +158,8 @@ export default async function HomePage() {
                   <CountdownBoxes iso={next.session.starts_at} />
                 </div>
                 <div className="mt-4 flex items-center gap-2">
-                  <Link href={`/schedule/${next.round}`} className="cta flex-1 justify-center">
-                    Смотреть
+                  <Link href={liveStream ? "/live" : `/schedule/${next.round}`} className="cta flex-1 justify-center">
+                    {liveStream ? "Смотреть эфир" : "Открыть этап"}
                   </Link>
                   <NotifyBell
                     compact
@@ -237,14 +237,25 @@ async function HomeData() {
 
   return (
     <>
+      {/* СТРИМЫ КАСТЕРОВ */}
+      {streams.length > 0 && (
+        <Reveal>
+          <HomeStreams streams={streams} />
+        </Reveal>
+      )}
+
+
+      {/* ИТОГИ И ЗАЧЁТ — рядом */}
+      {((lastDone && podium.length > 0) || topStandings.length > 0) && (
+        <Reveal>
+          <div className="grid gap-6 lg:grid-cols-2 lg:items-start 2xl:grid-cols-1">
       {/* ПРОШЕДШИЙ ЭТАП — подиум */}
       {lastDone && podium.length > 0 && (
-        <Reveal>
-        <section>
+        <section className="min-w-0">
           <div className="mb-4 flex items-baseline justify-between gap-3">
             <h2 className="font-display text-xl font-semibold">Прошедший этап</h2>
             <Link href={`/schedule/${lastDone.round}`} className="text-sm text-mute hover:text-bone">
-              итоги →
+              Итоги →
             </Link>
           </div>
           <div className="card-soft p-5">
@@ -252,7 +263,7 @@ async function HomeData() {
               <Flag code={lastDone.circuit?.country_code ?? null} w={30} />
               <span className="font-display font-semibold">{lastDone.name_ru ?? lastDone.name_en}</span>
             </div>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-2 2xl:grid-cols-3">
               {podium.map((r) => {
                 const medal = r.position === 1 ? "#E7B24B" : r.position === 2 ? "#C4CAD0" : "#CD7F45";
                 return (
@@ -278,60 +289,18 @@ async function HomeData() {
             </div>
           </div>
         </section>
-        </Reveal>
-      )}
-
-      {/* БЛИЖАЙШИЕ ЭТАПЫ (кусок календаря) */}
-      {rounds.length > 0 && (
-        <Reveal>
-        <section>
-          <div className="mb-4 flex items-baseline justify-between gap-3">
-            <h2 className="font-display text-xl font-semibold">Ближайшие этапы</h2>
-            <Link href="/schedule" className="text-sm text-mute hover:text-bone">весь календарь →</Link>
-          </div>
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            {rounds.map((m, idx) => (
-              <Link key={m.round} href={`/schedule/${m.round}`} className="card-soft relative flex flex-col gap-3 overflow-hidden p-4 transition-colors hover:bg-surface-2">
-                <TrackMap circuit={m.circuit?.key} size={116} className="pointer-events-none absolute right-2 top-2 opacity-[0.13]" />
-                <div className="flex items-center justify-between">
-                  <Flag code={m.circuit?.country_code ?? null} />
-                  <span className="text-[11px] uppercase tracking-wide text-mute">Этап {m.round}</span>
-                </div>
-                <div className="min-w-0">
-                  <div className="truncate font-display font-semibold">{m.name_ru ?? m.name_en}</div>
-                  <div className="truncate text-sm text-mute">{m.circuit?.name_ru ?? m.circuit?.name_en}</div>
-                </div>
-                <div className="mt-auto flex items-center justify-between text-sm">
-                  <span className="text-mute"><SessionTime iso={m.starts_at} mode="date" /></span>
-                  {idx === 0 && m.starts_at && (
-                    <span className="tabular text-xs text-[var(--ember)]"><Countdown iso={m.starts_at} /></span>
-                  )}
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-        </Reveal>
-      )}
-
-      {/* СТРИМЫ КАСТЕРОВ */}
-      {streams.length > 0 && (
-        <Reveal>
-          <HomeStreams streams={streams} />
-        </Reveal>
       )}
 
       {/* ЧЕМПИОНАТ — реальные данные (Jolpica) */}
       {topStandings.length > 0 && (
-        <Reveal>
-        {/* на 2xl зачёт уже в колонке справа — тут не дублируем */}
-        <section className="card-soft overflow-hidden 2xl:hidden">
-          <div className="flex items-center justify-between border-b border-line px-5 py-4">
-            <span className="font-display text-base font-semibold">Личный зачёт</span>
-            <Link href="/standings" className="text-[13px] text-mute hover:text-bone">весь зачёт →</Link>
+        /* на 2xl зачёт уже в колонке справа — тут не дублируем */
+        <section className="min-w-0 2xl:hidden">
+          <div className="mb-4 flex items-baseline justify-between gap-3">
+            <h2 className="font-display text-xl font-semibold">Личный зачёт</h2>
+            <Link href="/standings" className="text-sm text-mute hover:text-bone">Весь зачёт →</Link>
           </div>
-          <div className="grid md:grid-cols-2">
-            {[topStandings.slice(0, 5), topStandings.slice(5, 10)].map((col, ci) => (
+          <div className="card-soft overflow-hidden">
+            {[topStandings.slice(0, 5)].map((col, ci) => (
               <div key={ci} className={ci === 1 ? "md:border-l md:border-line" : ""}>
                 {col.map((d, ri) => {
                   const color = d.team_slug ? TEAMS[d.team_slug]?.color : undefined;
@@ -361,8 +330,44 @@ async function HomeData() {
             ))}
           </div>
         </section>
+      )}
+          </div>
         </Reveal>
       )}
+
+      {/* БЛИЖАЙШИЕ ЭТАПЫ (кусок календаря) */}
+      {rounds.length > 0 && (
+        <Reveal>
+        <section>
+          <div className="mb-4 flex items-baseline justify-between gap-3">
+            <h2 className="font-display text-xl font-semibold">Ближайшие этапы</h2>
+            <Link href="/schedule" className="text-sm text-mute hover:text-bone">Весь календарь →</Link>
+          </div>
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            {rounds.map((m, idx) => (
+              <Link key={m.round} href={`/schedule/${m.round}`} className="card-soft relative flex flex-col gap-3 overflow-hidden p-4 transition-colors hover:bg-surface-2">
+                <TrackMap circuit={m.circuit?.key} size={116} className="pointer-events-none absolute right-2 top-2 opacity-[0.13]" />
+                <div className="flex items-center justify-between">
+                  <Flag code={m.circuit?.country_code ?? null} />
+                  <span className="text-[11px] uppercase tracking-wide text-mute">Этап {m.round}</span>
+                </div>
+                <div className="min-w-0">
+                  <div className="truncate font-display font-semibold">{m.name_ru ?? m.name_en}</div>
+                  <div className="truncate text-sm text-mute">{m.circuit?.name_ru ?? m.circuit?.name_en}</div>
+                </div>
+                <div className="mt-auto flex items-center justify-between text-sm">
+                  <span className="text-mute"><SessionTime iso={m.starts_at} mode="date" /></span>
+                  {idx === 0 && m.starts_at && (
+                    <span className="tabular text-xs text-[var(--ember)]"><Countdown iso={m.starts_at} /></span>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+        </Reveal>
+      )}
+
     </>
   );
 }
