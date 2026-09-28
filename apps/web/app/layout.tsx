@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Geologica, Golos_Text } from "next/font/google";
 import { Link, ViewTransitions } from "next-view-transitions";
 import { MobileNav } from "@/components/MobileNav";
 import { RailNav } from "@/components/RailNav";
@@ -7,25 +6,17 @@ import { SeasonDock } from "@/components/SeasonDock";
 import { getConstructorStandings, getDriverStandings, type ConstructorStandingOut, type DriverStandingOut } from "@/lib/api";
 import { ToastHost } from "@/components/ToastHost";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
+import "@fontsource/geologica/500.css";
+import "@fontsource/geologica/600.css";
+import "@fontsource/geologica/700.css";
+import "@fontsource/golos-text/400.css";
+import "@fontsource/golos-text/500.css";
+import "@fontsource/golos-text/600.css";
 import "./globals.css";
 
-const display = Geologica({
-  subsets: ["latin", "cyrillic"],
-  weight: ["500", "600", "700"],
-  variable: "--font-display",
-  display: "swap",
-  // У вариативной Geologica нет метрик фолбэка в базе Next — отключаем авто-подгонку,
-  // чтобы убрать предупреждение сборки; свой фолбэк-стек задаём явно.
-  adjustFontFallback: false,
-  fallback: ["system-ui", "sans-serif"],
-});
-
-const sans = Golos_Text({
-  subsets: ["latin", "cyrillic"],
-  weight: ["400", "500", "600"],
-  variable: "--font-sans",
-  display: "swap",
-});
+// Шрифты — свои, из npm (@fontsource), а не next/font/google: при сборке на сервере
+// Google Fonts бывает недоступен из РФ, и билд падал в next/font. unicode-range в CSS —
+// браузер качает только нужные подмножества (кириллица/латиница).
 
 // viewport-fit=cover — чтобы нижняя панель на телефоне обходила «домашнюю полоску».
 export const viewport: Viewport = {
@@ -69,7 +60,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   ]);
   return (
     <ViewTransitions>
-      <html lang="ru" className={`${display.variable} ${sans.variable}`}>
+      <html lang="ru">
       <body>
         <div className="flex min-h-screen glow-page">
           {/* LEFT RAIL */}
