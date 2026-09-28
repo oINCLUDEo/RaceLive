@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { CountUp } from "@/components/CountUp";
 import { FavoriteStar } from "@/components/FavoriteStar";
 import { Flag } from "@/components/Flag";
+import { FormChart } from "@/components/FormChart";
 import { ShareButton } from "@/components/ShareButton";
 import { TeamLogo } from "@/components/TeamLogo";
 import { getTeam, type TeamProfileOut, type TeamRoundEntryOut } from "@/lib/api";
@@ -70,7 +71,7 @@ export default async function TeamPage({ params }: { params: { slug: string } })
           <TeamLogo slug={slug} size={56} vt={`tlogo-${slug}`} />
           <div>
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-mute">
-              команда
+              Команда
               {nat && (
                 <>
                   <Flag code={nat.code} w={22} />
@@ -92,38 +93,58 @@ export default async function TeamPage({ params }: { params: { slug: string } })
         </section>
       )}
 
-      {/* ФОРМА КОМАНДЫ — очки по этапам */}
-      {t.rounds.length > 1 && (
-        <section>
-          <div className="mb-3 flex items-baseline justify-between gap-3">
-            <h2 className="font-display text-lg font-semibold">Форма команды</h2>
-            <span className="text-xs text-mute">очки по этапам</span>
-          </div>
-          <div className="card-soft flex items-end gap-2 overflow-x-auto px-4 pb-2 pt-3">
-            {(() => {
-              const maxPts = Math.max(...t.rounds.map((r) => r.team_points), 1);
-              return t.rounds.map((r) => (
-                <Link
-                  key={r.round}
-                  href={`/schedule/${r.round}`}
-                  title={`Этап ${r.round}: ${r.team_points} очк.`}
-                  className="flex flex-col items-center gap-0.5"
-                >
-                  <span className="tabular text-[9px] text-mute">{r.team_points}</span>
-                  <div
-                    className="w-3.5 rounded-t-[3px] transition-opacity hover:opacity-80"
-                    style={{ height: `${Math.max(3, Math.round((r.team_points / maxPts) * 52))}px`, background: color }}
-                  />
-                  <span className="tabular text-[9px] text-mute">{r.round}</span>
-                </Link>
-              ));
-            })()}
-          </div>
-        </section>
-      )}
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
+        <div className="flex min-w-0 flex-col gap-5">
+          {/* ФОРМА КОМАНДЫ — очки по этапам */}
+          {t.rounds.length > 1 && (
+            <section>
+              <div className="mb-3 flex items-baseline justify-between gap-3">
+                <h2 className="font-display text-lg font-semibold">Форма команды</h2>
+                <span className="text-xs text-mute">Очки по этапам</span>
+              </div>
+              <FormChart
+                color={color}
+                items={t.rounds.map((r) => ({ round: r.round, value: r.team_points, title: `Этап ${r.round}: ${r.team_points} очк.` }))}
+              />
+            </section>
+          )}
 
+          {/* РЕЗУЛЬТАТЫ ПО ЭТАПАМ */}
+          {t.rounds.length > 0 && (
+            <section className="card-soft overflow-hidden">
+              <div className="flex items-center justify-between border-b border-line px-5 py-3 text-xs uppercase tracking-wide text-mute">
+                <span>Результаты по этапам</span>
+                <span>Очки этапа</span>
+              </div>
+              {t.rounds.map((r, i) => (
+                <div
+                  key={r.round}
+                  className={`grid grid-cols-[28px_1fr_auto] items-center gap-3 px-5 py-3 ${i < t.rounds.length - 1 ? "border-b border-line" : ""}`}
+                >
+                  <Link href={`/schedule/${r.round}`} className="tabular text-mute hover:text-bone">
+                    {r.round}
+                  </Link>
+                  <div className="flex min-w-0 flex-col gap-1">
+                    <Link href={`/schedule/${r.round}`} className="truncate text-sm hover:text-bone">
+                      {r.name_ru ?? r.name_en}
+                    </Link>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                      {r.entries.map((e) => (
+                        <EntryChip key={e.driver_id || e.code} e={e} />
+                      ))}
+                    </div>
+                  </div>
+                  <span className="tabular font-display font-semibold">{r.team_points}</span>
+                </div>
+              ))}
+            </section>
+          )}
+
+        </div>
+
+        <div className="flex min-w-0 flex-col gap-5 xl:sticky xl:top-4">
       {/* СОСТАВ + H2H */}
-      <section className="grid gap-5 lg:grid-cols-[1fr_1fr]">
+      <section className="flex flex-col gap-5">
         {t.drivers.length > 0 && (
           <div className="card-soft overflow-hidden">
             <div className="border-b border-line px-5 py-3 text-xs uppercase tracking-wide text-mute">Состав</div>
@@ -163,36 +184,8 @@ export default async function TeamPage({ params }: { params: { slug: string } })
         )}
       </section>
 
-      {/* РЕЗУЛЬТАТЫ ПО ЭТАПАМ */}
-      {t.rounds.length > 0 && (
-        <section className="card-soft overflow-hidden">
-          <div className="flex items-center justify-between border-b border-line px-5 py-3 text-xs uppercase tracking-wide text-mute">
-            <span>Результаты по этапам</span>
-            <span>очки этапа</span>
-          </div>
-          {t.rounds.map((r, i) => (
-            <div
-              key={r.round}
-              className={`grid grid-cols-[28px_1fr_auto] items-center gap-3 px-5 py-3 ${i < t.rounds.length - 1 ? "border-b border-line" : ""}`}
-            >
-              <Link href={`/schedule/${r.round}`} className="tabular text-mute hover:text-bone">
-                {r.round}
-              </Link>
-              <div className="flex min-w-0 flex-col gap-1">
-                <Link href={`/schedule/${r.round}`} className="truncate text-sm hover:text-bone">
-                  {r.name_ru ?? r.name_en}
-                </Link>
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
-                  {r.entries.map((e) => (
-                    <EntryChip key={e.driver_id || e.code} e={e} />
-                  ))}
-                </div>
-              </div>
-              <span className="tabular font-display font-semibold">{r.team_points}</span>
-            </div>
-          ))}
-        </section>
-      )}
+        </div>
+      </div>
 
       <p className="text-xs text-mute">Источник данных: Jolpica / Ergast.</p>
     </div>

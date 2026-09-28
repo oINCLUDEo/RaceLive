@@ -4,6 +4,7 @@ import { CountUp } from "@/components/CountUp";
 import { DriverPhoto } from "@/components/DriverPhoto";
 import { FavoriteStar } from "@/components/FavoriteStar";
 import { Flag } from "@/components/Flag";
+import { FormChart } from "@/components/FormChart";
 import { ShareButton } from "@/components/ShareButton";
 import { TeamLogo } from "@/components/TeamLogo";
 import { getDriverProfile, type DriverProfileOut } from "@/lib/api";
@@ -99,7 +100,24 @@ export default async function DriverPage({ params }: { params: { id: string } })
         <Stat value={bestFinish ? `P${bestFinish}` : "—"} label={`лучший финиш · ${podiums} подиума(ов)`} />
       </section>
 
-      <hr className="divider-fade" />
+            {/* ФОРМА — очки по этапам */}
+      {d.results.length > 1 && (
+        <section>
+          <div className="mb-3 flex items-baseline justify-between gap-3">
+            <h2 className="font-display text-lg font-semibold">Форма</h2>
+            <span className="text-xs text-mute">Очки по этапам · сверху — место</span>
+          </div>
+          <FormChart
+            color={color}
+            items={d.results.map((r) => ({
+              round: r.round,
+              value: r.points,
+              label: isDnf(r.status) ? statusCode(r.status) : `P${r.position}`,
+              title: `Этап ${r.round}: ${isDnf(r.status) ? statusRu(r.status) : `P${r.position}`}, ${r.points} очк.`,
+            }))}
+          />
+        </section>
+      )}
 
       {/* РЕЗУЛЬТАТЫ СЕЗОНА */}
       {d.results.length > 0 && (
@@ -107,6 +125,7 @@ export default async function DriverPage({ params }: { params: { id: string } })
           <div className="border-b border-line px-5 py-3 text-xs uppercase tracking-wide text-mute">
             Результаты сезона
           </div>
+          <div className="grid xl:grid-cols-2 xl:[&>*:nth-child(odd)]:border-r xl:[&>*:nth-child(odd)]:border-line">
           {d.results.map((r) => (
             <Link
               key={r.round}
@@ -124,6 +143,7 @@ export default async function DriverPage({ params }: { params: { id: string } })
               <span className="tabular w-10 text-right font-display font-semibold">{r.points}</span>
             </Link>
           ))}
+          </div>
         </section>
       )}
 
