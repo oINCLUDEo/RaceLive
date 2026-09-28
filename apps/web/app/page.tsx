@@ -324,7 +324,8 @@ async function HomeData() {
       {/* ЧЕМПИОНАТ — реальные данные (Jolpica) */}
       {topStandings.length > 0 && (
         <Reveal>
-        <section className="card-soft overflow-hidden">
+        {/* на 2xl зачёт уже в колонке справа — тут не дублируем */}
+        <section className="card-soft overflow-hidden 2xl:hidden">
           <div className="flex items-center justify-between border-b border-line px-5 py-4">
             <span className="font-display text-base font-semibold">Личный зачёт</span>
             <Link href="/standings" className="text-[13px] text-mute hover:text-bone">весь зачёт →</Link>

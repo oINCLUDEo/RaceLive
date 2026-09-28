@@ -6,6 +6,7 @@ import { Link } from "next-view-transitions";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { RAIL } from "@/components/RailNav";
+import { openSeason } from "@/components/SeasonDock";
 
 const MAIN = ["/", "/schedule", "/live", "/standings"];
 
@@ -67,6 +68,12 @@ export function MobileNav() {
                 href={r.href}
                 className={`flex flex-col items-center gap-1 py-2.5 text-[10px] font-medium ${on ? "text-[var(--ember)]" : "text-mute"}`}
                 aria-current={on ? "page" : undefined}
+                onClick={(e) => {
+                  if (r.href === "/standings" && !on) {
+                    e.preventDefault();
+                    openSeason();
+                  }
+                }}
               >
                 <span className={`flex h-7 w-12 items-center justify-center rounded-full ${on ? "bg-[var(--ember-soft)]" : ""}`}>
                   <Icon d={r.icon} />

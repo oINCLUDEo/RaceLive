@@ -24,6 +24,30 @@ function colorOf(slug: string | null): string {
   return (slug ? TEAMS[slug]?.color : undefined) ?? "var(--line)";
 }
 
+const GRID = "grid grid-cols-[26px_4px_28px_minmax(0,1fr)_44px_64px] items-center gap-3 sm:grid-cols-[26px_4px_28px_minmax(0,1fr)_44px_56px_64px]";
+
+function Head() {
+  return (
+    <div className={`${GRID} border-b border-line px-5 py-2 text-[10px] uppercase tracking-[0.14em] text-mute`}>
+      <span>#</span>
+      <span />
+      <span />
+      <span />
+      <span className="text-right">Побед</span>
+      <span className="hidden text-right sm:block">До соседа</span>
+      <span className="text-right">Очки</span>
+    </div>
+  );
+}
+
+function Bar({ pts, leader, color }: { pts: number; leader: number; color: string }) {
+  return (
+    <span className="mt-1.5 block h-[3px] overflow-hidden rounded-full bg-surface-2">
+      <span className="block h-full rounded-full" style={{ width: `${Math.max(2, (pts / (leader || 1)) * 100)}%`, background: color }} />
+    </span>
+  );
+}
+
 export default async function StandingsPage() {
   const [drivers, constructors] = await Promise.all([
     getDriverStandings().catch(() => [] as DriverStandingOut[]),
@@ -35,7 +59,7 @@ export default async function StandingsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <div className="text-xs uppercase tracking-[0.16em] text-mute">чемпионат</div>
+        <div className="text-xs uppercase tracking-[0.16em] text-mute">Чемпионат</div>
         <h1 className="mt-2 font-display text-3xl font-semibold">Зачёт сезона</h1>
       </div>
 
@@ -45,73 +69,92 @@ export default async function StandingsPage() {
         </div>
       )}
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-5 xl:grid-cols-2">
         {drivers.length > 0 && (
           <section className="card-soft overflow-hidden">
-            <div className="border-b border-line px-5 py-4">
+            <div className="flex items-baseline justify-between border-b border-line px-5 py-4">
               <span className="font-display text-base font-semibold">Личный зачёт</span>
+              <span className="text-xs text-mute">{drivers.length} пилотов</span>
             </div>
+            <Head />
             <div>
-              {drivers.map((d, i) => (
-                <div
-                  key={d.code || d.position}
-                  className={`team-row grid grid-cols-[26px_4px_28px_1fr_auto] items-center gap-3 px-5 py-2.5 ${i < drivers.length - 1 ? "border-b border-line" : ""} ${d.position === 1 ? "bg-surface-2" : ""}`}
-                  style={{ "--row": colorOf(d.team_slug) } as React.CSSProperties}
-                >
-                  <span className="tabular text-mute">{d.position}</span>
-                  <span className="h-6 w-[4px] rounded-full" style={{ background: colorOf(d.team_slug) }} />
-                  <TeamLogo slug={d.team_slug ?? ""} size={26} />
-                  <span className="flex min-w-0 items-center gap-2">
-                    <Link href={`/drivers/${d.driver_id}`} className="truncate hover:text-[var(--accent2)]">
-                      {d.name_ru ?? d.name_en}
-                    </Link>
-                    <FavoriteStar kind="driver" id={d.driver_id} size={14} />
-                  </span>
-                  <span className="text-right leading-tight">
-                    <span className="tabular block font-display font-semibold">{d.points}</span>
-                    <span className="tabular block text-[11px] text-mute">
-                      {d.position === 1 ? "лидер" : `−${leaderD - d.points}`}
+              {drivers.map((d, i) => {
+                const color = colorOf(d.team_slug);
+                const ahead = i > 0 ? drivers[i - 1].points - d.points : null;
+                return (
+                  <div
+                    key={d.code || d.position}
+                    className={`team-row ${GRID} px-5 py-2.5 ${i < drivers.length - 1 ? "border-b border-line" : ""} ${d.position === 1 ? "bg-surface-2" : ""}`}
+                    style={{ "--row": color } as React.CSSProperties}
+                  >
+                    <span className="tabular text-mute">{d.position}</span>
+                    <span className="h-6 w-[4px] rounded-full" style={{ background: color }} />
+                    <TeamLogo slug={d.team_slug ?? ""} size={26} />
+                    <span className="min-w-0">
+                      <span className="flex min-w-0 items-center gap-2">
+                        <Link href={`/drivers/${d.driver_id}`} className="truncate hover:text-[var(--accent2)]">
+                          {d.name_ru ?? d.name_en}
+                        </Link>
+                        <FavoriteStar kind="driver" id={d.driver_id} size={14} />
+                      </span>
+                      <span className="block truncate text-[11px] text-mute">{d.team_name}</span>
+                      <Bar pts={d.points} leader={leaderD} color={color} />
                     </span>
-                  </span>
-                </div>
-              ))}
+                    <span className="tabular text-right text-sm">{d.wins || <span className="text-mute">—</span>}</span>
+                    <span className="tabular hidden text-right text-xs text-mute sm:block">{ahead == null ? "—" : ahead === 0 ? "=" : `−${ahead}`}</span>
+                    <span className="text-right leading-tight">
+                      <span className="tabular block font-display font-semibold">{d.points}</span>
+                      <span className="tabular block text-[11px] text-mute">{d.position === 1 ? "лидер" : `−${leaderD - d.points}`}</span>
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </section>
         )}
 
         {constructors.length > 0 && (
-          <section className="card-soft overflow-hidden">
-            <div className="border-b border-line px-5 py-4">
+          <section className="card-soft self-start overflow-hidden">
+            <div className="flex items-baseline justify-between border-b border-line px-5 py-4">
               <span className="font-display text-base font-semibold">Кубок конструкторов</span>
+              <span className="text-xs text-mute">{constructors.length} команд</span>
             </div>
+            <Head />
             <div>
-              {constructors.map((c, i) => (
-                <div
-                  key={c.team_slug || c.position}
-                  className={`team-row grid grid-cols-[26px_4px_28px_1fr_auto] items-center gap-3 px-5 py-2.5 ${i < constructors.length - 1 ? "border-b border-line" : ""} ${c.position === 1 ? "bg-surface-2" : ""}`}
-                  style={{ "--row": colorOf(c.team_slug) } as React.CSSProperties}
-                >
-                  <span className="tabular text-mute">{c.position}</span>
-                  <span className="h-6 w-[4px] rounded-full" style={{ background: colorOf(c.team_slug) }} />
-                  <TeamLogo slug={c.team_slug ?? ""} size={26} vt={c.team_slug ? `tlogo-${c.team_slug}` : undefined} />
-                  {c.team_slug ? (
-                    <span className="flex min-w-0 items-center gap-2">
-                      <Link href={`/teams/${c.team_slug}`} className="truncate hover:text-[var(--accent2)]">
-                        {c.team_name}
-                      </Link>
-                      <FavoriteStar kind="team" id={c.team_slug} size={14} />
+              {constructors.map((c, i) => {
+                const color = colorOf(c.team_slug);
+                const ahead = i > 0 ? constructors[i - 1].points - c.points : null;
+                return (
+                  <div
+                    key={c.team_slug || c.position}
+                    className={`team-row ${GRID} px-5 py-2.5 ${i < constructors.length - 1 ? "border-b border-line" : ""} ${c.position === 1 ? "bg-surface-2" : ""}`}
+                    style={{ "--row": color } as React.CSSProperties}
+                  >
+                    <span className="tabular text-mute">{c.position}</span>
+                    <span className="h-6 w-[4px] rounded-full" style={{ background: color }} />
+                    <TeamLogo slug={c.team_slug ?? ""} size={26} vt={c.team_slug ? `tlogo-${c.team_slug}` : undefined} />
+                    <span className="min-w-0">
+                      {c.team_slug ? (
+                        <span className="flex min-w-0 items-center gap-2">
+                          <Link href={`/teams/${c.team_slug}`} className="truncate hover:text-[var(--accent2)]">
+                            {c.team_name}
+                          </Link>
+                          <FavoriteStar kind="team" id={c.team_slug} size={14} />
+                        </span>
+                      ) : (
+                        <span className="block truncate">{c.team_name}</span>
+                      )}
+                      <Bar pts={c.points} leader={leaderC} color={color} />
                     </span>
-                  ) : (
-                    <span className="truncate">{c.team_name}</span>
-                  )}
-                  <span className="text-right leading-tight">
-                    <span className="tabular block font-display font-semibold">{c.points}</span>
-                    <span className="tabular block text-[11px] text-mute">
-                      {c.position === 1 ? "лидер" : `−${leaderC - c.points}`}
+                    <span className="tabular text-right text-sm">{c.wins || <span className="text-mute">—</span>}</span>
+                    <span className="tabular hidden text-right text-xs text-mute sm:block">{ahead == null ? "—" : ahead === 0 ? "=" : `−${ahead}`}</span>
+                    <span className="text-right leading-tight">
+                      <span className="tabular block font-display font-semibold">{c.points}</span>
+                      <span className="tabular block text-[11px] text-mute">{c.position === 1 ? "лидер" : `−${leaderC - c.points}`}</span>
                     </span>
-                  </span>
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           </section>
         )}

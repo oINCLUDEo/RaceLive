@@ -3,6 +3,8 @@ import { Geologica, Golos_Text } from "next/font/google";
 import { Link, ViewTransitions } from "next-view-transitions";
 import { MobileNav } from "@/components/MobileNav";
 import { RailNav } from "@/components/RailNav";
+import { SeasonDock } from "@/components/SeasonDock";
+import { getConstructorStandings, getDriverStandings, type ConstructorStandingOut, type DriverStandingOut } from "@/lib/api";
 import { ToastHost } from "@/components/ToastHost";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
 import "./globals.css";
@@ -59,7 +61,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Зачёт сезона — общий для всех страниц (колонка справа / шторка).
+  const [drivers, constructors] = await Promise.all([
+    getDriverStandings().catch(() => [] as DriverStandingOut[]),
+    getConstructorStandings().catch(() => [] as ConstructorStandingOut[]),
+  ]);
   return (
     <ViewTransitions>
       <html lang="ru" className={`${display.variable} ${sans.variable}`}>
@@ -112,10 +119,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </div>
             </header>
 
-            <div className="mx-auto w-full max-w-[1200px] flex-1 px-4 py-5 md:px-8 md:py-7">{children}</div>
+            {/* Контент тянется по ширине экрана (до 1920), на 2xl справа — колонка «Зачёт сезона» */}
+            <div className="mx-auto flex w-full max-w-[1920px] flex-1 gap-6 px-4 py-5 md:px-8 md:py-7">
+              <div className="min-w-0 flex-1">{children}</div>
+              <SeasonDock drivers={drivers} constructors={constructors} />
+            </div>
 
             <footer className="border-t border-line">
-              <div className="mx-auto flex w-full max-w-[1200px] flex-wrap items-center justify-between gap-3 px-4 py-6 text-xs text-mute md:px-8">
+              <div className="mx-auto flex w-full max-w-[1920px] flex-wrap items-center justify-between gap-3 px-4 py-6 text-xs text-mute md:px-8">
                 <span className="flex flex-wrap items-center gap-x-4 gap-y-2">
                   <span className="font-display lowercase text-bone">
                     race<span className="text-mute">.live</span>

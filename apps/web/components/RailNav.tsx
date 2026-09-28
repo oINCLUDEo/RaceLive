@@ -4,6 +4,7 @@
 // всегда, т.к. активность была захардкожена).
 import { Link } from "next-view-transitions";
 import { usePathname } from "next/navigation";
+import { openSeason } from "@/components/SeasonDock";
 
 export const RAIL = [
   { href: "/", label: "Главная", icon: "M3 11l9-8 9 8 M5 10v10h14V10" },
@@ -30,6 +31,13 @@ export function RailNav() {
           className={`rail-i ${active(r.href) ? "on" : ""}`}
           aria-label={r.label}
           title={r.label}
+          onClick={(e) => {
+            // «Зачёт» — не отдельная страница, а панель: колонка справа или шторка.
+            if (r.href === "/standings" && !path.startsWith("/standings")) {
+              e.preventDefault();
+              openSeason();
+            }
+          }}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
             <path d={r.icon} />

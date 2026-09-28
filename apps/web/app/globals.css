@@ -400,3 +400,10 @@ body { text-rendering: optimizeLegibility; }
 @media (prefers-reduced-motion: reduce) {
   .pressable:hover, .pressable:active { transform: none; }
 }
+
+/* Шторка (зачёт сезона и т.п.): снизу на телефоне, справа на десктопе */
+@keyframes sheetUp { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes sheetLeft { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+.sheet-in { animation: sheetUp 0.22s cubic-bezier(0.2, 0.8, 0.2, 1); }
+@media (min-width: 768px) { .sheet-in { animation-name: sheetLeft; } }
+@media (prefers-reduced-motion: reduce) { .sheet-in { animation: none; } }
