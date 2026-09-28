@@ -23,7 +23,7 @@ function StatusChip({ live, hasRec }: { live: boolean; hasRec: boolean }) {
     );
   if (hasRec)
     return (
-      <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-mute" style={{ background: "var(--surface-2)" }} title="Кастер не в эфире — показана последняя запись">
+      <span className="eyebrow inline-flex items-center rounded-full px-2.5 py-1" style={{ background: "var(--surface-2)" }} title="Кастер не в эфире — показана последняя запись">
         Запись
       </span>
     );
@@ -188,7 +188,7 @@ export function StreamStage({ streams }: { streams: StreamOut[] }) {
           <StatusChip live={v.live} hasRec={!!v.embed_url} />
           <PlatformIcon platform={v.platform} size={26} />
           <span className="truncate font-display text-lg font-semibold">{v.caster}</span>
-          <span className="shrink-0 rounded-full bg-surface-2 px-2 py-0.5 text-[10px] uppercase tracking-wide text-mute">
+          <span className="eyebrow shrink-0 rounded-full bg-surface-2 px-2 py-0.5">
             {platformLabel(v.platform)}
           </span>
         </div>
@@ -220,7 +220,7 @@ export function StreamStage({ streams }: { streams: StreamOut[] }) {
               <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: s.live ? "var(--ember)" : "var(--disabled)" }} />
               <span className="max-w-[150px] truncate">{s.caster}</span>
               {s.live && (
-                <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: "var(--ember)" }}>
+                <span className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--ember)" }}>
                   live
                 </span>
               )}

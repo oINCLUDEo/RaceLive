@@ -24,7 +24,7 @@ export default async function TracksPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <div className="text-xs uppercase tracking-[0.16em] text-mute">сезон</div>
+        <div className="eyebrow">сезон</div>
         <h1 className="mt-2 font-display text-3xl font-semibold">Трассы</h1>
       </div>
 
@@ -50,7 +50,7 @@ export default async function TracksPage() {
               </div>
             </div>
             {c.round != null && (
-              <span className="shrink-0 text-[11px] uppercase tracking-wide text-mute">
+              <span className="eyebrow shrink-0">
                 этап {c.round}
               </span>
             )}

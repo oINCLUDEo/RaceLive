@@ -40,7 +40,7 @@ export function CountdownBoxes({ iso }: { iso: string }) {
           <div className="tabular font-display text-2xl font-semibold leading-none">
             {v == null ? "—" : <RollNumber value={v} pad={2} />}
           </div>
-          <div className="mt-1 text-[10px] uppercase tracking-wide text-mute">{l}</div>
+          <div className="eyebrow mt-1">{l}</div>
         </div>
       ))}
     </div>

@@ -153,7 +153,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <path d="M21 15a2 2 0 01-2 2H8l-5 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
           </svg>
           <span className="font-display text-sm">Чат</span>
-          <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] uppercase tracking-wide text-mute">скоро</span>
+          <span className="eyebrow rounded-full bg-surface-2 px-2 py-0.5">скоро</span>
         </div>
 
         <MobileNav />

@@ -114,7 +114,7 @@ export default function GlossaryPage() {
     <div className="flex flex-col gap-6">
       {/* ШАПКА */}
       <section className="glow-panel overflow-hidden rounded-[24px] p-8 shadow-[var(--soft)]">
-        <div className="text-xs uppercase tracking-[0.16em] text-mute">справочник</div>
+        <div className="eyebrow">справочник</div>
         <h1 className="mt-2 font-display text-4xl font-semibold">Словарь терминов</h1>
         <p className="mt-3 max-w-[560px] text-mute">
           Язык автогонок по-русски: что значат статусы в протоколе, цвета в таблице тайминга,
@@ -128,7 +128,7 @@ export default function GlossaryPage() {
         {SECTIONS.map((s) => (
           <section key={s.title} className="card-soft overflow-hidden">
             <div className="border-b border-line px-5 py-3">
-              <div className="text-xs uppercase tracking-wide text-mute">{s.title}</div>
+              <div className="eyebrow">{s.title}</div>
               {s.note && <div className="mt-1 text-[12px] leading-snug text-mute/80">{s.note}</div>}
             </div>
             {s.items.map((item, i) => (

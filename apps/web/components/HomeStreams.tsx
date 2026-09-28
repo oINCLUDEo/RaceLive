@@ -18,11 +18,11 @@ export function HomeStreams({ streams }: { streams: StreamOut[] }) {
         <div className="flex items-baseline gap-3">
           <h2 className="font-display text-xl font-semibold">Кастеры</h2>
           <span className="text-sm text-mute">
-            {liveCount > 0 ? `сейчас в эфире: ${liveCount}` : "комментаторы сообщества race.live"}
+            {liveCount > 0 ? `Сейчас в эфире: ${liveCount}` : "Комментаторы сообщества race.live"}
           </span>
         </div>
-        <Link href="/live#streams" className="text-sm text-mute hover:text-bone">
-          в эфир →
+        <Link href="/live#streams" className="section-link">
+          В эфир →
         </Link>
       </div>
 
@@ -59,7 +59,7 @@ export function HomeStreams({ streams }: { streams: StreamOut[] }) {
                 </span>
               ) : (
                 <span className="rounded-full bg-black/45 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-bone/80 backdrop-blur">
-                  {s.embed_url ? "запись" : "офлайн"}
+                  {s.embed_url ? "Запись" : "Офлайн"}
                 </span>
               )}
               {(s.likes ?? 0) > 0 && (

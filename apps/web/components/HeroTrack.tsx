@@ -225,7 +225,7 @@ export function HeroTrack({
         <div className="pointer-events-none absolute bottom-6 right-6 hidden items-center gap-3 rounded-2xl border border-line bg-[rgba(18,11,13,0.62)] px-4 py-3 backdrop-blur-md md:flex md:bottom-8 md:right-8">
           <Flag code={country ?? null} w={28} />
           <div>
-            <div className="text-[10px] uppercase tracking-[0.18em] text-mute">
+            <div className="eyebrow">
               Трасса этапа{round != null ? ` ${round}` : ""}
             </div>
             <div className="font-display text-base font-semibold text-bone">{label}</div>

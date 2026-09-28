@@ -58,7 +58,7 @@ function DayCard({ d }: { d: WeatherDayOut }) {
         <span className="text-[11px] text-mute">{dayMonth(d.date)}</span>
       </div>
       {d.session_ru && (
-        <span className="w-fit rounded-full bg-surface-2 px-2 py-0.5 text-[10px] uppercase tracking-wide text-mute">
+        <span className="eyebrow w-fit rounded-full bg-surface-2 px-2 py-0.5">
           {d.session_ru}
         </span>
       )}
@@ -98,7 +98,7 @@ export function WeekendForecast({ data }: { data: WeekendForecastOut }) {
   if (!data.available || data.days.length === 0) return null;
   return (
     <div className="card-soft overflow-hidden">
-      <div className="flex items-center justify-between border-b border-line px-5 py-3 text-xs uppercase tracking-wide text-mute">
+      <div className="eyebrow flex items-center justify-between border-b border-line px-5 py-3">
         <span>Прогноз на уик-энд</span>
         <span className="normal-case tracking-normal">Open-Meteo</span>
       </div>

@@ -234,7 +234,7 @@ export function Tower({
         </span>
         <span className="flex shrink-0 items-center gap-2">
           {frame.flag && <SessionFlag status={frame.flag} />}
-          <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] uppercase tracking-wide">
+          <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] uppercase tracking-wide">
             {frame.badge ?? (frame.demo ? "демо-поток" : "эфир")}
           </span>
         </span>
@@ -260,7 +260,7 @@ export function Tower({
               style={{ background: "color-mix(in srgb, var(--purple) 15%, transparent)" }}
             >
               <span style={{ color: "var(--purple)" }}>{Icon.stop}</span>
-              <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: "var(--purple)" }}>БК</span>
+              <span className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--purple)" }}>БК</span>
               <span className="font-semibold text-bone">{frame.fastest.code}</span>
               {frame.fastest.time && <span className="tabular text-mute">{frame.fastest.time}</span>}
             </Tip>
@@ -286,10 +286,10 @@ export function Tower({
               <span className="tabular flex items-center gap-0.5 text-mute">
                 <span>{r.pos}</span>
                 {changes[r.code] === "up" && (
-                  <span className="text-[9px] leading-none" style={{ color: "var(--green)" }}>▲</span>
+                  <span className="text-[11px] leading-none" style={{ color: "var(--green)" }}>▲</span>
                 )}
                 {changes[r.code] === "down" && (
-                  <span className="text-[9px] leading-none" style={{ color: "var(--red)" }}>▼</span>
+                  <span className="text-[11px] leading-none" style={{ color: "var(--red)" }}>▼</span>
                 )}
               </span>
               <TeamLogo slug={r.team} />
@@ -304,7 +304,7 @@ export function Tower({
                 <span className="tabular block" style={r.best ? { color: "var(--purple)" } : undefined}>
                   {mainGap}
                 </span>
-                {subGap && <span className="tabular block text-[10px] text-mute">{subGap}</span>}
+                {subGap && <span className="tabular block text-[11px] text-mute">{subGap}</span>}
               </span>
               <Tip
                 as="span"
@@ -313,7 +313,7 @@ export function Tower({
               >
                 {r.tyre && <TyreIcon compound={r.tyre} />}
                 {r.tyre_age != null && (
-                  <span className="tabular mt-0.5 text-[9px] leading-none text-mute">
+                  <span className="tabular mt-0.5 text-[11px] leading-none text-mute">
                     {r.tyre_age} кр{r.stops ? ` · ${r.stops}п` : ""}
                   </span>
                 )}
@@ -333,7 +333,7 @@ export function RaceFeed({ rc }: { rc: RcMessage[] }) {
     <div className="card-soft flex max-h-[560px] flex-col overflow-hidden self-start">
       <div className="flex items-center justify-between border-b border-line px-4 py-3 text-xs text-mute">
         <span>Рейс-контроль{rc.length > 0 && <span className="tabular text-bone"> · {rc.length}</span>}</span>
-        <span className="text-[10px] uppercase tracking-wide">на русском</span>
+        <span className="text-[11px] uppercase tracking-wide">на русском</span>
       </div>
       {rc.length === 0 ? (
         <div className="px-4 py-6 text-sm text-mute">
@@ -364,7 +364,7 @@ function StatusBadge({ color, text, title }: { color: string; text: string; titl
   return (
     <Tip
       text={title}
-      className="tabular shrink-0 rounded px-1 text-[10px] font-semibold leading-[1.4]"
+      className="tabular shrink-0 rounded px-1 text-[11px] font-semibold leading-[1.4]"
       style={{ color, background: `color-mix(in srgb, ${color} 16%, transparent)` }}
     >
       {text}

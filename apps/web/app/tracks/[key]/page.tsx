@@ -66,7 +66,7 @@ export default async function TrackPage({ params }: { params: { key: string } })
           {facts.map((f) => (
             <div key={f.label} className="bg-surface-1 px-5 py-5">
               <div className="tabular font-display text-2xl font-semibold leading-none">{f.value}</div>
-              <div className="mt-2 text-[11px] uppercase tracking-wide text-mute">{f.label}</div>
+              <div className="eyebrow mt-2">{f.label}</div>
             </div>
           ))}
         </section>
@@ -77,7 +77,7 @@ export default async function TrackPage({ params }: { params: { key: string } })
         <section className="card-soft p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <div className="text-xs uppercase tracking-[0.16em] text-mute">этап {c.round} · сезон</div>
+              <div className="eyebrow">этап {c.round} · сезон</div>
               <div className="mt-1 font-display text-lg font-semibold">
                 {c.meeting_name_ru ?? c.meeting_name_en}
               </div>
@@ -92,7 +92,7 @@ export default async function TrackPage({ params }: { params: { key: string } })
                 <div className="flex items-center gap-2.5">
                   <TeamLogo slug={c.winner_team_slug ?? ""} size={26} />
                   <div>
-                    <div className="text-[11px] uppercase tracking-wide text-mute">победитель</div>
+                    <div className="eyebrow">победитель</div>
                     <div className="text-sm">{c.winner_name_ru ?? c.winner_name_en}</div>
                   </div>
                 </div>

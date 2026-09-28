@@ -1,7 +1,6 @@
 "use client";
 
-// Компактный зачёт сезона — живёт в колонке справа на широком экране и в шторке
-// (кнопка «Зачёт» в навигации) на остальных. Вкладки «Пилоты/Команды», топ-10 с
+// Компактный зачёт сезона — колонка справа на широком экране. Вкладки «Пилоты/Команды», топ-10 с
 // раскрытием до полного списка и переход к подробной странице.
 import { Link } from "next-view-transitions";
 import { useState } from "react";
@@ -17,11 +16,9 @@ type RowData = { key: string; pos: number; name: string; sub: string; href: stri
 export function SeasonPanel({
   drivers,
   constructors,
-  onNavigate,
 }: {
   drivers: DriverStandingOut[];
   constructors: ConstructorStandingOut[];
-  onNavigate?: () => void;
 }) {
   const [tab, setTab] = useState<"d" | "c">("d");
   const [all, setAll] = useState(false);
@@ -99,14 +96,14 @@ export function SeasonPanel({
               </span>
               <span className="shrink-0 text-right leading-tight">
                 <span className="tabular block font-display text-sm font-semibold">{r.pts}</span>
-                <span className="tabular block text-[10px] text-mute">{r.pos === 1 ? "лидер" : `−${gap}`}</span>
+                <span className="tabular block text-[11px] text-mute">{r.pos === 1 ? "лидер" : `−${gap}`}</span>
               </span>
             </>
           );
           return (
             <li key={r.key} className="border-b border-line last:border-b-0">
               {r.href ? (
-                <Link href={r.href} onClick={onNavigate} className="flex items-center gap-2.5 px-4 py-2 hover:bg-surface-2" title={r.sub || undefined}>
+                <Link href={r.href} className="flex items-center gap-2.5 px-4 py-2 hover:bg-surface-2" title={r.sub || undefined}>
                   {inner}
                 </Link>
               ) : (
@@ -125,7 +122,7 @@ export function SeasonPanel({
         ) : (
           <span />
         )}
-        <Link href="/standings" onClick={onNavigate} className="text-bone hover:underline">
+        <Link href="/standings" className="text-bone hover:underline">
           Подробно →
         </Link>
       </div>

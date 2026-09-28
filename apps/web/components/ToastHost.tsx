@@ -100,7 +100,7 @@ export function ToastHost() {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={t.image} alt="" className="h-full w-full object-cover" />
                     {t.kind === "live" && (
-                      <span className="absolute bottom-1 left-1 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase text-white" style={{ background: "var(--ember)" }}>
+                      <span className="absolute bottom-1 left-1 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-bold uppercase text-white" style={{ background: "var(--ember)" }}>
                         <span className="h-1 w-1 rounded-full bg-white" /> live
                       </span>
                     )}

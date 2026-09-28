@@ -5,10 +5,9 @@
 import { Link } from "next-view-transitions";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { RAIL } from "@/components/RailNav";
-import { openSeason } from "@/components/SeasonDock";
+import { isActive, RAIL } from "@/components/RailNav";
 
-const MAIN = ["/", "/schedule", "/live", "/standings"];
+const MAIN = ["/", "/schedule", "/live", "/tracks"];
 
 function Icon({ d, size = 22 }: { d: string; size?: number }) {
   return (
@@ -21,7 +20,10 @@ function Icon({ d, size = 22 }: { d: string; size?: number }) {
 export function MobileNav() {
   const path = usePathname();
   const [more, setMore] = useState(false);
-  const active = (href: string) => (href === "/" ? path === "/" : path.startsWith(href));
+  const active = (href: string) => {
+    const item = RAIL.find((r) => r.href === href);
+    return item ? isActive(item, path) : false;
+  };
   const main = RAIL.filter((r) => MAIN.includes(r.href));
   const rest = RAIL.filter((r) => !MAIN.includes(r.href));
   const restActive = rest.some((r) => active(r.href));
@@ -66,14 +68,8 @@ export function MobileNav() {
               <Link
                 key={r.href}
                 href={r.href}
-                className={`flex flex-col items-center gap-1 py-2.5 text-[10px] font-medium ${on ? "text-[var(--ember)]" : "text-mute"}`}
+                className={`flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium ${on ? "text-[var(--ember)]" : "text-mute"}`}
                 aria-current={on ? "page" : undefined}
-                onClick={(e) => {
-                  if (r.href === "/standings" && !on) {
-                    e.preventDefault();
-                    openSeason();
-                  }
-                }}
               >
                 <span className={`flex h-7 w-12 items-center justify-center rounded-full ${on ? "bg-[var(--ember-soft)]" : ""}`}>
                   <Icon d={r.icon} />
@@ -84,7 +80,7 @@ export function MobileNav() {
           })}
           <button
             onClick={() => setMore((m) => !m)}
-            className={`flex flex-col items-center gap-1 py-2.5 text-[10px] font-medium ${more || restActive ? "text-[var(--ember)]" : "text-mute"}`}
+            className={`flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium ${more || restActive ? "text-[var(--ember)]" : "text-mute"}`}
             aria-expanded={more}
           >
             <span className={`flex h-7 w-12 items-center justify-center rounded-full ${more || restActive ? "bg-[var(--ember-soft)]" : ""}`}>

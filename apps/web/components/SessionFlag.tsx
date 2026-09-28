@@ -38,7 +38,7 @@ export function SessionFlag({ status }: { status?: string }) {
 
   return (
     <span
-      className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+      className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide"
       style={style}
       title={cfg.label}
     >

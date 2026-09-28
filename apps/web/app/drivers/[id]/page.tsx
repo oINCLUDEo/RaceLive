@@ -122,7 +122,7 @@ export default async function DriverPage({ params }: { params: { id: string } })
       {/* РЕЗУЛЬТАТЫ СЕЗОНА */}
       {d.results.length > 0 && (
         <section className="card-soft overflow-hidden">
-          <div className="border-b border-line px-5 py-3 text-xs uppercase tracking-wide text-mute">
+          <div className="eyebrow border-b border-line px-5 py-3">
             Результаты сезона
           </div>
           <div className="grid xl:grid-cols-2 xl:[&>*:nth-child(odd)]:border-r xl:[&>*:nth-child(odd)]:border-line">
@@ -158,7 +158,7 @@ function Stat({ value, label }: { value: React.ReactNode; label: string }) {
       <div className="tabular font-display text-2xl font-semibold leading-none md:text-3xl">
         {value}
       </div>
-      <div className="mt-2 text-[11px] uppercase tracking-wide text-mute">{label}</div>
+      <div className="eyebrow mt-2">{label}</div>
     </div>
   );
 }

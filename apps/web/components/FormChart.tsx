@@ -22,7 +22,7 @@ export function FormChart({
             title={it.title}
             className="group flex min-w-0 flex-1 flex-col items-center gap-1"
           >
-            <span className="tabular text-[10px] text-mute group-hover:text-bone">{it.label ?? it.value}</span>
+            <span className="tabular hidden text-[11px] text-mute group-hover:text-bone sm:block">{it.label ?? it.value}</span>
             <span
               className="block w-full max-w-[28px] rounded-t-[4px] transition-opacity group-hover:opacity-80"
               style={{
@@ -30,7 +30,7 @@ export function FormChart({
                 background: it.value > 0 ? color : "var(--surface-2)",
               }}
             />
-            <span className="tabular text-[10px] text-mute">{it.round}</span>
+            <span className="tabular text-[11px] text-mute">{it.round}</span>
           </Link>
         ))}
       </div>

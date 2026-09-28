@@ -70,7 +70,7 @@ export default async function TeamPage({ params }: { params: { slug: string } })
         <div className="flex flex-wrap items-center gap-5">
           <TeamLogo slug={slug} size={56} vt={`tlogo-${slug}`} />
           <div>
-            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-mute">
+            <div className="eyebrow flex items-center gap-2">
               Команда
               {nat && (
                 <>
@@ -112,7 +112,7 @@ export default async function TeamPage({ params }: { params: { slug: string } })
           {/* РЕЗУЛЬТАТЫ ПО ЭТАПАМ */}
           {t.rounds.length > 0 && (
             <section className="card-soft overflow-hidden">
-              <div className="flex items-center justify-between border-b border-line px-5 py-3 text-xs uppercase tracking-wide text-mute">
+              <div className="eyebrow flex items-center justify-between border-b border-line px-5 py-3">
                 <span>Результаты по этапам</span>
                 <span>Очки этапа</span>
               </div>
@@ -147,7 +147,7 @@ export default async function TeamPage({ params }: { params: { slug: string } })
       <section className="flex flex-col gap-5">
         {t.drivers.length > 0 && (
           <div className="card-soft overflow-hidden">
-            <div className="border-b border-line px-5 py-3 text-xs uppercase tracking-wide text-mute">Состав</div>
+            <div className="eyebrow border-b border-line px-5 py-3">Состав</div>
             {t.drivers.map((d, i) => (
               <Link
                 key={d.driver_id || d.code}
@@ -163,7 +163,7 @@ export default async function TeamPage({ params }: { params: { slug: string } })
 
         {t.h2h && t.h2h.a_ahead + t.h2h.b_ahead > 0 && (
           <div className="card-soft p-5">
-            <div className="text-xs uppercase tracking-wide text-mute">Очные встречи · гонки</div>
+            <div className="eyebrow">Очные встречи · гонки</div>
             <div className="mt-3 flex items-center justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm">{t.h2h.a_name}</div>
@@ -196,7 +196,7 @@ function Stat({ value, label }: { value: React.ReactNode; label: string }) {
   return (
     <div className="bg-surface-1 px-5 py-5">
       <div className="tabular font-display text-2xl font-semibold leading-none md:text-3xl">{value}</div>
-      <div className="mt-2 text-[11px] uppercase tracking-wide text-mute">{label}</div>
+      <div className="eyebrow mt-2">{label}</div>
     </div>
   );
 }

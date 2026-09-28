@@ -22,7 +22,7 @@ function Cell({
       <div className="tabular font-display text-xl font-semibold leading-none" style={accent ? { color: accent } : undefined}>
         {children}
       </div>
-      <div className="mt-1.5 text-[11px] uppercase tracking-wide text-mute">{label}</div>
+      <div className="eyebrow mt-1.5">{label}</div>
     </div>
   );
 }
@@ -64,7 +64,7 @@ export function WeatherCard({ w, compact = false }: { w: Weather; compact?: bool
           </Cell>
         )}
         <Cell label="осадки" accent={w.rain ? "var(--blue)" : undefined}>
-          {w.rain ? "дождь" : "сухо"}
+          {w.rain ? "Дождь" : "Сухо"}
         </Cell>
       </div>
     </div>

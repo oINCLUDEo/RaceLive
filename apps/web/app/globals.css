@@ -401,9 +401,23 @@ body { text-rendering: optimizeLegibility; }
   .pressable:hover, .pressable:active { transform: none; }
 }
 
-/* Шторка (зачёт сезона и т.п.): снизу на телефоне, справа на десктопе */
-@keyframes sheetUp { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
-@keyframes sheetLeft { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
-.sheet-in { animation: sheetUp 0.22s cubic-bezier(0.2, 0.8, 0.2, 1); }
-@media (min-width: 768px) { .sheet-in { animation-name: sheetLeft; } }
-@media (prefers-reduced-motion: reduce) { .sheet-in { animation: none; } }
+
+/* ── Типографическая шкала ─────────────────────────────────────────────
+   Надзаголовок/подпись раздела («ЭТАП 18», «СЕССИИ») — одна на весь сайт,
+   вместо 9/10/11px и четырёх вариантов трекинга. */
+.eyebrow {
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+/* Ссылка «Весь календарь →» у заголовка секции */
+.section-link {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mute);
+  transition: color 0.15s;
+}
+.section-link:hover { color: var(--bone); }

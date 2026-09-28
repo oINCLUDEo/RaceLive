@@ -1,5 +1,6 @@
 import { Link } from "next-view-transitions";
 import { FavoriteStar } from "@/components/FavoriteStar";
+import { SeasonHeader } from "@/components/SeasonHeader";
 import { TeamLogo } from "@/components/TeamLogo";
 import {
   getConstructorStandings,
@@ -28,13 +29,13 @@ const GRID = "grid grid-cols-[26px_4px_28px_minmax(0,1fr)_44px_64px] items-cente
 
 function Head() {
   return (
-    <div className={`${GRID} border-b border-line px-5 py-2 text-[10px] uppercase tracking-[0.14em] text-mute`}>
+    <div className={`${GRID} border-b border-line px-5 py-2 text-[11px] uppercase tracking-[0.14em] text-mute`}>
       <span>#</span>
       <span />
       <span />
       <span />
       <span className="text-right">Побед</span>
-      <span className="hidden text-right sm:block">До соседа</span>
+      <span className="hidden text-right sm:block" title="Отставание от соседа выше">Разрыв</span>
       <span className="text-right">Очки</span>
     </div>
   );
@@ -58,10 +59,7 @@ export default async function StandingsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <div className="text-xs uppercase tracking-[0.16em] text-mute">Чемпионат</div>
-        <h1 className="mt-2 font-display text-3xl font-semibold">Зачёт сезона</h1>
-      </div>
+      <SeasonHeader />
 
       {drivers.length === 0 && constructors.length === 0 && (
         <div className="card-soft p-5 text-sm text-mute">
@@ -97,7 +95,7 @@ export default async function StandingsPage() {
                         </Link>
                         <FavoriteStar kind="driver" id={d.driver_id} size={14} />
                       </span>
-                      <span className="block truncate text-[11px] text-mute">{d.team_name}</span>
+                      <span className="block truncate text-[12px] text-mute">{d.team_name}</span>
                       <Bar pts={d.points} leader={leaderD} color={color} />
                     </span>
                     <span className="tabular text-right text-sm">{d.wins || <span className="text-mute">—</span>}</span>

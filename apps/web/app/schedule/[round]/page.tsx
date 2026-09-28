@@ -97,7 +97,7 @@ export default async function MeetingPage({
         </div>
         <div className="mt-4 flex items-center gap-6">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-mute">
+            <div className="eyebrow flex items-center gap-2">
               <Flag code={m.circuit?.country_code ?? null} w={26} />
               Этап {m.round}
             </div>
@@ -196,7 +196,7 @@ function RaceTable({ rows }: { rows: RaceResultOut[] }) {
 function QualiTable({ rows }: { rows: QualifyingResultOut[] }) {
   return (
     <div>
-      <div className="hidden grid-cols-[26px_4px_28px_minmax(0,1fr)_84px_84px_84px] gap-3 border-b border-line px-5 py-2 text-[10px] uppercase tracking-[0.14em] text-mute md:grid">
+      <div className="eyebrow hidden grid-cols-[26px_4px_28px_minmax(0,1fr)_84px_84px_84px] gap-3 border-b border-line px-5 py-2 md:grid">
         <span>#</span>
         <span />
         <span />
@@ -239,7 +239,7 @@ function QualiTable({ rows }: { rows: QualifyingResultOut[] }) {
 function Sessions({ m, now, compact = false }: { m: MeetingOut; now: number; compact?: boolean }) {
   return (
     <div className="card-soft overflow-hidden">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3 text-xs uppercase tracking-wide text-mute">
+      <div className="eyebrow flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3">
         <span>Сессии</span>
         <TimezoneNote className="normal-case tracking-normal" />
       </div>

@@ -27,7 +27,7 @@ import {
   type RaceResultOut,
   type StreamOut,
 } from "@/lib/api";
-import { sessionLabel } from "@/lib/format";
+import { sessionLabel, statusCode } from "@/lib/format";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
 import { TEAMS } from "@/lib/teams";
 
@@ -127,22 +127,20 @@ export default async function HomePage() {
         />
 
         <div className="relative p-8 md:p-10">
-          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-line bg-black/40 px-3.5 py-1.5 text-xs backdrop-blur">
-            <span className="live-dot" aria-hidden />
-            {liveStream
-              ? `Сейчас в эфире · ${liveStream.caster}`
-              : next
-                ? `Скоро · ${next.meeting_name_ru ?? next.meeting_name_en}`
-                : "race.live"}
-          </span>
-          <h1 className="mt-4 max-w-[16ch] font-display text-3xl font-semibold leading-[1.05] md:text-4xl">
+          {liveStream && (
+            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-line bg-black/40 px-3.5 py-1.5 text-xs backdrop-blur">
+              <span className="live-dot" aria-hidden />
+              Сейчас в эфире · {liveStream.caster}
+            </span>
+          )}
+          <h1 className="mt-4 max-w-[16ch] first:mt-0 font-display text-3xl font-semibold leading-[1.05] md:text-4xl">
             Смотрим Формулу вместе
           </h1>
         </div>
 
         <div className="relative flex flex-wrap items-end justify-between gap-4 p-6 md:p-8">
           <div className="w-full max-w-[330px] rounded-2xl border border-line bg-[rgba(18,11,13,0.62)] p-5 backdrop-blur-md">
-            <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-mute">
+            <div className="eyebrow flex items-center gap-2">
               <span className="live-dot" aria-hidden /> Ближайшая гонка
             </div>
             <div className="mt-2 font-display text-xl font-semibold">
@@ -231,8 +229,8 @@ async function HomeData() {
   const lastDone = [...schedule]
     .reverse()
     .find((m) => m.ends_at && new Date(m.ends_at).getTime() < now);
-  const podium = lastDone
-    ? (await getRaceResults(lastDone.round).catch(() => [] as RaceResultOut[])).slice(0, 3)
+  const top5 = lastDone
+    ? (await getRaceResults(lastDone.round).catch(() => [] as RaceResultOut[])).slice(0, 5)
     : [];
 
   return (
@@ -245,92 +243,71 @@ async function HomeData() {
       )}
 
 
-      {/* ИТОГИ И ЗАЧЁТ — рядом */}
-      {((lastDone && podium.length > 0) || topStandings.length > 0) && (
+      {/* ИТОГИ И ЗАЧЁТ — рядом, одинаковые карточки по 5 строк */}
+      {((lastDone && top5.length > 0) || topStandings.length > 0) && (
         <Reveal>
-          <div className="grid gap-6 lg:grid-cols-2 lg:items-start 2xl:grid-cols-1">
-      {/* ПРОШЕДШИЙ ЭТАП — подиум */}
-      {lastDone && podium.length > 0 && (
-        <section className="min-w-0">
-          <div className="mb-4 flex items-baseline justify-between gap-3">
-            <h2 className="font-display text-xl font-semibold">Прошедший этап</h2>
-            <Link href={`/schedule/${lastDone.round}`} className="text-sm text-mute hover:text-bone">
-              Итоги →
-            </Link>
-          </div>
-          <div className="card-soft p-5">
-            <div className="mb-4 flex items-center gap-3">
-              <Flag code={lastDone.circuit?.country_code ?? null} w={30} />
-              <span className="font-display font-semibold">{lastDone.name_ru ?? lastDone.name_en}</span>
-            </div>
-            <div className="grid gap-2 2xl:grid-cols-3">
-              {podium.map((r) => {
-                const medal = r.position === 1 ? "#E7B24B" : r.position === 2 ? "#C4CAD0" : "#CD7F45";
-                return (
-                  <Link
-                    key={r.code || r.position}
-                    href={`/drivers/${r.driver_id}`}
-                    className="card-soft flex items-center gap-3 bg-surface-2 p-3.5"
-                  >
-                    <span
-                      className="tabular flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-display text-sm font-bold"
-                      style={{ background: `color-mix(in srgb, ${medal} 22%, transparent)`, color: medal }}
-                    >
-                      {r.position}
-                    </span>
-                    <TeamLogo slug={r.team_slug ?? ""} size={26} />
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-medium">{r.name_ru ?? r.name_en}</div>
-                      <div className="tabular text-[11px] text-mute">{r.time ?? r.status}</div>
-                    </div>
+          <div className="grid gap-6 lg:grid-cols-2 2xl:grid-cols-1">
+            {lastDone && top5.length > 0 && (
+              <section className="flex min-w-0 flex-col">
+                <div className="mb-4 flex items-baseline justify-between gap-3">
+                  <h2 className="font-display text-xl font-semibold">Прошедший этап</h2>
+                  <Link href={`/schedule/${lastDone.round}`} className="section-link">
+                    Все итоги →
                   </Link>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      )}
+                </div>
+                <div className="card-soft flex flex-1 flex-col overflow-hidden">
+                  <div className="flex items-center gap-2.5 border-b border-line px-5 py-3">
+                    <Flag code={lastDone.circuit?.country_code ?? null} w={24} />
+                    <span className="truncate font-display text-[15px] font-semibold">{lastDone.name_ru ?? lastDone.name_en}</span>
+                    <span className="eyebrow ml-auto shrink-0">Этап {lastDone.round}</span>
+                  </div>
+                  {top5.map((r) => (
+                    <HomeRow
+                      key={r.code || r.position}
+                      pos={r.position}
+                      medal={r.position <= 3}
+                      slug={r.team_slug}
+                      href={`/drivers/${r.driver_id}`}
+                      name={r.name_ru ?? r.name_en}
+                      sub={r.team_name}
+                      value={r.time ?? statusCode(r.status)}
+                      valueSub={r.points ? `+${r.points} очк.` : undefined}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
 
-      {/* ЧЕМПИОНАТ — реальные данные (Jolpica) */}
-      {topStandings.length > 0 && (
-        /* на 2xl зачёт уже в колонке справа — тут не дублируем */
-        <section className="min-w-0 2xl:hidden">
-          <div className="mb-4 flex items-baseline justify-between gap-3">
-            <h2 className="font-display text-xl font-semibold">Личный зачёт</h2>
-            <Link href="/standings" className="text-sm text-mute hover:text-bone">Весь зачёт →</Link>
-          </div>
-          <div className="card-soft overflow-hidden">
-            {[topStandings.slice(0, 5)].map((col, ci) => (
-              <div key={ci} className={ci === 1 ? "md:border-l md:border-line" : ""}>
-                {col.map((d, ri) => {
-                  const color = d.team_slug ? TEAMS[d.team_slug]?.color : undefined;
-                  const gap = leaderPoints - d.points;
-                  return (
-                    <div
+            {/* на 2xl зачёт уже в колонке справа — тут не дублируем */}
+            {topStandings.length > 0 && (
+              <section className="flex min-w-0 flex-col 2xl:hidden">
+                <div className="mb-4 flex items-baseline justify-between gap-3">
+                  <h2 className="font-display text-xl font-semibold">Личный зачёт</h2>
+                  <Link href="/standings" className="section-link">
+                    Весь зачёт →
+                  </Link>
+                </div>
+                <div className="card-soft flex flex-1 flex-col overflow-hidden">
+                  <div className="flex items-center gap-2.5 border-b border-line px-5 py-3">
+                    <span className="font-display text-[15px] font-semibold">Пилоты</span>
+                    <span className="eyebrow ml-auto shrink-0">Очки</span>
+                  </div>
+                  {topStandings.slice(0, 5).map((d) => (
+                    <HomeRow
                       key={d.code || d.position}
-                      className={`team-row grid grid-cols-[22px_4px_28px_1fr_auto] items-center gap-3 px-5 py-2.5 ${ri < col.length - 1 ? "border-b border-line" : ""} ${d.position === 1 ? "bg-surface-2" : ""}`}
-                      style={{ "--row": color ?? "var(--bone)" } as React.CSSProperties}
-                    >
-                      <span className="tabular text-mute">{d.position}</span>
-                      <span className="h-6 w-[4px] rounded-full" style={{ background: color ?? "var(--line)" }} />
-                      <TeamLogo slug={d.team_slug ?? ""} size={26} />
-                      <Link href={`/drivers/${d.driver_id}`} className="truncate hover:text-[var(--accent2)]">
-                        {d.name_ru ?? d.name_en}
-                      </Link>
-                      <span className="text-right leading-tight">
-                        <span className="tabular block font-display font-semibold">{d.points}</span>
-                        <span className="tabular block text-[11px] text-mute">
-                          {d.position === 1 ? "лидер" : `−${gap}`}
-                        </span>
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+                      pos={d.position}
+                      slug={d.team_slug}
+                      href={`/drivers/${d.driver_id}`}
+                      name={d.name_ru ?? d.name_en}
+                      sub={d.team_name ?? ""}
+                      value={String(d.points)}
+                      strong
+                      valueSub={d.position === 1 ? "Лидер" : `−${leaderPoints - d.points}`}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
         </Reveal>
       )}
@@ -341,7 +318,7 @@ async function HomeData() {
         <section>
           <div className="mb-4 flex items-baseline justify-between gap-3">
             <h2 className="font-display text-xl font-semibold">Ближайшие этапы</h2>
-            <Link href="/schedule" className="text-sm text-mute hover:text-bone">Весь календарь →</Link>
+            <Link href="/schedule" className="section-link">Весь календарь →</Link>
           </div>
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             {rounds.map((m, idx) => (
@@ -349,7 +326,7 @@ async function HomeData() {
                 <TrackMap circuit={m.circuit?.key} size={116} className="pointer-events-none absolute right-2 top-2 opacity-[0.13]" />
                 <div className="flex items-center justify-between">
                   <Flag code={m.circuit?.country_code ?? null} />
-                  <span className="text-[11px] uppercase tracking-wide text-mute">Этап {m.round}</span>
+                  <span className="eyebrow">Этап {m.round}</span>
                 </div>
                 <div className="min-w-0">
                   <div className="truncate font-display font-semibold">{m.name_ru ?? m.name_en}</div>
@@ -369,6 +346,53 @@ async function HomeData() {
       )}
 
     </>
+  );
+}
+
+// Строка карточек «Прошедший этап» / «Личный зачёт» — одна разметка, одинаковая высота.
+function HomeRow({
+  pos,
+  medal = false,
+  slug,
+  href,
+  name,
+  sub,
+  value,
+  valueSub,
+  strong = false,
+}: {
+  pos: number;
+  medal?: boolean;
+  slug: string | null;
+  href: string;
+  name: string;
+  sub: string;
+  value: string;
+  valueSub?: string;
+  strong?: boolean;
+}) {
+  const color = (slug && TEAMS[slug]?.color) || "var(--line-strong)";
+  const medalColor = pos === 1 ? "#E7B24B" : pos === 2 ? "#C4CAD0" : "#CD7F45";
+  return (
+    <Link
+      href={href}
+      className="team-row grid flex-1 grid-cols-[24px_4px_26px_minmax(0,1fr)_auto] items-center gap-3 border-b border-line px-5 py-2.5 last:border-b-0 hover:bg-surface-2"
+      style={{ "--row": color } as React.CSSProperties}
+    >
+      <span className="tabular font-display text-[15px] font-semibold" style={{ color: medal ? medalColor : "var(--mute)" }}>
+        {pos}
+      </span>
+      <span className="h-7 w-[4px] rounded-full" style={{ background: color }} />
+      <TeamLogo slug={slug ?? ""} size={24} />
+      <span className="min-w-0">
+        <span className="block truncate text-[15px] font-medium leading-tight text-bone">{name}</span>
+        <span className="mt-0.5 block truncate text-[13px] leading-tight text-mute">{sub}</span>
+      </span>
+      <span className="text-right leading-tight">
+        <span className={`tabular block ${strong ? "font-display text-[15px] font-semibold text-bone" : "text-[13px] text-bone"}`}>{value}</span>
+        {valueSub && <span className="tabular mt-0.5 block text-[12px] text-mute">{valueSub}</span>}
+      </span>
+    </Link>
   );
 }
 

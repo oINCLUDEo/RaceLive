@@ -27,12 +27,12 @@ export function WeekendSessions({ meeting }: { meeting: MeetingOut }) {
       <Link href={`/schedule/${meeting.round}`} className="flex items-center gap-3 border-b border-line px-5 py-4 hover:bg-surface-2">
         <TrackMap circuit={meeting.circuit?.key} size={44} className="shrink-0 opacity-80" />
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-mute">
+          <div className="eyebrow flex items-center gap-2">
             <Flag code={meeting.circuit?.country_code ?? null} w={18} /> Этап {meeting.round}
           </div>
           <div className="truncate font-display font-semibold">{meeting.name_ru ?? meeting.name_en}</div>
         </div>
-        <span className="shrink-0 text-sm text-mute">к этапу →</span>
+        <span className="shrink-0 text-sm text-mute">К этапу →</span>
       </Link>
 
       <ul>
@@ -72,7 +72,7 @@ export function WeekendSessions({ meeting }: { meeting: MeetingOut }) {
                   через <Countdown iso={r.s.starts_at} />
                 </span>
               ) : r.done ? (
-                <span className="shrink-0 text-[11px] uppercase tracking-wide text-mute">завершена</span>
+                <span className="eyebrow shrink-0">завершена</span>
               ) : null}
             </li>
           );

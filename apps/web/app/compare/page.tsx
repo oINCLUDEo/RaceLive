@@ -25,9 +25,9 @@ export default async function ComparePage({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <div className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-mute">
+        <div className="eyebrow flex items-center gap-2">
           сравнение
-          <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] normal-case tracking-normal">тест</span>
+          <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] normal-case tracking-normal">тест</span>
         </div>
         <h1 className="mt-2 font-display text-3xl font-semibold">Сравнение пилотов</h1>
         <p className="mt-1 text-mute">Времена кругов и темп по данным гонки — выбери гонку и двух пилотов.</p>

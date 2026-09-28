@@ -97,7 +97,7 @@ export default async function LivePage() {
       <section id="streams" className="scroll-mt-6">
         <div className="mb-3 flex items-baseline justify-between gap-3">
           <h2 className="font-display text-lg font-semibold">Смотреть с кастером</h2>
-          <span className="text-[11px] uppercase tracking-wide text-mute">трансляции сообщества</span>
+          <span className="eyebrow">трансляции сообщества</span>
         </div>
         <WatchArea>
           {streams.length > 0 ? (
@@ -115,8 +115,8 @@ export default async function LivePage() {
         <section>
           <div className="mb-3 flex items-baseline justify-between gap-3">
             <h2 className="font-display text-lg font-semibold">Уик-энд</h2>
-            <Link href={`/schedule/${meeting.round}`} className="text-sm text-mute hover:text-bone">
-              подробнее об этапе →
+            <Link href={`/schedule/${meeting.round}`} className="section-link">
+              Подробнее об этапе →
             </Link>
           </div>
           <div className={`grid gap-5 ${hasForecast ? "lg:grid-cols-[minmax(0,420px)_1fr]" : ""}`}>

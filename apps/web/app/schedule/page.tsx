@@ -2,6 +2,7 @@ import { Link } from "next-view-transitions";
 import { Countdown } from "@/components/Countdown";
 import { Flag } from "@/components/Flag";
 import { DateRange } from "@/components/DateRange";
+import { SeasonHeader } from "@/components/SeasonHeader";
 import { SessionTime } from "@/components/SessionTime";
 import { TimezoneNote } from "@/components/TimezoneNote";
 import { TrackMap } from "@/components/TrackMap";
@@ -119,13 +120,7 @@ export default async function SchedulePage({
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <div className="text-xs uppercase tracking-[0.16em] text-mute">Календарь</div>
-        <h1 className="mt-2 font-display text-3xl font-semibold">Расписание сезона</h1>
-        <p className="mt-2 text-sm text-mute">
-          <TimezoneNote />
-        </p>
-      </div>
+      <SeasonHeader note={<TimezoneNote />} />
 
       {error && (
         <div className="card-soft p-5 text-sm text-mute">

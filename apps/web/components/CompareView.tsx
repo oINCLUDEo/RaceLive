@@ -216,7 +216,7 @@ export function CompareView({
       <div className="flex flex-wrap items-center justify-between gap-2">
         {(data.sessions ?? []).length > 0 ? (
           <div className="flex items-center gap-2">
-            <span className="text-[11px] uppercase tracking-wide text-mute">Гонка</span>
+            <span className="eyebrow">Гонка</span>
             <select
               value={data.session_key ?? ""}
               onChange={(e) => onRace(Number(e.target.value))}
@@ -246,15 +246,15 @@ export function CompareView({
             <div className="mt-3 grid grid-cols-3 gap-2 text-center">
               <div>
                 <div className="tabular font-display text-lg font-semibold">{fmt(p.s.best)}</div>
-                <div className="text-[11px] uppercase tracking-wide text-mute">Лучший</div>
+                <div className="eyebrow">Лучший</div>
               </div>
               <div>
                 <div className="tabular font-display text-lg font-semibold">{fmt(p.s.avg)}</div>
-                <div className="text-[11px] uppercase tracking-wide text-mute">Средний</div>
+                <div className="eyebrow">Средний</div>
               </div>
               <div>
                 <div className="tabular font-display text-lg font-semibold">{p.s.laps}</div>
-                <div className="text-[11px] uppercase tracking-wide text-mute">Кругов</div>
+                <div className="eyebrow">Кругов</div>
               </div>
             </div>
           </div>

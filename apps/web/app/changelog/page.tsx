@@ -33,7 +33,7 @@ export default function ChangelogPage() {
           style={{ background: "var(--ember)" }}
           aria-hidden
         />
-        <div className="text-xs uppercase tracking-[0.16em] text-mute">Что нового</div>
+        <div className="eyebrow">Что нового</div>
         <h1 className="mt-2 font-display text-3xl font-semibold md:text-4xl">Обновления</h1>
         <p className="mt-2 max-w-prose text-mute">
           Коротко и по-человечески — что мы добавили и починили на race.live. Самое свежее сверху.

@@ -61,7 +61,7 @@ export function ReplaySpeed() {
         К старту
       </button>
       <span className="mx-1 h-4 w-px bg-line" aria-hidden />
-      <span className="mr-0.5 text-[11px] uppercase tracking-wide text-mute">Скорость</span>
+      <span className="eyebrow mr-0.5">Скорость</span>
       {opts.map((o) => {
         const active = speed === o;
         return (
