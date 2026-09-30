@@ -16,7 +16,7 @@ import time
 from datetime import datetime, timezone
 from typing import Awaitable, Callable
 
-from . import cache, race_control
+from . import battles, cache, race_control
 from .providers.openf1 import OpenF1Client, OpenF1Locked
 
 log = logging.getLogger("uvicorn.error")
@@ -119,7 +119,9 @@ def _latest(series: list[tuple[float, object]], t: float):
     """Последнее значение с временем <= t (series отсортирован по времени)."""
     if not series:
         return None
-    i = bisect.bisect_right(series, (t, float("inf"))) - 1
+    # key= по времени: сравнение кортежей при равном t полезло бы в значения
+    # (строка «+1 LAP» против числа) и роняло кадр TypeError'ом.
+    i = bisect.bisect_right(series, t, key=lambda x: x[0]) - 1
     return series[i][1] if i >= 0 else None
 
 
@@ -234,6 +236,8 @@ class Timeline:
             num = r.get("driver_number")
             if t0 is not None and isinstance(dur, (int, float)) and num is not None:
                 self.lapdur.setdefault(num, []).append((t0 + float(dur), float(dur)))
+        for series in self.lapdur.values():
+            series.sort(key=lambda x: x[0])
 
         # Быстрейший круг: когда меняется обладатель лучшего времени круга (t → driver_number).
         fl_events = sorted(
@@ -341,6 +345,17 @@ class Timeline:
             for e in entries
         ]
         leader_lap = entries[0]["lap"] if entries and isinstance(entries[0]["lap"], int) else None
+        flag = race_control.session_flag(msgs)
+        # Битвы и прогноз — только в гонке/спринте (есть интервалы). Сколько кругов
+        # осталось, знаем лишь в реплее: в живой сессии total_laps = текущий круг.
+        fights = {"battles": [], "forecast": []}
+        if self.has_intervals:
+            left = (
+                self.total_laps - leader_lap
+                if leader_lap is not None and self.total_laps and self.total_laps > leader_lap
+                else None
+            )
+            fights = battles.compute(entries, self.itv, self.lapdur, t, flag, left)
         # Вся лента рейс-контроля до момента t (новые сверху) — можно отмотать назад.
         recent = [race_control.feed_item(r, r.get("lap_number")) for tt, r in self.rc if tt <= t]
         fl_code = self.info.get(fl_num, {}).get("code") if fl_num else None
@@ -352,7 +367,9 @@ class Timeline:
             "rows": rows,
             "rc": list(reversed(recent[-150:])),
             "fastest": {"code": fl_code, "time": _fmt_laptime(fl[1])} if fl else None,
-            "flag": race_control.session_flag(msgs),
+            "flag": flag,
+            "battles": fights["battles"],
+            "forecast": fights["forecast"],
             "weather": {
                 "track": w.get("track_temperature"),
                 "air": w.get("air_temperature"),

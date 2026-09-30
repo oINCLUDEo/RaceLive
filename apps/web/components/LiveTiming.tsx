@@ -36,7 +36,14 @@ export type RcMessage = {
   message: string;
   message_ru: string;
 };
+// Битвы и прогноз — считаются на сервере (apps/api/app/battles.py).
+export type BattleCar = { code: string; team: string; pos: number };
+export type Battle = { pos: number; cars: BattleCar[]; gaps: number[]; trends: ("closing" | "holding" | "pulling")[] };
+export type Forecast = { pos: number; ahead: BattleCar; behind: BattleCar; gap: number; rate: number; laps: number };
+
 export type Frame = {
+  battles?: Battle[];
+  forecast?: Forecast[];
   session?: string;
   lap?: number;
   total_laps?: number;

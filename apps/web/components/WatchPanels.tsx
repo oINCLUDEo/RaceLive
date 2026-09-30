@@ -1,25 +1,27 @@
 "use client";
 
-// Раскладка «стрим + данные гонки». Панели (позиции, рейс-контроль, погода) появляются
+// Раскладка «стрим + данные гонки». Панели (битвы, позиции, рейс-контроль, погода) появляются
 // ТОЛЬКО когда данные живые (кадр с бейджем «эфир»). Повтор/демо/нет данных — колонки
 // нет вовсе, стрим занимает всю ширину. Колонка «липкая» и не выше экрана — прокрутка
 // внутри, страница не растягивается. Есть ползунок «задержка под стрим».
 import { useEffect, useState } from "react";
+import { Battles } from "@/components/Battles";
 import { RaceFeed, Tower } from "@/components/LiveTiming";
 import { WeatherCard } from "@/components/WeatherCard";
 import { useTimingFeed } from "@/lib/useTimingFeed";
 
-type PanelId = "positions" | "rc" | "weather";
+type PanelId = "battles" | "positions" | "rc" | "weather";
 type Prefs = Record<PanelId, boolean>;
 
 const PANELS: { id: PanelId; label: string }[] = [
+  { id: "battles", label: "Битвы" },
   { id: "positions", label: "Позиции" },
   { id: "rc", label: "Рейс-контроль" },
   { id: "weather", label: "Погода" },
 ];
 const PREFS_KEY = "racelive:panels:live";
 const DELAY_KEY = "racelive:stream-delay";
-const DEFAULTS: Prefs = { positions: true, rc: true, weather: false };
+const DEFAULTS: Prefs = { battles: true, positions: true, rc: true, weather: false };
 
 function load<T>(key: string): T | null {
   try {
@@ -43,7 +45,7 @@ export function WatchArea({ children }: { children: React.ReactNode }) {
   const { frame, changes, prevOrder } = useTimingFeed(delay);
 
   useEffect(() => {
-    setPrefs(load<Prefs>(PREFS_KEY) ?? DEFAULTS);
+    setPrefs({ ...DEFAULTS, ...(load<Partial<Prefs>>(PREFS_KEY) ?? {}) });
     setDelay(load<number>(DELAY_KEY) ?? 0);
   }, []);
 
@@ -105,6 +107,7 @@ export function WatchArea({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
+        {prefs.battles && <Battles battles={frame.battles} forecast={frame.forecast} />}
         {prefs.positions && (
           <div className="no-scrollbar max-h-[520px] overflow-y-auto rounded-[var(--r-card)]">
             <Tower frame={frame} prevOrder={prevOrder} changes={changes} />
